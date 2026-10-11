@@ -434,6 +434,15 @@ export function Outfits({ nav, tripId }: { nav: Navigate; tripId?: string }) {
     [occasion, setOccasion] =
       useState<Schema["OutfitRequest"]["occasion"]>("walking"),
     [temperature, setTemperature] = useState(18),
+    [profile, setProfile] = useState<Schema["Profile"]>(),
+    [trips, setTrips] = useState<Schema["Trip"][]>([]),
+    [fashion, setFashion] = useState<Schema["FashionPreferences"]>({
+      occasion: "walking",
+      temperature_c: 18,
+      preferred_style: "",
+      preferred_colors: [],
+      owned_only: false,
+    }),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
@@ -443,16 +452,72 @@ export function Outfits({ nav, tripId }: { nav: Navigate; tripId?: string }) {
     void Promise.all([
       api<Schema["WardrobeItem"][]>("/consumer/wardrobe"),
       api<Schema["OutfitVote"][]>("/consumer/outfits/votes"),
+      api<Schema["Home"]>("/consumer/home"),
     ])
-      .then(([i, v]) => {
+      .then(([i, v, home]) => {
         setItems(i);
         setVotes(v);
+        setProfile(home.profile);
+        setTrips(home.trips);
+        if (home.profile.fashion) setFashion(home.profile.fashion);
+        setOccasion(home.profile.fashion?.occasion || "walking");
+        setTemperature(home.profile.fashion?.temperature_c ?? 18);
       })
       .catch((e) => setError(e.message));
   }, []);
+  async function saveFashion() {
+    if (!profile)
+      throw new Error("Fashion settings are still loading. Refresh to retry.");
+    if (!Number.isInteger(temperature) || temperature < -30 || temperature > 50)
+      throw new Error("Enter a whole-number temperature between −30 and 50°C.");
+    const { id, label, version, ...preferences } = profile;
+    const saved = await api<Schema["Profile"]>(
+      "/consumer/preferences",
+      "PUT",
+      {
+        ...preferences,
+        fashion: { ...fashion, occasion, temperature_c: temperature },
+      },
+      version,
+    );
+    setProfile(saved);
+    return saved;
+  }
+  async function saveSettings() {
+    setBusy(true);
+    setError("");
+    try {
+      await saveFashion();
+      setMessage(
+        "Fashion settings saved. Generate outfits to use your changes.",
+      );
+    } catch (e) {
+      setError((e as Error).message);
+      const home = await api<Schema["Home"]>("/consumer/home").catch(
+        () => undefined,
+      );
+      if (home) setProfile(home.profile);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function finish() {
+    if (!tripId || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await api("/consumer/trips/" + tripId + "/packing", "POST", {});
+      nav("/packing?trip=" + tripId);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
   async function generate() {
     setBusy(true);
     try {
+      await saveFashion();
       const freshVotes = await api<Schema["OutfitVote"][]>(
         "/consumer/outfits/votes",
       );
@@ -539,38 +604,131 @@ export function Outfits({ nav, tripId }: { nav: Navigate; tripId?: string }) {
             A little edit.
             <br />A lot of possibilities.
           </p>
-          <label>
-            What’s the occasion?
-            <select
-              value={occasion}
-              onChange={(e) =>
-                setOccasion(
-                  e.target.value as Schema["OutfitRequest"]["occasion"],
-                )
-              }
-            >
-              {["walking", "dinner", "business", "outdoors"].map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Expected temperature (°C)
-            <input
-              type="number"
-              min="-30"
-              max="50"
-              value={temperature}
-              onChange={(e) => setTemperature(Number(e.target.value))}
-            />
-          </label>
+          {!tripId ? (
+            <label>
+              Packing for
+              <select
+                value=""
+                disabled={busy}
+                onChange={(e) => {
+                  if (e.target.value) nav("/outfits?trip=" + e.target.value);
+                }}
+              >
+                <option value="">Just browsing</option>
+                {trips.map((trip) => (
+                  <option key={trip.id} value={trip.id}>
+                    {trip.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <details className="fashion-panel" open={!outfits.length}>
+            <summary>
+              Fashion settings · {occasion} · {temperature}°C
+            </summary>
+            <fieldset className="fashion-settings" disabled={busy || !profile}>
+              <legend className="sr-only">Fashion settings</legend>
+              <label>
+                What’s the occasion?
+                <select
+                  value={occasion}
+                  onChange={(e) =>
+                    setOccasion(
+                      e.target.value as Schema["OutfitRequest"]["occasion"],
+                    )
+                  }
+                >
+                  {["walking", "dinner", "business", "outdoors"].map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Expected temperature (°C)
+                <input
+                  type="number"
+                  min="-30"
+                  max="50"
+                  value={temperature}
+                  onChange={(e) => setTemperature(Number(e.target.value))}
+                />
+              </label>
+              <label>
+                Preferred style
+                <select
+                  value={fashion.preferred_style || ""}
+                  onChange={(e) =>
+                    setFashion((f) => ({
+                      ...f,
+                      preferred_style: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="">Any style</option>
+                  {Array.from(new Set(items.map((item) => item.style)))
+                    .sort()
+                    .map((style) => (
+                      <option key={style}>{style}</option>
+                    ))}
+                </select>
+              </label>
+              <div className="fashion-colors">
+                <p id="fashion-colors-label">Preferred colors</p>
+                <div className="chips" aria-labelledby="fashion-colors-label">
+                  {Array.from(new Set(items.map((item) => item.color)))
+                    .sort()
+                    .map((color) => (
+                      <button
+                        type="button"
+                        key={color}
+                        aria-pressed={
+                          fashion.preferred_colors?.includes(color) || false
+                        }
+                        onClick={() =>
+                          setFashion((f) => ({
+                            ...f,
+                            preferred_colors: f.preferred_colors?.includes(
+                              color,
+                            )
+                              ? f.preferred_colors.filter((c) => c !== color)
+                              : [...(f.preferred_colors || []), color].slice(
+                                  0,
+                                  10,
+                                ),
+                          }))
+                        }
+                      >
+                        {color}
+                      </button>
+                    ))}
+                </div>
+              </div>
+              <label className="fashion-owned">
+                <input
+                  type="checkbox"
+                  checked={fashion.owned_only || false}
+                  onChange={(e) =>
+                    setFashion((f) => ({ ...f, owned_only: e.target.checked }))
+                  }
+                />
+                Only clothes I own
+              </label>
+              <button
+                className="outline-button"
+                onClick={() => void saveSettings()}
+              >
+                Save fashion settings
+              </button>
+            </fieldset>
+          </details>
           <p className="annotation">
-            Your estimate, not a live forecast. Only ready clothing is
-            considered.
+            Style and colors guide ranking. Your temperature is an estimate, not
+            a live forecast. Only ready clothing is considered.
           </p>
           <button
             className="ink-button"
-            disabled={busy}
+            disabled={busy || !profile}
             onClick={() => void generate()}
           >
             Generate outfits
@@ -579,19 +737,6 @@ export function Outfits({ nav, tripId }: { nav: Navigate; tripId?: string }) {
             <strong>{liked}</strong>
             <span>looks you love</span>
           </div>
-          {tripId ? (
-            <button
-              className="outline-button"
-              onClick={() => nav("/packing?trip=" + tripId)}
-            >
-              Review & pack liked looks ↗
-            </button>
-          ) : (
-            <Note>
-              Likes are saved without a trip. Choose a trip from Home to turn
-              looks into packing.
-            </Note>
-          )}
         </aside>
         <section className="swipe-section">
           {error ? <Note kind="error">{error}</Note> : null}
@@ -679,6 +824,14 @@ export function Outfits({ nav, tripId }: { nav: Navigate; tripId?: string }) {
               <details>
                 <summary>View outfit details</summary>
                 <p>{outfit.explanation}</p>
+                <ul>
+                  {outfit.item_ids.map((id) => (
+                    <li key={id}>
+                      {items.find((item) => item.id === id)?.name ||
+                        "Removed piece"}
+                    </li>
+                  ))}
+                </ul>
                 <p>
                   Suitable days:{" "}
                   {outfit.suitable_days.join(", ") || "An everyday possibility"}
@@ -700,6 +853,20 @@ export function Outfits({ nav, tripId }: { nav: Navigate; tripId?: string }) {
                 <button onClick={() => void undo()}>Undo last swipe</button>
               ) : null}
             </Empty>
+          )}
+          {tripId ? (
+            <button
+              className="ink-button"
+              disabled={busy || liked === 0}
+              onClick={() => void finish()}
+            >
+              Done · What to pack →
+            </button>
+          ) : (
+            <Note>
+              Likes are saved without a trip. Select a trip under “Packing for”
+              before generating looks for its packing list.
+            </Note>
           )}
           <p className="annotation swipe-help">
             Swipe or drag · ← pass · → like · U undo
@@ -1092,9 +1259,11 @@ export function Briefing({ nav, tripId }: { nav: Navigate; tripId: string }) {
 export function Preferences({
   profile,
   refresh,
+  nav,
 }: {
   profile: Schema["Profile"];
   refresh: () => Promise<void>;
+  nav: Navigate;
 }) {
   const [dietary, setDietary] = useState(profile.dietary),
     [accessibility, setAccessibility] = useState(profile.accessibility),
@@ -1112,6 +1281,7 @@ export function Preferences({
           travel_style: profile.travel_style,
           interests: profile.interests,
           notification_preference: notification,
+          fashion: profile.fashion,
         },
         profile.version,
       );
@@ -1128,6 +1298,9 @@ export function Preferences({
         title="The little details."
         note="Global preferences stay separate from each trip’s notes."
       />
+      <button className="outline-button" onClick={() => nav("/outfits")}>
+        Fashion settings & outfits →
+      </button>
       <form className="notebook-form" onSubmit={save}>
         <label>
           Dietary preferences

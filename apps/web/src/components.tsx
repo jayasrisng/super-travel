@@ -102,7 +102,7 @@ export function Theme() {
       onClick={() => setTheme((t) => (t === "light" ? "dark" : "light"))}
     >
       {theme === "light" ? "☾" : "☀"}
-      <span>{theme === "light" ? "Chalkboard" : "Paper"}</span>
+      <span>{theme === "light" ? "Evening" : "Day"}</span>
     </button>
   );
 }
@@ -229,18 +229,84 @@ export function OutfitLook({
       aria-label={`Illustrated outfit: ${outfit.title}`}
     >
       <span className="look-caption">look no. {outfit.id.slice(0, 4)}</span>
-      <div className="lookbook-garments">
-        {selected.map((item, i) =>
-          item ? (
-            <figure className={`look-${item.category}`} key={item.id}>
-              <img src={item.image} alt={item.name} />
-              <figcaption>{item.name}</figcaption>
-            </figure>
-          ) : (
-            <p key={i}>Item removed — choose a substitution.</p>
-          ),
+      <svg
+        className="complete-look"
+        viewBox="0 0 340 480"
+        role="img"
+        aria-label={`Complete outfit: ${selected
+          .filter(Boolean)
+          .map((item) => item!.name)
+          .join(", ")}`}
+      >
+        <ellipse
+          cx="158"
+          cy="456"
+          rx="91"
+          ry="7"
+          fill="currentColor"
+          opacity=".06"
+        />
+        {(["bottoms", "tops", "shoes", "accessories"] as const).map(
+          (category) => {
+            const item = selected.find((piece) => piece?.category === category);
+            if (!item) return null;
+            const placement = {
+              tops: {
+                x: 73,
+                y: 34,
+                width: 170,
+                height: 205,
+                crop: "58 38 164 192",
+              },
+              bottoms: {
+                x: 99,
+                y: 225,
+                width: 118,
+                height: 199,
+                crop: "82 40 118 198",
+              },
+              shoes: {
+                x: 76,
+                y: 410,
+                width: 160,
+                height: 66,
+                crop: "50 115 180 88",
+              },
+              accessories: {
+                x: 243,
+                y: 115,
+                width: 87,
+                height: 130,
+                crop: "30 35 220 205",
+              },
+            }[category];
+            return (
+              <svg
+                key={item.id}
+                x={placement.x}
+                y={placement.y}
+                width={placement.width}
+                height={placement.height}
+                viewBox={
+                  item.image_mode === "illustration"
+                    ? placement.crop
+                    : "0 0 280 280"
+                }
+              >
+                <image
+                  href={item.image}
+                  width="280"
+                  height="280"
+                  preserveAspectRatio="xMidYMid meet"
+                />
+              </svg>
+            );
+          },
         )}
-      </div>
+      </svg>
+      {selected.some((item) => !item) ? (
+        <p>Item removed — choose a substitution.</p>
+      ) : null}
       <span className="look-foot">
         a little less to pack, a little more to wear.
       </span>

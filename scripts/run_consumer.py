@@ -18,4 +18,9 @@ if __name__ == "__main__":
     os.environ["APP_ENV"] = "local"
     os.environ.setdefault("WONDER_AGENT_MODE", "fixture")
     os.environ.setdefault("WONDER_DB_PATH", str(root / "wonder-consumer.sqlite3"))
-    uvicorn.run("super_travel.control.app:app", host="127.0.0.1", port=8000, access_log=False)
+    uvicorn.run(
+        "super_travel.control.app:app",
+        host="127.0.0.1",
+        port=int(os.environ.get("WONDER_API_PORT", "8000")),
+        access_log=False,
+    )

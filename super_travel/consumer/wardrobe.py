@@ -106,7 +106,8 @@ class WardrobeService:
         return self.put(actor, "wardrobe", item)
 
     def outfits(self, actor, request):
-        self.initialize(actor)
+        profile = self.initialize(actor)
+        fashion = profile.get("fashion", {})
         trip = self.owned(actor, "trip", request.trip_id) if request.trip_id else None
         clothing = self.collection(actor, "wardrobe")
         trip_availability = (
@@ -125,6 +126,9 @@ class WardrobeService:
                 and item["availability"] == "ready"
                 and trip_availability.get(item["id"], "ready") == "ready"
                 and request.occasion in item["occasions"]
+                and (
+                    not fashion.get("owned_only") or item["ownership_status"] == "owned"
+                )
             ]
             for key in ("tops", "bottoms", "shoes", "accessories")
         }
@@ -177,7 +181,10 @@ class WardrobeService:
             if votes.get(identity) == "dislike":
                 continue
             score = sum(
-                (3 if item["favorite"] else 0) + (2 if item["id"] in liked_items else 0)
+                (3 if item["favorite"] else 0)
+                + (2 if item["id"] in liked_items else 0)
+                + (3 if item["style"] == fashion.get("preferred_style") else 0)
+                + (2 if item["color"] in fashion.get("preferred_colors", []) else 0)
                 for item in choices
             )
             # Neutral capsule colours pair consistently; accents count at most once.

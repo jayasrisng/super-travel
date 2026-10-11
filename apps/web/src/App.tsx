@@ -5,6 +5,7 @@ import { TripForm, TripPage } from "./trip";
 import { GroupPage } from "./group";
 import { Wardrobe, Outfits, Packing, Briefing, Preferences } from "./wardrobe";
 import { Magic } from "./magic";
+import { Advisor } from "./advisor";
 
 export type Navigate = (path: string) => void;
 export default function App() {
@@ -58,7 +59,24 @@ export default function App() {
             onClick={() => nav("/")}
             aria-label="Wonder home"
           >
-            wonder<span className="brand-star">✳</span>
+            <svg className="brand-orbit" viewBox="0 0 60 44" aria-hidden="true">
+              <circle cx="25" cy="25" r="14" fill="currentColor" />
+              <ellipse
+                cx="26"
+                cy="25"
+                rx="27"
+                ry="9"
+                transform="rotate(-22 26 25)"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+              />
+              <path
+                d="m42 4 8 3 7-2-7 5-1 6-3-5-7-1 6-2Z"
+                fill="currentColor"
+              />
+            </svg>
+            Wonder
           </button>
           <nav aria-label="Main navigation">
             <button
@@ -88,6 +106,12 @@ export default function App() {
               onClick={() => nav("/magic" + (tripId ? "?trip=" + tripId : ""))}
             >
               Magic <span aria-hidden>✧</span>
+            </button>
+            <button
+              aria-current={view === "advisor" ? "page" : undefined}
+              onClick={() => nav("/advisor")}
+            >
+              My advisor
             </button>
           </nav>
           <Theme />
@@ -125,17 +149,19 @@ export default function App() {
           ) : view === "wardrobe" ? (
             <Wardrobe nav={nav} tripId={tripId} />
           ) : view === "outfits" ? (
-            <Outfits nav={nav} tripId={tripId} />
+            <Outfits key={tripId || "standalone"} nav={nav} tripId={tripId} />
           ) : view === "packing" && tripId ? (
             <Packing nav={nav} tripId={tripId} />
           ) : view === "briefing" && tripId ? (
             <Briefing nav={nav} tripId={tripId} />
           ) : view === "magic" ? (
             <Magic tripId={tripId} />
+          ) : view === "advisor" ? (
+            <Advisor />
           ) : view === "group" && tripId ? (
             <GroupPage id={tripId} />
           ) : view === "preferences" ? (
-            <Preferences profile={home.profile} refresh={refresh} />
+            <Preferences profile={home.profile} refresh={refresh} nav={nav} />
           ) : (
             <Empty title="This page needs a trip">
               <button onClick={() => nav("/")}>Back home</button>

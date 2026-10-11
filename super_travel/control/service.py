@@ -1,16 +1,85 @@
 """Bounded worker and actor-scoped application operations."""
 
 import json
-from datetime import timedelta
+from datetime import date, timedelta
 from uuid import uuid4
 
 from pydantic import TypeAdapter, ValidationError
 
+from super_travel.agents.essentials.proposal import EssentialsProposalAgent
 from super_travel.agents.explore import ExploreAgent, ProviderUnavailable
 from super_travel.agents.proposals import PackingAgent, PlanningAgent
+from super_travel.agents.recovery.proposal import RecoveryProposalAgent
+from super_travel.agents.voice import VoiceQuoteAgent
 from super_travel.consumer.agents import HelperAdapter
-from super_travel.control.schemas import AgentRun, RunRequest
+from super_travel.control.schemas import (
+    AdvisorLink,
+    AgentRun,
+    InsurancePolicy,
+    Intake,
+    Location,
+    Message,
+    MessageCreate,
+    RunRequest,
+    Trip,
+)
 from super_travel.control.store import ControlError
+from super_travel.core.geo import destination
+
+# Deterministic message triage: (topic, words that all-of-any-group must match).
+INSURANCE_WORDS = ("insurance", "insured", "policy", "coverage", "cover")
+BORDER_WORDS = (
+    "border",
+    "officer",
+    "immigration",
+    "passport control",
+    "customs",
+    "entry",
+    "airport",
+)
+DISRUPTION_WORDS = ("delay", "delayed", "cancel", "missed", "bag", "luggage", "lost")
+
+
+def triage(text):
+    lower = text.lower()
+    if any(w in lower for w in INSURANCE_WORDS):
+        at_border = any(w in lower for w in BORDER_WORDS)
+        return {
+            "topic": "insurance_proof",
+            "urgency": "urgent" if at_border else "normal",
+            "suggested_action": "voice_quotes",
+            "reason": "Traveler needs proof of travel insurance"
+            + (" at the border" if at_border else ""),
+        }
+    if any(w in lower for w in DISRUPTION_WORDS):
+        return {
+            "topic": "disruption",
+            "urgency": "urgent",
+            "suggested_action": "manage_recover",
+            "reason": "Traveler reports a disruption",
+        }
+    return {
+        "topic": "general",
+        "urgency": "normal",
+        "suggested_action": "reply",
+        "reason": "General question",
+    }
+
+
+# Intake interests (free text) -> Magic candidate categories.
+MAGIC_CATEGORIES = {
+    "food": ("food", "eat", "restaurant", "tapas", "market", "cafe", "coffee"),
+    "nature": ("park", "beach", "garden", "nature", "outdoor", "hike"),
+    "culture": (
+        "museum",
+        "aquarium",
+        "art",
+        "history",
+        "architecture",
+        "culture",
+        "gothic",
+    ),
+}
 
 
 class Service:
@@ -20,6 +89,9 @@ class Service:
             "plan_book": PlanningAgent(mode),
             "pack_shop": PackingAgent(mode),
             "explore_magic": ExploreAgent(mode),
+            "travel_essentials": EssentialsProposalAgent(mode),
+            "manage_recover": RecoveryProposalAgent(mode),
+            "voice_quotes": VoiceQuoteAgent(mode),
             "essentials": HelperAdapter("essentials", mode),
             "recovery": HelperAdapter("recovery", mode),
         }
@@ -92,9 +164,16 @@ class Service:
                 "invalid_constraints",
                 "Trip overrides produce invalid dates or constraints",
             ) from exc
-        if request.agent != "explore_magic" and any(
-            getattr(resolved.input, field) is None
-            for field in ("destination", "start_date", "end_date")
+        disruption_only = (
+            request.agent == "manage_recover" and resolved.input.disruption is not None
+        )
+        if (
+            request.agent != "explore_magic"
+            and not disruption_only
+            and any(
+                getattr(resolved.input, field) is None
+                for field in ("destination", "start_date", "end_date")
+            )
         ):
             raise ControlError(
                 422,
@@ -117,6 +196,242 @@ class Service:
         self.store.insert(actor, "run", body, resolved.model_dump(mode="json"))
         return body
 
+    def create_intake(self, actor, intake):
+        """Create the trip, record the intake and queue every agent that can run for it.
+
+        Runs inside the caller's store transaction, so all of it commits or none does.
+        """
+        now = self.store.now()
+        place = destination(intake.destination)
+        timezone = place["timezone"] if place else "Europe/Madrid"
+        trip = Trip(
+            id=uuid4(),
+            owner_user_id=actor,
+            title=f"{intake.client_name.split()[0]}'s {intake.destination.split(',')[0]} trip",
+            destination=intake.destination,
+            start_date=intake.start_date,
+            end_date=intake.end_date,
+            timezone=timezone,
+            currency=place["currency"]
+            if place and place["currency"] in ("EUR", "USD", "JPY")
+            else "EUR",
+            traveler_configuration=intake.traveler_configuration,
+            interests=intake.interests,
+        ).model_dump(mode="json")
+        self.store.insert(actor, "trip", trip)
+
+        trip_id = trip["id"]
+        runs = []
+        requests = {
+            "plan_book": {},
+            "pack_shop": {},
+            "travel_essentials": {"home_currency": intake.home_currency},
+            "manage_recover": {},
+        }
+        for agent, values in requests.items():
+            request = TypeAdapter(RunRequest).validate_python(
+                {"agent": agent, "trip_id": trip_id, "input": values}
+            )
+            runs.append(
+                {"agent": agent, "run_id": self.create_run(actor, request)["id"]}
+            )
+
+        center = place and Location(latitude=place["lat"], longitude=place["lon"])
+        # Preserve the advisor demo's declared Barcelona coverage; the consumer
+        # fixture adapter separately accepts entered origins in other cities.
+        if (
+            center
+            and 41.32 <= center.latitude <= 41.47
+            and 2.05 <= center.longitude <= 2.23
+        ):
+            text = " ".join(intake.interests).lower()
+            categories = [
+                c
+                for c, words in MAGIC_CATEGORIES.items()
+                if any(w in text for w in words)
+            ]
+            request = TypeAdapter(RunRequest).validate_python(
+                {
+                    "agent": "explore_magic",
+                    "trip_id": trip_id,
+                    "input": {
+                        "location": center.model_dump(),
+                        "available_minutes": 120,
+                        "interests": categories,
+                    },
+                }
+            )
+            runs.append(
+                {
+                    "agent": "explore_magic",
+                    "run_id": self.create_run(actor, request)["id"],
+                }
+            )
+        else:
+            runs.append(
+                {
+                    "agent": "explore_magic",
+                    "run_id": None,
+                    "skipped_reason": "Magic covers the Barcelona demo area only",
+                }
+            )
+
+        body = Intake(
+            **intake.model_dump(),
+            id=uuid4(),
+            trip_id=trip_id,
+            created_at=now,
+            runs=runs,
+            client_code=self.new_client_code(),
+        ).model_dump(mode="json")
+        self.store.insert(actor, "intake", body)
+        return body
+
+    CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no 0/O/1/I
+
+    def new_client_code(self):
+        import secrets
+
+        while True:
+            code = "".join(secrets.choice(self.CODE_ALPHABET) for _ in range(6))
+            taken = self.store.db.execute(
+                "SELECT 1 FROM objects WHERE kind='intake' AND json_extract(body,'$.client_code')=?", (code,)
+            ).fetchone()
+            if not taken:
+                return code
+
+    # ---- traveler side: a consumer actor linked to an agency trip by client code ----
+
+    def link_advisor(self, consumer, code):
+        row = self.store.db.execute(
+            "SELECT actor, body FROM objects WHERE kind='intake' AND json_extract(body,'$.client_code')=?",
+            (code.strip().upper(),),
+        ).fetchone()
+        if not row:
+            raise ControlError(404, "not_found", "No trip matches that code. Check it with your advisor.")
+        intake = json.loads(row["body"])
+        self.store.db.execute(
+            "DELETE FROM objects WHERE actor=? AND kind='advisor_link'", (str(consumer),)
+        )  # one advisor connection per traveler
+        link = AdvisorLink(
+            id=uuid4(), intake_id=intake["id"], trip_id=intake["trip_id"], client_name=intake["client_name"],
+            advisor_name=intake.get("advisor_name"), destination=intake["destination"],
+            start_date=intake["start_date"], end_date=intake["end_date"],
+        ).model_dump(mode="json")
+        self.store.insert(consumer, "advisor_link", {**link, "agency_actor": row["actor"]})
+        return link
+
+    def advisor_link(self, consumer):
+        """Returns (public link, agency actor) for the traveler, or raises 404."""
+        row = self.store.db.execute(
+            "SELECT body FROM objects WHERE actor=? AND kind='advisor_link'", (str(consumer),)
+        ).fetchone()
+        if not row:
+            raise ControlError(404, "not_linked", "Connect to your advisor with the code they gave you")
+        body = json.loads(row["body"])
+        agency = body.pop("agency_actor")
+        return body, agency
+
+    def traveler_messages(self, consumer):
+        link, agency = self.advisor_link(consumer)
+        return self.store.thread(agency, "message", link["trip_id"])
+
+    def traveler_send(self, consumer, text):
+        link, agency = self.advisor_link(consumer)
+        payload = MessageCreate(sender="traveler", text=text)  # the traveler side can only speak as the traveler
+        return self.create_message(agency, link["trip_id"], payload)
+
+    def traveler_policy(self, consumer, policy_id):
+        link, agency = self.advisor_link(consumer)
+        policy = self.store.get(agency, "policy", policy_id)
+        if policy["trip_id"] != link["trip_id"]:
+            raise ControlError(404, "not_found", "Resource not found")
+        return policy
+
+    def intake_for_trip(self, actor, trip_id):
+        intakes, _ = self.store.list(actor, "intake", limit=1000)
+        return next((i for i in intakes if i["trip_id"] == str(trip_id)), None)
+
+    def create_message(self, actor, trip_id, payload):
+        self.store.get(actor, "trip", trip_id)  # 404 unless the actor owns the trip
+        if payload.attachment:
+            policy = self.store.get(actor, "policy", payload.attachment.policy_id)
+            if policy["trip_id"] != str(trip_id):
+                raise ControlError(
+                    422, "invalid_attachment", "Attachment belongs to another trip"
+                )
+        body = Message(
+            **payload.model_dump(),
+            id=uuid4(),
+            trip_id=trip_id,
+            created_at=self.store.now(),
+            triage=triage(payload.text) if payload.sender == "traveler" else None,
+        ).model_dump(mode="json")
+        self.store.insert(actor, "message", body)
+        return body
+
+    def create_policy(self, actor, trip_id, payload):
+        """Advisor approval of a voice-agent quote. Issues a SIMULATED policy record."""
+        trip = self.store.get(actor, "trip", trip_id)
+        run = self.store.get(actor, "run", payload.run_id)
+        if (
+            run["agent"] != "voice_quotes"
+            or run["trip_id"] != str(trip_id)
+            or run["status"] != "succeeded"
+        ):
+            raise ControlError(
+                409,
+                "run_not_ready",
+                "Approve a quote from this trip's finished voice-agent run",
+            )
+        quote = next(
+            (
+                c["quote"]
+                for c in run["proposal"]["calls"]
+                if c["quote"] and c["quote"]["quote_id"] == payload.quote_id
+            ),
+            None,
+        )
+        if quote is None:
+            raise ControlError(404, "not_found", "Quote not found")
+        if not quote["meets_requirements"]:
+            raise ControlError(
+                422,
+                "quote_not_eligible",
+                "This quote does not meet the coverage requirements",
+            )
+        intake = self.intake_for_trip(actor, trip_id)
+        configuration = trip["traveler_configuration"]
+        insured = [intake["client_name"]] if intake else ["Lead traveler"]
+        insured += ["Adult traveler"] * (configuration["adult_count"] - 1)
+        ages = (intake or {}).get("child_ages", [])
+        insured += [
+            f"Child, age {ages[i]}" if i < len(ages) else "Child"
+            for i in range(configuration["child_count"])
+        ]
+        insured += ["Infant"] * configuration["infant_count"]
+        now = self.store.now()
+        start = max(now.date(), date.fromisoformat(trip["start_date"]))
+        body = InsurancePolicy(
+            id=uuid4(),
+            trip_id=trip_id,
+            run_id=payload.run_id,
+            quote_id=quote["quote_id"],
+            policy_number=f"SIM-{uuid4().hex[:8].upper()}",
+            insurer=quote["insurer"],
+            insured=insured,
+            coverage_start=start,
+            coverage_end=max(start, date.fromisoformat(trip["end_date"])),
+            premium=quote["premium"],
+            medical_cover=quote["medical_cover"],
+            deductible=quote["deductible"],
+            repatriation=quote["repatriation"],
+            schengen_compliant=quote["schengen_compliant"],
+            issued_at=now,
+        ).model_dump(mode="json")
+        self.store.insert(actor, "policy", body)
+        return body
+
     def work_once(self):
         claimed = self.store.claim()
         if not claimed:
@@ -124,8 +439,11 @@ class Service:
         body, payload, lease = claimed
         try:
             request = TypeAdapter(RunRequest).validate_python(payload)
-            proposal = self.agents[request.agent].propose(
-                request.input, self.store.now()
+            agent = self.agents[request.agent]
+            proposal = (
+                agent.propose(request.input, self.store.now(), run_id=body["id"])
+                if getattr(agent, "needs_run_id", False)
+                else agent.propose(request.input, self.store.now())
             )
             validated = AgentRun.model_validate(
                 {

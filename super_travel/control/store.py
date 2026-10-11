@@ -138,11 +138,21 @@ class Store:
 
         return self.transaction(operation)
 
-    def list(self, actor, kind, cursor=None, limit=20):
+    def thread(self, actor, kind, trip_id):
+        """All of a trip's records of `kind` in insertion order (stable even when timestamps tie)."""
         rows = self.db.execute(
-            "SELECT body FROM objects WHERE actor=? AND kind=? ORDER BY created DESC,id DESC",
-            (str(actor), kind),
+            "SELECT body FROM objects WHERE actor=? AND kind=? AND json_extract(body,'$.trip_id')=? ORDER BY rowid",
+            (str(actor), kind, str(trip_id)),
         ).fetchall()
+        return [json.loads(row["body"]) for row in rows]
+
+    def list(self, actor, kind, cursor=None, limit=20, trip_id=None):
+        query = "SELECT body FROM objects WHERE actor=? AND kind=?"
+        params = [str(actor), kind]
+        if trip_id is not None:
+            query += " AND json_extract(body,'$.trip_id')=?"
+            params.append(str(trip_id))
+        rows = self.db.execute(query + " ORDER BY created DESC,id DESC", params).fetchall()
         values = [json.loads(row["body"]) for row in rows]
         if cursor:
             positions = [

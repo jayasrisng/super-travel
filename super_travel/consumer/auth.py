@@ -2,6 +2,7 @@
 
 import hashlib
 import hmac
+import os
 import time
 from uuid import UUID, uuid4
 
@@ -11,16 +12,20 @@ from super_travel.control.store import ControlError
 def local_request(request):
     host = request.url.hostname
     origin = request.headers.get("origin", "")
+    ports = {"5173", "8000"}
+    for name in ("WONDER_WEB_PORT", "WONDER_API_PORT"):
+        port = os.environ.get(name, "")
+        if port.isdecimal() and 1 <= int(port) <= 65535:
+            ports.add(str(int(port)))
+    trusted_origins = {
+        f"http://{hostname}:{port}"
+        for hostname in ("localhost", "127.0.0.1")
+        for port in ports
+    }
     if (
         host not in ("127.0.0.1", "localhost", "testserver")
         or origin
-        and origin
-        not in (
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "http://localhost:8000",
-            "http://127.0.0.1:8000",
-        )
+        and origin not in trusted_origins
     ):
         raise ControlError(
             403,

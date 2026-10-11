@@ -7,7 +7,6 @@ from uuid import UUID
 from pydantic import AwareDatetime, Field, model_validator
 
 from super_travel.control.schemas import (
-    AgentKey,
     MagicInput,
     Model,
     Money,
@@ -15,6 +14,10 @@ from super_travel.control.schemas import (
     Text,
     Trip,
 )
+
+ConsumerAgentKey = Literal[
+    "plan_book", "pack_shop", "explore_magic", "essentials", "recovery"
+]
 
 TaskStatus = Literal[
     "not_started",
@@ -33,7 +36,7 @@ class TaskCreate(Model):
     title: Text
     description: str = Field(default="", max_length=2000)
     agent_instructions: str = Field(default="", max_length=2000)
-    assigned_agent: AgentKey = "plan_book"
+    assigned_agent: ConsumerAgentKey = "plan_book"
     priority: Literal["must", "should", "could"] = "should"
     due_date: date | None = None
     requires_approval: bool = True
@@ -43,7 +46,7 @@ class TaskPatch(Model):
     title: Text | None = None
     description: str | None = Field(default=None, max_length=2000)
     agent_instructions: str | None = Field(default=None, max_length=2000)
-    assigned_agent: AgentKey | None = None
+    assigned_agent: ConsumerAgentKey | None = None
     priority: Literal["must", "should", "could"] | None = None
     due_date: date | None = None
     requires_approval: bool | None = None
@@ -66,12 +69,21 @@ class TaskDecision(Model):
     action: Literal["complete", "reopen", "approve", "reject"]
 
 
+class FashionPreferences(Model):
+    occasion: Literal["walking", "dinner", "business", "outdoors"] = "walking"
+    temperature_c: int = Field(default=18, ge=-30, le=50, strict=True)
+    preferred_style: str = Field(default="", max_length=100)
+    preferred_colors: list[str] = Field(default_factory=list, max_length=10)
+    owned_only: bool = False
+
+
 class Preferences(Model):
     dietary: str = Field(default="", max_length=500)
     accessibility: str = Field(default="", max_length=500)
     travel_style: str = Field(default="unhurried", max_length=100)
     interests: list[Text] = Field(default_factory=list, max_length=20)
     notification_preference: bool = False
+    fashion: FashionPreferences = Field(default_factory=FashionPreferences)
 
 
 class Profile(Preferences):
