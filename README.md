@@ -110,13 +110,18 @@ node dashboard/serve.mjs                                                        
 uv run python scripts/seed_demo.py                                                          # Sarah's trip, starting today
 ```
 
-**Demo: Sarah at the border.** Open the customer app at `localhost:5180/app/` (phone width) and the dashboard at `localhost:5180/`.
+**Demo: Sarah at the border.** Run the API with `WONDER_DEMO_AUTH=true` (for the consumer web app), `node dashboard/serve.mjs`, and the web app (`cd apps/web && pnpm dev`).
 
-1. In the app, Sarah taps "I'm at border control… asking for proof of travel insurance". The message is triaged as urgent by code.
-2. The dashboard shows an urgent case with the suggested action. The advisor clicks **Call insurers for the cheapest quote**, which deploys the voice agent (`voice_quotes` run).
-3. The voice agent calls 5 insurers (simulated, fictional insurers, with transcripts). Wonder code checks each quote against Schengen-standard requirements (≥ €30,000 medical with repatriation, immediate certificate) and recommends the cheapest one that qualifies.
-4. The advisor reads the quotes and transcripts, then clicks **Approve & send to Sarah**. This issues a *simulated* policy and sends it in the chat.
-5. Sarah taps **Show to officer** for a full-screen certificate, then **I'm through ✓**. The dashboard marks the case resolved.
+1. Seed or onboard Sarah. Her intake card on the dashboard shows a **client app code**. In the consumer web app (`localhost:5173/advisor`), Sarah enters it under **My advisor**. The lightweight `/app/` page on the dashboard server works too.
+2. Sarah messages "I'm at border control… asking for proof of travel insurance". It's triaged as urgent by code, and the dashboard shows an urgent case.
+3. The advisor clicks **Call insurers for the cheapest quote**, which runs the voice agent:
+   - **With Dial on**, it places real AI voice calls through Dial to the numbers in `DIAL_INSURER_NUMBERS` (two at a time), waits for each call to end, and reads the quote from the transcript. Claude reads it if `ANTHROPIC_API_KEY` is set; otherwise keyword rules do.
+   - **With Dial off**, it simulates calls to fictional insurers.
+   - Either way, Wonder code checks the Schengen-standard requirements and recommends the cheapest quote that qualifies.
+4. The advisor clicks **Approve & send to Sarah**. A *simulated* policy is issued and appears in Sarah's app as a card.
+5. Sarah taps **Show to officer**, then **I'm through ✓**. The dashboard case resolves.
+
+**Turning on real calls (Dial).** In `.env` set `DIAL_ENABLED=true`, `DIAL_API_KEY`, `DIAL_SENDER_NUMBER` (your Dial number ID or E.164) and `DIAL_INSURER_NUMBERS="Name=+1555…;Other=+1555…"`, then restart the API. Only those numbers are ever dialled: use team test phones playing insurers, not real businesses. Each call is capped by `DIAL_MAX_CALL_SECONDS` and placed with an idempotency key, so a retried run never re-dials the same number. The voice agent never gives personal or payment details and never buys anything.
 
 Other dashboard features: per-agent proposals for all five agents, report-a-disruption (EU261 / US DOT / baggage), save Magic ideas, re-run agents. Onboarding's **Send to Wonder agents** creates a new client. Approve/Dismiss on the five agents' proposals is browser-local. No real calls, purchases or insurance policies are made; the onboarding page's images, fonts and analytics script are still missing.
 

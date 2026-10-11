@@ -144,7 +144,10 @@ function currentCase() {
   return { request, voice, sent, through, step, open: !through };
 }
 
-const animating = (run) => run && state.animate[run.id] && revealed(run) < run.proposal?.calls.length;
+const voiceInfo = () => state.agentsInfo.find((a) => a.agent === "voice_quotes");
+const voiceLive = () => /Dial/.test(voiceInfo()?.limitation || "");
+// Simulated calls are instant, so they're paced on screen; live Dial calls show real progress.
+const animating = (run) => run && run.proposal?.data_mode !== "live" && state.animate[run.id] && revealed(run) < run.proposal?.calls.length;
 function revealed(run) {
   const started = state.animate[run.id];
   if (!started) return Infinity;
@@ -180,11 +183,11 @@ function callRow(call, index, run) {
   if (index === shown && animating(run)) return `<li class="call live"><span class="spinner" aria-hidden="true"></span><b>${esc(call.insurer)}</b><span class="call-state">On the call · ${esc(call.phone)}</span></li>`;
   const q = call.quote;
   const best = run.proposal.recommended_quote_id && q?.quote_id === run.proposal.recommended_quote_id;
-  const outcome = call.outcome === "quoted" ? `${esc(money(q.premium))}` : call.outcome === "declined" ? "Declined" : "No answer";
+  const outcome = { quoted: q && money(q.premium), declined: "No quote", no_answer: "No answer", failed: "Call failed" }[call.outcome];
   return `<li class="call done ${best ? "best" : ""} ${q && !q.meets_requirements ? "fails" : ""}">
     <details><summary>
       <span class="call-dot ${call.outcome}"></span><b>${esc(call.insurer)}</b>
-      <span class="call-state">${outcome}${q ? ` · ${esc(money(q.medical_cover))} medical` : ""}</span>
+      <span class="call-state">${esc(outcome)}${q ? ` · ${esc(money(q.medical_cover))} medical` : ""}${call.duration_seconds ? ` · ${Math.round(call.duration_seconds / 60 * 10) / 10} min` : ""}</span>
       ${best ? `<span class="tag ok">Cheapest that qualifies</span>` : q && !q.meets_requirements ? `<span class="tag bad">Doesn't qualify</span>` : ""}
     </summary>
     ${q ? `<ul class="list call-notes">${q.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
@@ -199,15 +202,22 @@ function voicePanel(c) {
   if (!c.voice) {
     return `<div class="voice-cta"><p class="micro">Suggested action</p>
       <h4>Deploy the voice agent</h4>
-      <p>It phones travel insurers at once, asks for Schengen-standard cover for ${esc(partyLabel(state.intake))} and brings back quotes. Nothing is bought until you approve.</p>
+      <p>It phones travel insurers, asks for Schengen-standard cover for ${esc(partyLabel(state.intake))} and brings back quotes. Nothing is bought until you approve.</p>
+      <p class="voice-mode">${voiceLive() ? `<span class="tag ok">Live calls via Dial</span> ${esc(voiceInfo().limitation)}` : `<span class="tag mock">Simulated calls</span> Set DIAL_ENABLED=true to place real calls.`}</p>
       <button class="btn primary" type="button" data-deploy-voice="${esc(c.request.id)}">Call insurers for the cheapest quote</button></div>`;
   }
   const run = c.voice;
-  if (ACTIVE.includes(run.status)) return `<div class="working-note"><span class="spinner" aria-hidden="true"></span>Dialing insurers…</div>`;
+  if (ACTIVE.includes(run.status)) {
+    const secs = Math.max(0, Math.round((Date.now() - ms(run.created_at)) / 1000));
+    return `<div class="working-note"><span class="spinner" aria-hidden="true"></span>${voiceLive()
+      ? `On calls via Dial · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")} · quotes appear when the calls end`
+      : "Dialing insurers…"}</div>`;
+  }
   if (run.status === "failed") return `<div class="note warn-note">${esc(run.error?.message || "The voice agent could not finish.")}</div>`;
   const p = run.proposal;
   const done = !animating(run);
-  return `<p class="micro">${done ? esc(p.reply) : `Calling ${p.calls.length} insurers…`} <span class="tag mock">Simulated calls</span></p>
+  const modeTag = p.data_mode === "live" ? `<span class="tag ok">Live calls via Dial</span>` : `<span class="tag mock">Simulated calls</span>`;
+  return `<p class="micro">${done ? esc(p.reply) : `Calling ${p.calls.length} insurers…`} ${modeTag}</p>
     <ol class="calls">${p.calls.map((call, i) => callRow(call, i, run)).join("")}</ol>
     ${done ? `<details class="fine"><summary>Requirements checked by Wonder code</summary><ul class="list">${p.requirements.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></details>` : ""}
     ${c.sent ? `<p class="q-done">✓ Approved and sent to ${esc(name)}</p>` : ""}`;
@@ -309,6 +319,8 @@ function renderOnboarding() {
       <span class="tag ok"><span class="dot"></span>Sent to agents</span>
     </div>
     <dl class="kv">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    ${i.client_code ? `<div class="client-code"><div><p class="micro">Client app code</p><b>${esc(i.client_code)}</b></div>
+      <a class="btn" href="http://localhost:5173/advisor?code=${encodeURIComponent(i.client_code)}" target="_blank" rel="noopener">Open in Wonder app ↗</a></div>` : ""}
     <div class="note"><p class="micro">What the agents received</p>
       <ul><li>Destination, dates, party size and interests only. The client's name and needs stay with the agency.</li>
       ${i.runs.filter((r) => !r.run_id).map((r) => `<li>${esc(AGENT[r.agent].title)} skipped: ${esc(r.skipped_reason)}</li>`).join("")}</ul></div>`;

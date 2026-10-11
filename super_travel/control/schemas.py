@@ -17,7 +17,10 @@ from pydantic import (
     model_validator,
 )
 
-AgentKey = Literal[
+# Agents a consumer task can be assigned to (main's five-agent contract).
+AgentKey = Literal["plan_book", "pack_shop", "explore_magic", "essentials", "recovery"]
+# Every agent the run queue accepts: the five above plus the advisor-side agents.
+RunAgentKey = Literal[
     "plan_book", "pack_shop", "explore_magic", "essentials", "recovery",
     "travel_essentials", "manage_recover", "voice_quotes",
 ]
@@ -244,7 +247,7 @@ class MagicRequest(MagicInput):
 class TaskProposal(Model):
     item_id: Text
     title: Text
-    system: AgentKey
+    system: RunAgentKey
     due_date: date | None = None
     priority: Priority = "should"
 
@@ -445,8 +448,9 @@ class InsurerCall(Model):
     item_id: Text
     insurer: Text
     phone: str = Field(min_length=1, max_length=30)
-    outcome: Literal["quoted", "declined", "no_answer"]
+    outcome: Literal["quoted", "declined", "no_answer", "failed"]
     duration_seconds: int = Field(ge=0, le=3600, strict=True)
+    provider_call_id: str | None = None
     transcript: list[TranscriptLine] = Field(max_length=40)
     quote: InsuranceQuote | None
 
@@ -473,7 +477,7 @@ class AgentRun(Model):
     id: UUID
     actor_user_id: UUID
     trip_id: UUID | None
-    agent: AgentKey
+    agent: RunAgentKey
     status: Status
     context_version: int | None
     version: int
@@ -604,7 +608,7 @@ class IntakeCreate(Model):
 
 
 class IntakeRun(Model):
-    agent: AgentKey
+    agent: RunAgentKey
     run_id: UUID | None
     skipped_reason: str | None = None
 
@@ -614,7 +618,30 @@ class Intake(IntakeCreate):
     trip_id: UUID
     created_at: AwareDatetime
     runs: list[IntakeRun]
+    client_code: str = Field(default="", description="Code the traveler enters in the Wonder app to connect")
     version: int = 1
+
+
+class AdvisorLinkCreate(Model):
+    client_code: str = Field(min_length=4, max_length=12)
+
+
+class AdvisorLink(Model):
+    """A traveler's (consumer actor's) connection to the agency trip created from their intake."""
+
+    id: UUID
+    intake_id: UUID
+    trip_id: UUID
+    client_name: str
+    advisor_name: str | None
+    destination: str
+    start_date: date
+    end_date: date
+    version: int = 1
+
+
+class TravelerMessageCreate(Model):
+    text: Text
 
 
 class PolicyAttachment(Model):
@@ -684,7 +711,7 @@ class SavedExperience(Model):
 
 
 class AgentInfo(Model):
-    agent: AgentKey
+    agent: RunAgentKey
     prototype_name: str
     title: str
     mode: Mode

@@ -50,6 +50,8 @@ All paths include `/v1`. GET entity responses carry `ETag: "version"`. JSON is s
 | GET `/intakes`, GET `/intakes/{intake_id}` | Actor-owned intakes with their trip and run IDs |
 | POST/GET `/trips/{trip_id}/messages` | Traveler ↔ advisor chat for a trip (oldest first). Traveler messages get deterministic triage (insurance proof / disruption / general) and a suggested action. `sender` is supplied by the client in this single-token local adapter |
 | POST `/trips/{trip_id}/insurance-policies`, GET `.../{policy_id}` | Advisor approval of a `voice_quotes` quote; only quotes that meet the requirements are accepted. Issues a **simulated** policy record (no purchase) that can be attached to a message |
+| POST `/consumer/advisor-link` | Traveler (consumer-app demo session) connects to the agency trip with the intake's `client_code` |
+| GET `/consumer/advisor`, GET/POST `/consumer/advisor/messages`, GET `/consumer/advisor/policies/{id}` | Traveler side of the linked trip: read the thread, send as `traveler` only, read attached policies |
 | POST `/me/saved-experiences` | Save an unexpired recommendation from the actor's succeeded Magic run |
 | GET `/me/saved-experiences` | Actor-owned minimal saved records, cursor/limit pagination |
 | DELETE `/me/saved-experiences/{saved_id}` | Actor-owned deletion; requires `If-Match` |
@@ -68,7 +70,7 @@ Create → poll after one second → increase interval up to ten seconds → sto
 | `pack_shop` | `packing` | Categorized item quantities and preparation tasks; no purchases or packing-state mutation |
 | `explore_magic` | `explore` | Normalized provider candidates filtered/ranked by deterministic feasibility; saving creates only a private saved record |
 | `travel_essentials` | `essentials` | Deterministic briefing from curated country data, the ECB exchange rate and mock eSIM plans; no advisories or entry rules |
-| `voice_quotes` | `voice` | Voice agent that phones travel insurers for an urgent quote. Fixture provider simulates calls to fictional insurers; requirement checks and the recommendation (cheapest qualifying) are deterministic. A real telephony provider can implement `CallProvider` |
+| `voice_quotes` | `voice` | Voice agent that phones travel insurers for an urgent quote. `DIAL_ENABLED=true`: real calls via Dial (`POST /api/v1/calls` with an idempotency key, polled to completion) to `DIAL_INSURER_NUMBERS` only; quotes read from transcripts by Claude or keyword rules. Otherwise simulated calls to fictional insurers. Requirement checks and the recommendation (cheapest qualifying) are deterministic |
 | `manage_recover` | `recovery` | Deterministic EU261 / US DOT / Montreal rights for a reported disruption, with claim drafts as proposals; without a disruption, a home-prep and follow-up checklist. No flight monitoring |
 
 Standalone Plan/Pack require destination, start_date and end_date. Trip mode can omit those fields: the service reads only an actor-owned snapshot. Explicit null remains explicit and fails if a required constraint becomes absent. Unknown fields fail rather than silently accepting private documents. Traveler counts default to one adult; trip counts fill omitted fields. The model sees only the resolved input, never full TripContext, documents, passenger names, PNRs or ledger rows. The existing prototype `.run(task, trip)` adapter uses a destination/date allowlist and returns `AgentResult` without mutating the trip. Explore's prototype `.run` expects a JSON-encoded MagicInput, since free text cannot safely supply location/time.

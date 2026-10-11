@@ -11,16 +11,18 @@ from super_travel.agents.explore import ExploreAgent, ProviderUnavailable
 from super_travel.agents.proposals import PackingAgent, PlanningAgent
 from super_travel.agents.recovery.proposal import RecoveryProposalAgent
 from super_travel.agents.voice import VoiceQuoteAgent
+from super_travel.consumer.agents import HelperAdapter
 from super_travel.control.schemas import (
+    AdvisorLink,
     AgentRun,
     InsurancePolicy,
     Intake,
     Location,
     Message,
+    MessageCreate,
     RunRequest,
     Trip,
 )
-from super_travel.consumer.agents import HelperAdapter
 from super_travel.control.store import ControlError
 from super_travel.core.geo import destination
 
@@ -220,10 +222,72 @@ class Service:
                          "skipped_reason": "No known map point for this destination yet"})
 
         body = Intake(
-            **intake.model_dump(), id=uuid4(), trip_id=trip_id, created_at=now, runs=runs
+            **intake.model_dump(), id=uuid4(), trip_id=trip_id, created_at=now, runs=runs,
+            client_code=self.new_client_code(),
         ).model_dump(mode="json")
         self.store.insert(actor, "intake", body)
         return body
+
+    CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no 0/O/1/I
+
+    def new_client_code(self):
+        import secrets
+
+        while True:
+            code = "".join(secrets.choice(self.CODE_ALPHABET) for _ in range(6))
+            taken = self.store.db.execute(
+                "SELECT 1 FROM objects WHERE kind='intake' AND json_extract(body,'$.client_code')=?", (code,)
+            ).fetchone()
+            if not taken:
+                return code
+
+    # ---- traveler side: a consumer actor linked to an agency trip by client code ----
+
+    def link_advisor(self, consumer, code):
+        row = self.store.db.execute(
+            "SELECT actor, body FROM objects WHERE kind='intake' AND json_extract(body,'$.client_code')=?",
+            (code.strip().upper(),),
+        ).fetchone()
+        if not row:
+            raise ControlError(404, "not_found", "No trip matches that code. Check it with your advisor.")
+        intake = json.loads(row["body"])
+        self.store.db.execute(
+            "DELETE FROM objects WHERE actor=? AND kind='advisor_link'", (str(consumer),)
+        )  # one advisor connection per traveler
+        link = AdvisorLink(
+            id=uuid4(), intake_id=intake["id"], trip_id=intake["trip_id"], client_name=intake["client_name"],
+            advisor_name=intake.get("advisor_name"), destination=intake["destination"],
+            start_date=intake["start_date"], end_date=intake["end_date"],
+        ).model_dump(mode="json")
+        self.store.insert(consumer, "advisor_link", {**link, "agency_actor": row["actor"]})
+        return link
+
+    def advisor_link(self, consumer):
+        """Returns (public link, agency actor) for the traveler, or raises 404."""
+        row = self.store.db.execute(
+            "SELECT body FROM objects WHERE actor=? AND kind='advisor_link'", (str(consumer),)
+        ).fetchone()
+        if not row:
+            raise ControlError(404, "not_linked", "Connect to your advisor with the code they gave you")
+        body = json.loads(row["body"])
+        agency = body.pop("agency_actor")
+        return body, agency
+
+    def traveler_messages(self, consumer):
+        link, agency = self.advisor_link(consumer)
+        return self.store.thread(agency, "message", link["trip_id"])
+
+    def traveler_send(self, consumer, text):
+        link, agency = self.advisor_link(consumer)
+        payload = MessageCreate(sender="traveler", text=text)  # the traveler side can only speak as the traveler
+        return self.create_message(agency, link["trip_id"], payload)
+
+    def traveler_policy(self, consumer, policy_id):
+        link, agency = self.advisor_link(consumer)
+        policy = self.store.get(agency, "policy", policy_id)
+        if policy["trip_id"] != link["trip_id"]:
+            raise ControlError(404, "not_found", "Resource not found")
+        return policy
 
     def intake_for_trip(self, actor, trip_id):
         intakes, _ = self.store.list(actor, "intake", limit=1000)
@@ -295,8 +359,11 @@ class Service:
         body, payload, lease = claimed
         try:
             request = TypeAdapter(RunRequest).validate_python(payload)
-            proposal = self.agents[request.agent].propose(
-                request.input, self.store.now()
+            agent = self.agents[request.agent]
+            proposal = (
+                agent.propose(request.input, self.store.now(), run_id=body["id"])
+                if getattr(agent, "needs_run_id", False)
+                else agent.propose(request.input, self.store.now())
             )
             validated = AgentRun.model_validate(
                 {

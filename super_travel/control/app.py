@@ -19,6 +19,8 @@ from starlette.exceptions import HTTPException
 # FastAPI evaluates dependency defaults as declarations.
 # ruff: noqa: B008
 from super_travel.control.schemas import (
+    AdvisorLink,
+    AdvisorLinkCreate,
     AgentInfo,
     AgentRun,
     Envelope,
@@ -34,6 +36,7 @@ from super_travel.control.schemas import (
     RunRequest,
     SavedExperience,
     SaveRequest,
+    TravelerMessageCreate,
     Trip,
     TripCreate,
 )
@@ -298,7 +301,7 @@ def create_app(
                     ("manage_recover", "recovery", "Manage & Recover",
                      "Deterministic rules on reported disruptions; no flight monitoring; claims are drafts"),
                     ("voice_quotes", "voice", "Voice agent: insurance quotes",
-                     "Simulated calls to fictional insurers; no real calls, purchases or policies"),
+                     request.app.state.service.agents["voice_quotes"].describe()),
                 ]
             ],
         )
@@ -462,6 +465,52 @@ def create_app(
         )
         set_etag(response, body)
         return envelope(request, body)
+
+    # ---- traveler side (consumer app): linked to the agency trip by client code ----
+
+    @app.post("/v1/consumer/advisor-link", status_code=201, response_model=Envelope[AdvisorLink])
+    def link_advisor(
+        payload: AdvisorLinkCreate,
+        request: Request,
+        response: Response,
+        identity=Depends(actor),
+        replay_key=Depends(key),
+    ):
+        service = request.app.state.service
+        result = service.store.create(
+            identity, "/v1/consumer/advisor-link", replay_key, payload.model_dump(mode="json"),
+            lambda: envelope(request, service.link_advisor(identity, payload.client_code)),
+        )
+        set_etag(response, result["data"])
+        return result
+
+    @app.get("/v1/consumer/advisor", response_model=Envelope[AdvisorLink])
+    def get_advisor(request: Request, identity=Depends(actor)):
+        service = request.app.state.service
+        return envelope(request, service.store.transaction(lambda: service.advisor_link(identity)[0]))
+
+    @app.get("/v1/consumer/advisor/messages", response_model=Envelope[list[Message]])
+    def traveler_messages(request: Request, identity=Depends(actor)):
+        service = request.app.state.service
+        return envelope(request, service.store.transaction(lambda: service.traveler_messages(identity)))
+
+    @app.post("/v1/consumer/advisor/messages", status_code=201, response_model=Envelope[Message])
+    def traveler_send(
+        payload: TravelerMessageCreate,
+        request: Request,
+        identity=Depends(actor),
+        replay_key=Depends(key),
+    ):
+        service = request.app.state.service
+        return service.store.create(
+            identity, "/v1/consumer/advisor/messages", replay_key, payload.model_dump(mode="json"),
+            lambda: envelope(request, service.traveler_send(identity, payload.text)),
+        )
+
+    @app.get("/v1/consumer/advisor/policies/{policy_id}", response_model=Envelope[InsurancePolicy])
+    def traveler_policy(policy_id: UUID, request: Request, identity=Depends(actor)):
+        service = request.app.state.service
+        return envelope(request, service.store.transaction(lambda: service.traveler_policy(identity, policy_id)))
 
     @app.post("/v1/trips/{trip_id}/messages", status_code=201, response_model=Envelope[Message])
     def create_message(

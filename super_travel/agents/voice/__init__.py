@@ -8,9 +8,12 @@ recommendation are deterministic code, never model output.
 
 from __future__ import annotations
 
+import os
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import date
 from typing import Protocol
+from uuid import NAMESPACE_URL, uuid5
 
 from super_travel.control.schemas import VoiceQuoteInput, VoiceQuoteProposal
 
@@ -20,7 +23,7 @@ class Insurer:
     key: str
     name: str
     phone: str
-    behaviour: str  # "quote" | "decline" | "no_answer"
+    behaviour: str  # fixture: "quote" | "decline" | "no_answer"; real calls: "dial"
     adult_cents_per_day: int = 0
     child_cents_per_day: int = 0
     medical_eur: int = 0
@@ -44,8 +47,9 @@ FIXTURE_INSURERS = [
 
 class CallProvider(Protocol):
     data_mode: str
+    concurrency: int
 
-    def call(self, insurer: Insurer, request: VoiceQuoteInput, brief: str) -> dict: ...
+    def call(self, insurer: Insurer, request: VoiceQuoteInput, brief: str, idempotency_key: str = "") -> dict: ...
 
 
 def _eur(amount: int) -> str:
@@ -56,17 +60,18 @@ class FixtureCallProvider:
     """Simulated calls with deterministic, templated transcripts."""
 
     data_mode = "fixture"
+    concurrency = 1
 
-    def call(self, insurer: Insurer, request: VoiceQuoteInput, brief: str) -> dict:
+    def call(self, insurer: Insurer, request: VoiceQuoteInput, brief: str, idempotency_key: str = "") -> dict:
         agent = lambda text: {"speaker": "voice_agent", "text": text}
         them = lambda text: {"speaker": "insurer", "text": text}
         opening = agent(f"Hi, I'm Wonder's AI travel assistant calling for a client. {brief} "
                         "They need travel insurance they can show at border control right now.")
         if insurer.behaviour == "no_answer":
-            return {"outcome": "no_answer", "duration_seconds": 45, "transcript": [
+            return {"outcome": "no_answer", "duration_seconds": 45, "provider_call_id": None, "transcript": [
                 agent("Ringing… no answer after 45 seconds. Moving to the next insurer.")], "quote": None}
         if insurer.behaviour == "decline":
-            return {"outcome": "declined", "duration_seconds": 72, "transcript": [
+            return {"outcome": "declined", "duration_seconds": 72, "provider_call_id": None, "transcript": [
                 opening, them(f"Thanks for calling {insurer.name}. {insurer.decline_reason}"),
                 agent("Understood, thank you for your time.")], "quote": None}
 
@@ -98,7 +103,8 @@ class FixtureCallProvider:
             "meets_requirements": False,
             "notes": [],
         }
-        return {"outcome": "quoted", "duration_seconds": 150 + 7 * len(insurer.name), "transcript": transcript, "quote": quote}
+        return {"outcome": "quoted", "duration_seconds": 150 + 7 * len(insurer.name), "transcript": transcript,
+                "quote": quote, "provider_call_id": None}
 
 
 def _days(request: VoiceQuoteInput) -> int:
@@ -123,7 +129,8 @@ def _dates(start: date | None, end: date | None) -> str:
 
 
 def check(quote: dict, request: VoiceQuoteInput) -> dict:
-    """Deterministic requirement check; fills meets_requirements and notes."""
+    """Deterministic requirement check; fills meets_requirements and notes (keeping any extraction notes)."""
+    extra = quote.get("notes", [])
     notes = []
     if quote["medical_cover"]["currency"] != request.min_medical.currency or \
             quote["medical_cover"]["amount_minor"] < request.min_medical.amount_minor:
@@ -134,26 +141,52 @@ def check(quote: dict, request: VoiceQuoteInput) -> dict:
         notes.append("Not certified as Schengen-compliant.")
     if request.need_document_now and quote["document_delivery"] != "instant_pdf":
         notes.append("Certificate not available immediately.")
-    return {**quote, "meets_requirements": not notes, "notes": notes or ["Meets every requirement."]}
+    return {**quote, "meets_requirements": not notes, "notes": (notes or ["Meets every requirement."]) + extra}
+
+
+def provider_from_env():
+    """Dial when DIAL_ENABLED=true (real calls to DIAL_INSURER_NUMBERS only), else simulated calls."""
+    if os.getenv("DIAL_ENABLED", "false").lower() != "true":
+        return FixtureCallProvider(), FIXTURE_INSURERS
+    from super_travel.agents.voice.dial import DialCallProvider, configured_insurers
+
+    insurers = configured_insurers()
+    if not insurers:
+        raise RuntimeError("DIAL_ENABLED=true needs DIAL_INSURER_NUMBERS (team test numbers)")
+    return DialCallProvider.from_env(), insurers
 
 
 class VoiceQuoteAgent:
     name = "voice"
+    needs_run_id = True
 
     def __init__(self, mode="fixture", provider: CallProvider | None = None, insurers=None):
         self.mode = mode
-        self.provider = provider or FixtureCallProvider()
+        if provider is None:
+            provider, default_insurers = provider_from_env()
+            insurers = insurers or default_insurers
+        self.provider = provider
         self.insurers = insurers or FIXTURE_INSURERS
 
-    def propose(self, request: VoiceQuoteInput, now) -> VoiceQuoteProposal:
+    def describe(self) -> str:
+        if self.provider.data_mode == "live":
+            return f"Live calls via Dial to {len(self.insurers)} configured test numbers; quotes read from transcripts"
+        return "Simulated calls to fictional insurers; no real calls, purchases or policies"
+
+    def propose(self, request: VoiceQuoteInput, now, run_id: str = "") -> VoiceQuoteProposal:
         destination = (request.destination or "the Schengen area").split(",")[0]
         brief = f"It's {_party(request)}, travelling in {destination} {_dates(request.start_date, request.end_date)}."
-        calls = []
-        for insurer in self.insurers:
-            result = self.provider.call(insurer, request, brief)
+
+        def one(insurer: Insurer) -> dict:
+            # Stable per run + insurer, so a retried run never dials the same insurer twice.
+            key = str(uuid5(NAMESPACE_URL, f"wonder-voice/{run_id}/{insurer.phone}")) if run_id else ""
+            result = self.provider.call(insurer, request, brief, key)
             if result["quote"]:
                 result["quote"] = check(result["quote"], request)
-            calls.append({"item_id": f"call-{insurer.key}", "insurer": insurer.name, "phone": insurer.phone, **result})
+            return {"item_id": f"call-{insurer.key}", "insurer": insurer.name, "phone": insurer.phone, **result}
+
+        with ThreadPoolExecutor(max_workers=max(1, getattr(self.provider, "concurrency", 1))) as pool:
+            calls = list(pool.map(one, self.insurers))
 
         eligible = [c["quote"] for c in calls if c["quote"] and c["quote"]["meets_requirements"]]
         best = min(eligible, key=lambda q: (q["premium"]["amount_minor"], q["insurer"])) if eligible else None
@@ -161,10 +194,14 @@ class VoiceQuoteAgent:
         reply = (f"Called {len(calls)} insurers, got {quoted} quotes. Cheapest that meets the requirements: "
                  f"{best['insurer']} at €{best['premium']['amount_minor'] / 100:.2f}." if best
                  else f"Called {len(calls)} insurers; none offered cover that meets the requirements.")
+        live = self.provider.data_mode == "live"
         return VoiceQuoteProposal(
             reply=reply,
-            assumptions=["Simulated calls to fictional insurers; transcripts and prices are demo data.",
-                         "Nothing is bought until the advisor approves a quote."],
+            assumptions=[
+                "Real calls placed through Dial to the agency's configured numbers; prices are what each insurer said "
+                "on the call and must be confirmed before binding." if live
+                else "Simulated calls to fictional insurers; transcripts and prices are demo data.",
+                "Nothing is bought until the advisor approves a quote."],
             sources=[],
             data_mode=self.provider.data_mode,
             requirements=[
