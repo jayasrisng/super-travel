@@ -1,0 +1,444 @@
+{
+  "_meta": {
+    "description": "Shared demo trip. All five agents read this as their initial TripContext. All people, PNRs and booking refs are fictional; flight numbers and prices are mock data.",
+    "today": "2026-11-03",
+    "notes": [
+      "Two travelers with different passports, so visa and entry logic differs (agent 1).",
+      "Maya's passport expires 2027-01-30, less than the 3 months Schengen requires after the 2026-11-21 departure. Agent 1 should catch this.",
+      "No travel insurance yet, so agent 4 should recommend some.",
+      "Weather spans mild Lisbon and cooler Barcelona evenings (agent 2).",
+      "The LIS->BCN flight is intra-EU and under 1500 km, so EU261 gives EUR 250 per passenger for a 3h+ non-extraordinary delay (agent 5). See demo_events.json.",
+      "Budget spent is derived from expenses (mixed USD/EUR) rather than stored, so convert with get_exchange_rate."
+    ]
+  },
+  "trip_id": "trip_demo_iberia_2026",
+  "name": "Lisbon + Barcelona, Nov 2026",
+  "status": "booked",
+  "home": {
+    "city": "San Francisco",
+    "country": "US",
+    "timezone": "America/Los_Angeles",
+    "currency": "USD"
+  },
+  "travelers": [
+    {
+      "id": "t_maya",
+      "name": "Maya Chen",
+      "citizenship": "US",
+      "age_band": "adult",
+      "email": "maya@example.com",
+      "dietary": [
+        "vegetarian"
+      ],
+      "is_primary": true
+    },
+    {
+      "id": "t_arjun",
+      "name": "Arjun Rao",
+      "citizenship": "IN",
+      "residence": "US",
+      "age_band": "adult",
+      "email": "arjun@example.com",
+      "dietary": [],
+      "is_primary": false
+    }
+  ],
+  "budget": {
+    "total": 7000,
+    "currency": "USD"
+  },
+  "preferences": {
+    "pace": "relaxed",
+    "interests": [
+      "food markets",
+      "architecture",
+      "live music",
+      "viewpoints",
+      "day trips"
+    ],
+    "avoid": [
+      "tourist-trap restaurants",
+      "long bus tours"
+    ],
+    "accommodation_style": "boutique / apartment",
+    "luggage": "one checked bag each + carry-on",
+    "magic_discovery": true
+  },
+  "destinations": [
+    {
+      "id": "d_lis",
+      "city": "Lisbon",
+      "country": "PT",
+      "arrive": "2026-11-13",
+      "depart": "2026-11-17",
+      "timezone": "Europe/Lisbon",
+      "currency": "EUR",
+      "language": "pt"
+    },
+    {
+      "id": "d_bcn",
+      "city": "Barcelona",
+      "country": "ES",
+      "arrive": "2026-11-17",
+      "depart": "2026-11-21",
+      "timezone": "Europe/Madrid",
+      "currency": "EUR",
+      "language": "es/ca"
+    }
+  ],
+  "segments": [
+    {
+      "id": "s1",
+      "mode": "flight",
+      "carrier": "TAP Air Portugal",
+      "carrier_code": "TP",
+      "number": "TP238",
+      "pnr": "QX7K2M",
+      "from": {
+        "iata": "SFO",
+        "city": "San Francisco"
+      },
+      "to": {
+        "iata": "LIS",
+        "city": "Lisbon"
+      },
+      "depart": "2026-11-12T15:30:00-08:00",
+      "arrive": "2026-11-13T11:05:00+00:00",
+      "travelers": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "cabin": "economy",
+      "checked_bags": 2,
+      "baggage_allowance": {
+        "checked_kg": 23,
+        "carry_on_kg": 8
+      },
+      "booked_by_agent": "planning",
+      "status": "confirmed"
+    },
+    {
+      "id": "s2",
+      "mode": "flight",
+      "carrier": "Vueling",
+      "carrier_code": "VY",
+      "number": "VY8461",
+      "pnr": "VL93TR",
+      "from": {
+        "iata": "LIS",
+        "city": "Lisbon"
+      },
+      "to": {
+        "iata": "BCN",
+        "city": "Barcelona"
+      },
+      "distance_km": 1005,
+      "depart": "2026-11-17T09:40:00+00:00",
+      "arrive": "2026-11-17T12:55:00+01:00",
+      "travelers": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "cabin": "economy",
+      "checked_bags": 2,
+      "baggage_allowance": {
+        "checked_kg": 23,
+        "carry_on_kg": 10
+      },
+      "booked_by_agent": "planning",
+      "status": "confirmed"
+    },
+    {
+      "id": "s3",
+      "mode": "flight",
+      "carrier": "Level",
+      "carrier_code": "IB",
+      "number": "IB2621",
+      "pnr": "LV4PZ8",
+      "from": {
+        "iata": "BCN",
+        "city": "Barcelona"
+      },
+      "to": {
+        "iata": "SFO",
+        "city": "San Francisco"
+      },
+      "depart": "2026-11-21T13:15:00+01:00",
+      "arrive": "2026-11-21T16:20:00-08:00",
+      "travelers": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "cabin": "economy",
+      "checked_bags": 2,
+      "baggage_allowance": {
+        "checked_kg": 23,
+        "carry_on_kg": 10
+      },
+      "booked_by_agent": "planning",
+      "status": "confirmed"
+    }
+  ],
+  "stays": [
+    {
+      "id": "h1",
+      "name": "Casa do Miradouro (apartment)",
+      "type": "apartment",
+      "destination_id": "d_lis",
+      "address": "Rua dos Remédios, Alfama, Lisbon",
+      "check_in": "2026-11-13T15:00:00+00:00",
+      "check_out": "2026-11-17T08:00:00+00:00",
+      "confirmation": "ABN-55120",
+      "cancellation_policy": "free until 2026-11-06",
+      "booked_by_agent": "planning",
+      "status": "confirmed"
+    },
+    {
+      "id": "h2",
+      "name": "Hotel Jardí de Gràcia",
+      "type": "hotel",
+      "destination_id": "d_bcn",
+      "address": "Carrer de Verdi, Gràcia, Barcelona",
+      "check_in": "2026-11-17T14:00:00+01:00",
+      "check_out": "2026-11-21T11:00:00+01:00",
+      "confirmation": "HJG-88213",
+      "cancellation_policy": "non-refundable",
+      "booked_by_agent": "planning",
+      "status": "confirmed"
+    }
+  ],
+  "reservations": [
+    {
+      "id": "r1",
+      "kind": "experience",
+      "name": "Sintra day trip (train + Pena Palace tickets)",
+      "destination_id": "d_lis",
+      "start": "2026-11-15T09:00:00+00:00",
+      "party": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "confirmation": "PENA-4471",
+      "booked_by_agent": "explore",
+      "status": "confirmed"
+    },
+    {
+      "id": "r2",
+      "kind": "dining",
+      "name": "Dinner at a vegetarian-friendly tapas bar, Gràcia",
+      "destination_id": "d_bcn",
+      "start": "2026-11-17T20:30:00+01:00",
+      "party": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "confirmation": "TAP-2093",
+      "booked_by_agent": "explore",
+      "status": "confirmed",
+      "_demo": "At risk if VY8461 is delayed"
+    },
+    {
+      "id": "r3",
+      "kind": "attraction",
+      "name": "Sagrada Família timed entry",
+      "destination_id": "d_bcn",
+      "start": "2026-11-18T10:00:00+01:00",
+      "party": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "confirmation": "SF-77310",
+      "booked_by_agent": "explore",
+      "status": "confirmed"
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc1",
+      "type": "passport",
+      "traveler_id": "t_maya",
+      "issuing_country": "US",
+      "number_last4": "4821",
+      "expires": "2027-01-30",
+      "_demo": "Fails the Schengen 3-months-after-departure rule"
+    },
+    {
+      "id": "doc2",
+      "type": "passport",
+      "traveler_id": "t_arjun",
+      "issuing_country": "IN",
+      "number_last4": "9034",
+      "expires": "2031-06-14"
+    },
+    {
+      "id": "doc3",
+      "type": "visa",
+      "traveler_id": "t_arjun",
+      "visa_type": "Schengen C (short stay)",
+      "status": "appointment_booked",
+      "appointment": "2026-11-05T10:30:00-08:00",
+      "issuing_consulate": "Consulate General of Spain, San Francisco"
+    },
+    {
+      "id": "doc4",
+      "type": "us_green_card",
+      "traveler_id": "t_arjun",
+      "expires": "2034-02-01"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "e1",
+      "date": "2026-09-20",
+      "description": "Flights SFO-LIS (2 pax)",
+      "amount": 1640.0,
+      "currency": "USD",
+      "category": "flights",
+      "payer": "t_maya",
+      "split": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "linked_to": "s1",
+      "receipt_id": null
+    },
+    {
+      "id": "e2",
+      "date": "2026-09-20",
+      "description": "Flights LIS-BCN (2 pax)",
+      "amount": 186.0,
+      "currency": "EUR",
+      "category": "flights",
+      "payer": "t_arjun",
+      "split": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "linked_to": "s2",
+      "receipt_id": null
+    },
+    {
+      "id": "e3",
+      "date": "2026-09-21",
+      "description": "Flights BCN-SFO (2 pax)",
+      "amount": 980.0,
+      "currency": "USD",
+      "category": "flights",
+      "payer": "t_arjun",
+      "split": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "linked_to": "s3",
+      "receipt_id": null
+    },
+    {
+      "id": "e4",
+      "date": "2026-09-22",
+      "description": "Alfama apartment, 4 nights",
+      "amount": 520.0,
+      "currency": "EUR",
+      "category": "lodging",
+      "payer": "t_maya",
+      "split": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "linked_to": "h1",
+      "receipt_id": null
+    },
+    {
+      "id": "e5",
+      "date": "2026-09-22",
+      "description": "Hotel Jardí de Gràcia, 4 nights",
+      "amount": 560.0,
+      "currency": "EUR",
+      "category": "lodging",
+      "payer": "t_arjun",
+      "split": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "linked_to": "h2",
+      "receipt_id": null
+    },
+    {
+      "id": "e6",
+      "date": "2026-10-02",
+      "description": "Sintra train + Pena Palace tickets",
+      "amount": 64.0,
+      "currency": "EUR",
+      "category": "activities",
+      "payer": "t_maya",
+      "split": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "linked_to": "r1",
+      "receipt_id": null
+    },
+    {
+      "id": "e7",
+      "date": "2026-10-02",
+      "description": "Sagrada Família tickets",
+      "amount": 60.0,
+      "currency": "EUR",
+      "category": "activities",
+      "payer": "t_arjun",
+      "split": [
+        "t_maya",
+        "t_arjun"
+      ],
+      "linked_to": "r3",
+      "receipt_id": null
+    }
+  ],
+  "checklist": [
+    {
+      "id": "c1",
+      "title": "Attend Schengen visa appointment",
+      "owner_agent": "planning",
+      "traveler_id": "t_arjun",
+      "due": "2026-11-05",
+      "status": "todo"
+    },
+    {
+      "id": "c2",
+      "title": "Renew Maya's passport (expedited) or confirm validity rule",
+      "owner_agent": "planning",
+      "traveler_id": "t_maya",
+      "due": "2026-11-06",
+      "status": "todo"
+    },
+    {
+      "id": "c3",
+      "title": "Buy EU plug adapter (Type F)",
+      "owner_agent": "packing",
+      "traveler_id": null,
+      "due": "2026-11-10",
+      "status": "todo"
+    },
+    {
+      "id": "c4",
+      "title": "Pick travel insurance",
+      "owner_agent": "essentials",
+      "traveler_id": null,
+      "due": "2026-11-08",
+      "status": "todo"
+    },
+    {
+      "id": "c5",
+      "title": "Hold mail + water plants arrangement",
+      "owner_agent": "packing",
+      "traveler_id": "t_maya",
+      "due": "2026-11-11",
+      "status": "todo",
+      "_demo": "Home preparation; owner depends on the open question in architecture.md"
+    }
+  ],
+  "packing": {
+    "lists": [],
+    "purchases": []
+  },
+  "incidents": []
+}

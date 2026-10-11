@@ -1,3 +1,6 @@
+.env
+.env.*
+!.env.example
 # Secrets and local configuration
 .env
 .env.*
@@ -12,6 +15,8 @@ node_modules/
 __pycache__/
 *.pyc
 .pytest_cache/
+.DS_Store
+*.db
 .ruff_cache/
 .coverage
 coverage/
