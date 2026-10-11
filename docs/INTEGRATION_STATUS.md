@@ -45,3 +45,13 @@ The major remaining seams are:
 6. Implement and prove the desired sponsor integrations; none is silently inferred from static samples or imported tools.
 
 The user will choose the next direction after this merge/status report. Do not begin these workstreams or launch paid/live services merely because they appear in this list.
+
+## Consumer implementation update — October 11, 2026
+
+The newer consumer/notebook owner briefs supersede the backend-only status and next-direction pause above. Feature branch `feat/consumer-notebook` adds a connected React/Vite app over the same FastAPI/SQLite control service: multiple trips, editable checklist with five agents, 34-piece wardrobe, swipes/votes, persistent deduplicated packing and extra essentials, selected synthetic calendar/daily brief, Magic/bookmarks, partial travelers, date-bounded segments, exact equal expenses and redacted read-only shares.
+
+Original teammate demos and the CLI are preserved. Consumer coordination and wardrobe services use Notebook's shared transaction/ownership primitives; OpenAPI and the generated TypeScript client define implemented wire behavior. See [CONSUMER_APP](CONSUMER_APP.md), README and the captured screenshots.
+
+Validation: **65 backend tests passed**, one live network test deselected. Consumer browser checks cover the Tokyo journey, refresh, empty/loading/error recovery, mouse/touch/keyboard controls, mobile overflow and selected-page accessibility. Hosted CI and live providers are separate verification gates. Production identities, authenticated collaboration, native iOS/WidgetKit, real OAuth/calendar/weather/discovery, notifications and transactions remain incomplete.
+
+Upstream main remained `a087f4f` when fetched for publication. Teammate PR #6 (`feat/live-agency-dashboard`) is a separate open contribution; it has not been merged as part of this consumer task. Do not conflate its advisor surface with the new consumer notebook or assume either demonstrates licensed live discovery.

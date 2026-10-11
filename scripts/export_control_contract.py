@@ -8,9 +8,11 @@ from super_travel.agents.essentials.proposal import EssentialsProposalAgent
 from super_travel.agents.explore import ExploreAgent
 from super_travel.agents.proposals import PackingAgent, PlanningAgent
 from super_travel.agents.recovery.proposal import RecoveryProposalAgent
+from super_travel.consumer.agents import HelperAdapter
 from super_travel.control.app import create_app
 from super_travel.control.schemas import (
     EssentialsInput,
+    HelperInput,
     MagicInput,
     PackInput,
     PlanInput,
@@ -62,9 +64,22 @@ def artifacts():
         .propose(RecoveryInput(**travel, disruption=DISRUPTION), now)
         .model_dump(mode="json"),
     }
+    for agent in ("essentials", "recovery"):
+        proposals[agent] = (
+            HelperAdapter(agent,"fixture")
+            .propose(HelperInput(**travel), now)
+            .model_dump(mode="json")
+        )
     requests = {
         agent: {"agent": agent, "input": magic if agent == "explore_magic" else travel}
-        for agent in ("plan_book", "pack_shop", "explore_magic", "travel_essentials")
+        for agent in (
+            "plan_book",
+            "pack_shop",
+            "explore_magic",
+            "essentials",
+            "recovery",
+            "travel_essentials",
+        )
     }
     requests["manage_recover"] = {
         "agent": "manage_recover",

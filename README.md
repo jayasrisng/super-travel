@@ -2,92 +2,103 @@
 
 **Less searching. More experiencing.**
 
-Wonder connects trip planning, preparation, local discovery, essentials, and group coordination through one personalized checklist. It supports multiple independent trips and direct use of individual tools. Magic answers “What can I do with the time I have?” using location, preferences, travel time, and the next commitment.
+Wonder is a personal travel notebook: a trip checklist, five travel agents, a digital wardrobe, lighter packing, a daily morning note, and Magic for the moments in between. It uses warm paper and pencil in light mode and a muted chalkboard in dark mode.
 
-## Current status
+## Run the consumer app
 
-The repository now contains the existing Essentials/Recovery prototypes and a working FastAPI control backend for **Plan & Book, Pack & Shop and Explore/Magic**. All three support labeled synthetic fixtures. Planning and Packing can use the existing Anthropic model runner; live Magic discovery/routing adapters are still required. The teammate-built advisor dashboard is in `dashboard/`; it reads synthetic static data and is not connected to the control API. Main also contains an onboarding HTML demo with missing local asset dependencies. Neither is a shipped consumer web app.
-
-The local backend provides authenticated create/poll/list/cancel, durable SQLite runs, actor-owned minimal trips and Magic bookmarks. It is an integration/demo backend, not a private-beta deployment. See [control API handoff](docs/CONTROL_API.md) for runnable setup, exact endpoints, limitations and [checked OpenAPI](packages/contracts/openapi.json).
-## Start here
-
-| Document | Purpose |
-|---|---|
-| [Product brief](docs/product/PRODUCT_BRIEF.md) | Preserved user brief; product source of truth |
-| [Team build brief](docs/TEAM_BUILD_BRIEF.md) | Refined five-person operating agreement |
-| [Plan](PLAN.md) | Dependencies, milestones, integration gates, acceptance criteria |
-| [MVP roadmap](docs/MVP_ROADMAP.md) | Prioritized backlog and owner assignments |
-| [Architecture](ARCHITECTURE.md) | Technical choices, boundaries, security and deployment |
-| [Data model](docs/DATA_MODEL.md) | Normative entities, constraints, money and time semantics |
-| [API contracts](docs/api/CONTRACTS.md) | Normative v1 operations, schemas and examples |
-| [Hackathon integration plan](docs/HACKATHON_INTEGRATIONS.md) | Sponsor boundaries, event deadline and proof of meaningful use |
-| [Decision register](docs/decisions/DECISIONS.md) | Trade-offs, assumptions and questions for the product owner |
-| [Control API handoff](docs/CONTROL_API.md) | Implemented backend, setup, wire contracts and limitations |
-| [Integration status](docs/INTEGRATION_STATUS.md) | Merged contributions, checks and remaining seams |
-| [Next steps](docs/NEXT_STEPS.md) | Prioritized work from the current implementation |
-| [Agent instructions](AGENTS.md) | Repository-wide contributor and coding-agent rules |
-
-The product is now named Wonder; the repository retains `super-travel`. Product intent comes from the preserved Super Travel brief plus explicit owner decisions in the decision register. Explicitly proposed scope reductions require product-owner agreement; they do not silently replace required MVP capabilities. Technical contracts govern implementation after the Phase 0 review. Conflicts must be resolved through a documented decision, rather than choosing whichever document is convenient.
-
-## Release strategy
-
-The owner chose a **Barcelona Magic private beta first**, with equally complete core web and native iOS. Today’s SpeedHacks demo is a separate milestone with honest limitations; its deadline is October 11, 2026 at 5 PM PDT. See [hackathon integrations](docs/HACKATHON_INTEGRATIONS.md) for the five partner tools, demonstrated-use strategy and submission plan. The full connected MVP includes auth, multiple personalized trips, checklist, three agents, itinerary and packing proposals, Magic, participants, expenses, share links, a basic Passport, essentials/recovery, responsive web, and native iOS. The original brief called for an iOS prototype; the owner now requires equally complete core web/native iOS for Magic beta. The demo may use prominently labeled fixtures; private beta requires operational integrations for any advertised live capability. Native iMessage extension, widgets, push notifications, direct bookings, payments, and merchant tools have separate later gates.
-
-The first vertical slice is sign in → ask Magic in Barcelona → receive sourced, feasible recommendations → save or navigate → see saved state on web and iOS. Trip creation, checklists, packing, expenses and Passport follow in the connected MVP. An event prototype may use fixtures, but it cannot be described as beta-ready.
-
-## Chosen foundation
-
-Next.js App Router + TypeScript + Tailwind/shadcn for web; SwiftUI for iOS; Python/FastAPI + Pydantic for a modular backend; Supabase PostgreSQL/Auth; SQLAlchemy and reviewed SQL migrations; pnpm for web workspaces and uv for Python. Python dependencies are installed and locked with uv. The current local adapter uses SQLite and a private bearer token; Supabase/PostgreSQL remains the beta target. Web/iOS tooling belongs to the respective teammate.
-
-REST `/v1` is the application boundary. FastAPI owns all trip reads/writes and authorization; clients use Supabase directly only for authentication. Agents receive scoped trip snapshots and return proposals. Clients never receive database credentials or AI keys. There is no purchase execution or payment processing in MVP.
-
-## Target repository layout
-
-```text
-apps/web/                         # responsive app and public share fallback (D4)
-apps/ios/                         # Xcode host app and extension targets (D5)
-  Wonder/Features/Coordination/ # coordination Swift sources (D2)
-  Extensions/Messages/            # later extension sources (D2)
-  Extensions/Widget/              # later widget sources (D5)
-services/api/src/super_travel/
-  core/                           # auth, persistence, context, jobs (D1)
-  domains/coordination/            # participants, invites, shares (D2)
-  domains/operations/              # checklist, essentials, expenses, recovery (D3)
-  agents/                         # plan_book, pack_shop, explore_magic (D1)
-  integrations/                   # provider interfaces and adapters (D1)
-packages/contracts/               # checked control OpenAPI/fixtures; generated clients follow (D1)
-packages/design-tokens/           # future shared visual tokens (D4)
-database/migrations/              # serialized migration review (D1)
-database/seeds/                   # synthetic demo scenarios (D3)
-docs/                             # specifications and decisions
-.github/workflows/                # future CI (D1)
-```
-
-This is the beta target layout. Current Python code remains in root `super_travel/`; the app directories are not created by this change. Agents and integrations are modules of one backend package, not separate deployed services. Domain tests live alongside their owning packages; cross-platform contract fixtures will live in `packages/contracts/fixtures/`.
-
-## Working locally today
-
-Follow [CONTROL_API.md](docs/CONTROL_API.md#run-locally) to generate a local token and launch the three-agent API on port 8000. Fixture mode requires no provider keys.
+Requirements: Python 3.12+ (verified with 3.13), `uv`, Node 22.19+, and pnpm 10.18.3. Run from the repository root.
 
 ```sh
 uv sync --frozen
+pnpm --dir apps/web install --frozen-lockfile
+uv run python scripts/run_consumer.py
+```
+
+In a second terminal:
+
+```sh
+pnpm --dir apps/web dev
+```
+
+Open **http://127.0.0.1:5173**. API documentation: http://127.0.0.1:8000/docs. No paid credentials are needed. Both servers bind locally. Keep this adapter on your own computer.
+
+The launcher creates an ignored, private `.wonder.local.env` signing secret and `wonder-consumer.sqlite3` database. A signed HttpOnly cookie identifies each browser notebook; it expires after seven days. Neither the signing secret nor a shared bearer token goes into JavaScript. Restarting the server and refreshing the browser preserves your records. Clearing the cookie, rotating the secret, or session expiry creates another notebook; this is not account recovery or production authentication. Access logging is disabled to keep share capabilities out of logs. Never commit local databases, secrets or uploaded photos.
+
+## What works now
+
+- Home with multiple independent trips, progress and next task; standalone Magic and Wardrobe.
+- Three-step onboarding with destination/undecided destination, date certainty, traveler counts and child ages, preferences, activities, budget and existing booking notes. Details remain editable.
+- Personalized, persisted checklist. Add/edit/assign/delete tasks; queued execution, actual worker states, results/history, cancel, rerun, approve/reject, manually complete and reopen. User instructions survive agent runs. Approval applies draft itinerary notes, and never implies a reservation or purchase.
+- All five registered specialists through the existing control service: Plan & Book, Pack & Shop, Explore & Experience, Travel Essentials, Manage & Recover. The latter two reuse the existing specialist runners in optional model mode on an isolated proposal snapshot.
+- 34 original illustrated clothes: 10 tops, 10 bottoms, four shoes, 10 accessories. Filters, favorites, manual tags, photo upload/edit/delete. Uploaded photos are size-limited, resized and stripped of metadata.
+- Deterministic compatible capsule outfits, manual temperature/occasion controls, illustrated lookbooks, mouse/touch swipes, keyboard and accessible voting buttons, persisted likes/dislikes and last-vote undo. Rejected combinations are excluded from subsequent generation.
+- Per-trip deduplicated packing from liked outfits; extra pieces/essentials, packed state and ready/worn/dirty/unavailable state. Saved outfit photos, relevant dates and tomorrow's options. Packing rebuilds preserve wear and packed state; unavailable pieces are excluded from new generation and carry warnings in saved looks.
+- Opt-in synthetic calendar events, explicit selection and disconnect. Persisted daily briefing combines selected events and saved itinerary, sample weather, ready packed outfits and outstanding tasks. Notification preference is stored; delivery is in-app only.
+- Magic uses the existing feasibility engine, scoped asynchronous runs, expiry/provenance, time/budget/buffers and optional next commitment. Manual or permission-based location, Save, Navigate and details; saved moments persist.
+- Owner-managed partial-trip participants, date-bounded destination segments and itinerary notes with same-trip participant assignment. Exact equal expense splits in integer minor units. One-day, revocable, redacted itinerary share links.
+
+Try the full journey: create a Tokyo family trip → edit a task and ask Wonder → review/accept its sample proposal → open 34-piece wardrobe → generate/swipe outfits → build/check packing → reopen saved looks → select demo calendar events → read the morning note → use Magic and save a moment → refresh.
+
+## Demo versus live
+
+| Capability | Current behavior | Needed for live use |
+|---|---|---|
+| Agents | Fixture proposals by default; real queue and state transitions | Anthropic credentials for optional model drafts; verified research/booking adapters remain separate |
+| Magic | Simulated places, routes, hours and costs at an entered origin; location does not assert real coverage | Permitted places/events/hours/routes adapters and source licenses, budget and monitoring |
+| Wardrobe | Original SVG illustrations or user photos; manual tagging; deterministic lookbooks | Optional garment recognition/renderer adapter, with confirmed user tags |
+| Calendar | Selected synthetic events only | Implement read-only Google OAuth adapter, consent, encrypted tokens, refresh/revocation and permission handling |
+| Weather | Explicit sample forecast or manually entered outfit temperature | Implement a licensed weather adapter |
+| Sharing | Owner notebook plus read-only guest itinerary | Verified accounts, memberships, invitations and collaborative permissions |
+| Notifications/iOS | Stored preference and documented briefing contract | Scheduler, delivery permissions, native SwiftUI app, signing and WidgetKit target |
+
+Entering credentials does not silently enable unimplemented providers. Event boundaries for Luma, Partiful, Eventbrite and Meetup fail as unconfigured until a legitimate adapter exists. There are **no executed bookings, purchases, payments, outbound claims or messages**. Sample navigation links lead to illustrative coordinates. No photorealistic try-on, live forecast, live calendar, automated morning delivery or native widget is claimed.
+
+Optional model drafts use the existing Anthropic integration:
+
+```sh
+WONDER_AGENT_MODE=llm uv run python scripts/run_consumer.py
+```
+
+Set `ANTHROPIC_API_KEY` only in your ignored backend environment. This opts into paid calls. Planning/Packing use their existing proposal adapters; Essentials/Recovery run against isolated snapshots. No live smoke test has been run in this change. Magic model mode fails explicitly without a live discovery adapter.
+
+## Check the implementation
+
+```sh
 uv run pytest -q -m 'not network'
-uv run python -m scripts.export_control_contract
+uv run ruff check super_travel/consumer super_travel/control scripts/run_consumer.py scripts/build_wardrobe_assets.py tests/test_consumer.py
+uv run python scripts/export_control_contract.py
+pnpm --dir apps/web contracts
+pnpm --dir apps/web build
+pnpm --dir apps/web exec playwright install chromium
+pnpm --dir apps/web test
 ```
 
-Existing specialist CLI scripts require `ANTHROPIC_API_KEY` in an ignored `.env`:
+Playwright starts local fixture API/web servers when they are absent, reuses existing servers outside CI, and tests the Tokyo journey, persistence, empty/loading/error recovery, mouse and touch swipes, keyboard controls, responsiveness and automated accessibility checks. Tests use synthetic data and separate browser identities. The network-marked model smoke test is excluded. CI also checks exported OpenAPI/TypeScript drift; hosted CI results must be checked separately from local results.
 
-```sh
-uv run python scripts/run_essentials.py
-uv run python scripts/run_recovery.py ev1
+[Desktop paper](docs/screenshots/home-light.png) · [desktop chalkboard](docs/screenshots/home-dark.png) · [outfit lookbook](docs/screenshots/outfits-light.png) · [mobile paper](docs/screenshots/mobile-light.png) · [mobile chalkboard](docs/screenshots/mobile-dark.png) · [mobile outfit](docs/screenshots/mobile-outfits.png).
+
+## Structure and contracts
+
+```text
+apps/web/                     React + strict TypeScript + Vite consumer app
+  src/api.generated.ts        generated from checked OpenAPI; never hand-edit
+  src/notebook.css            shared paper/chalkboard tokens and components
+  tests/                      browser journeys and accessibility checks
+super_travel/control/         existing FastAPI identity, SQLite jobs/replays/leases
+super_travel/consumer/        owner-scoped consumer models, routes and services
+  coordination.py             participants, segments and exact expenses
+  wardrobe.py                 wardrobe, outfits, votes and packing
+  providers/                  event/calendar/weather boundaries
+super_travel/agents/          existing five specialists and orchestrator
+packages/contracts/           canonical implemented OpenAPI and fixtures
+scripts/run_consumer.py        local fixture launcher
+scripts/build_wardrobe_assets.py original asset generator
+docs/                         briefs, handoff, beta design, screenshots
 ```
 
-The CLI orchestrator is implemented and delegates to all five registered specialists; an HTTP `/chat` endpoint is not implemented. Model chat requires `ANTHROPIC_API_KEY`:
+REST `/v1` is the domain boundary. Pydantic models define the wire contract; generated TypeScript consumes it. UUID ownership, same-trip checks, idempotency, ETags, context versions, civil dates/IANA zones and integer money are enforced by the backend. UI approval applies current proposals through application services. SQLite is shared with the existing local control API; no duplicate authoritative store or agent stack was introduced.
 
-```sh
-uv run python scripts/chat.py
-uv run python scripts/chat.py --event all
-```
+Vite is the implemented local frontend choice; the earlier Next.js/Supabase deployment plan remains a separate beta architecture. This keeps a small static client and reuses FastAPI directly. It sacrifices server-rendered pages and production account infrastructure, which this local implementation does not need. Production requires reviewed identity/membership, PostgreSQL/RLS, managed workers, quotas, migrations and licensed live providers.
 
 ### Agency dashboard, customer app and the border scenario
 
@@ -109,18 +120,10 @@ uv run python scripts/seed_demo.py                                              
 
 Other dashboard features: per-agent proposals for all five agents, report-a-disruption (EU261 / US DOT / baggage), save Magic ideas, re-run agents. Onboarding's **Send to Wonder agents** creates a new client. Approve/Dismiss on the five agents' proposals is browser-local. No real calls, purchases or insurance policies are made; the onboarding page's images, fonts and analytics script are still missing.
 
-## Team workflow
+## Continue here
 
-Use `docs/<topic>`, `feat/<domain>-<topic>`, or `fix/<domain>-<topic>` branches and small PRs. Do not push directly to main. Identify the owner, affected contracts, tests, migration impact, screenshots where relevant, and fallback behavior in every implementation PR. Contract and shared-core changes need D1 plus an affected consumer; money/permission changes need an independent reviewer. See the team brief for file-level boundaries and shared-file locking.
+The latest [consumer brief](docs/product/CONSUMER_BRIEF.md) and [notebook design](docs/product/NOTEBOOK_DESIGN.md) supersede older consumer priorities. The original [product brief](docs/product/PRODUCT_BRIEF.md) remains preserved.
 
-Keep secrets, precise location history, documents and personal expenses out of Git/logs. Add `.env.example` names without values when a configuration requirement changes. Do not invent provider access, live availability, booked status or production readiness.
+[Consumer handoff and wire semantics](docs/CONSUMER_APP.md) · [plan](PLAN.md) · [architecture](ARCHITECTURE.md) · [roadmap](docs/MVP_ROADMAP.md) · [next steps](docs/NEXT_STEPS.md) · [team brief](docs/TEAM_BUILD_BRIEF.md) · [decisions](docs/decisions/DECISIONS.md) · [agent instructions](AGENTS.md) · [beta data model](docs/DATA_MODEL.md) · [beta API design](docs/api/CONTRACTS.md) · [widget contract](docs/WIDGET_CONTRACT.md).
 
-## Configuration and integrations
-
-[`.env.example`](.env.example) lists planned settings. The implemented control uses `WONDER_AGENT_MODE=fixture`; planned domain adapters use `PROVIDER_MODE`. Unavailable integrations remain explicit; fixtures must be visibly marked and disabled in public release. Provider selection requires credential access, usage/cost caps, license review and a successful operational smoke test. Live Magic starts in Barcelona (Europe/Madrid, EUR); the exact coverage boundary and monthly budget remain open. Alike, Darwin, Dial, Keewano and Sparta have independent integration gates. No paid services have been provisioned.
-
-## Success and release readiness
-
-Measure time from a submitted need to a meaningful action: accepting a packing proposal, saving a feasible activity, completing a next task, or recording an expense. Track p50/p90 by journey, completion, AI cost, failure rates and repeat use. External link clicks are not confirmed bookings; settlement records are not payment transfers. Consent-aware analytics must exclude exact locations, traveler constraints, amounts and private itinerary text.
-
-The release gates in `PLAN.md` require durable state, trip isolation, recoverable failures, provenance, accessible UI, cross-client consistency and a restore rehearsal. Hosting, jurisdiction, provider licensing, support and monthly budget are private-beta readiness decisions; public launch needs its own gate. No license file exists; public visibility is not a license grant. The owner should choose a license before inviting external contributions.
+Assets are original illustrations, generated locally. Caveat is bundled with its [SIL Open Font License](apps/web/public/fonts/OFL.txt), from [Google Fonts](https://github.com/google/fonts/tree/main/ofl/caveat). The repository's overall license has not been selected by the owner.

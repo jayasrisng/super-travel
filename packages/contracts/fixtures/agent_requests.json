@@ -1,4 +1,12 @@
 {
+  "essentials": {
+    "agent": "essentials",
+    "input": {
+      "destination": "Barcelona",
+      "end_date": "2026-11-15",
+      "start_date": "2026-11-13"
+    }
+  },
   "explore_magic": {
     "agent": "explore_magic",
     "input": {
@@ -45,6 +53,14 @@
   },
   "plan_book": {
     "agent": "plan_book",
+    "input": {
+      "destination": "Barcelona",
+      "end_date": "2026-11-15",
+      "start_date": "2026-11-13"
+    }
+  },
+  "recovery": {
+    "agent": "recovery",
     "input": {
       "destination": "Barcelona",
       "end_date": "2026-11-15",

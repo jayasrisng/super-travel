@@ -20,6 +20,7 @@ from super_travel.control.schemas import (
     RunRequest,
     Trip,
 )
+from super_travel.consumer.agents import HelperAdapter
 from super_travel.control.store import ControlError
 from super_travel.core.geo import destination
 
@@ -65,6 +66,8 @@ class Service:
             "plan_book": PlanningAgent(mode),
             "pack_shop": PackingAgent(mode),
             "explore_magic": ExploreAgent(mode),
+            "essentials": HelperAdapter("essentials", mode),
+            "recovery": HelperAdapter("recovery", mode),
             "travel_essentials": EssentialsProposalAgent(mode),
             "manage_recover": RecoveryProposalAgent(mode),
             "voice_quotes": VoiceQuoteAgent(mode),
@@ -77,7 +80,7 @@ class Service:
             raise ControlError(
                 422,
                 "unsupported_area",
-                "Magic currently covers the Barcelona demo rectangle only",
+                "Invalid geographic origin",
             )
         now = self.store.now()
         trip = (
@@ -116,8 +119,14 @@ class Service:
                     "end_date",
                     "timezone",
                     "interests",
+                    "dietary",
+                    "accessibility",
+                    "travel_style",
+                    "child_ages",
                 )
             }
+            if request.agent == "plan_book" and trip.get("budget") is not None:
+                defaults["budget"] = trip["budget"]
             defaults.update(trip["traveler_configuration"])
             for field, value in defaults.items():
                 if field not in request.input.model_fields_set:
@@ -208,7 +217,7 @@ class Service:
             runs.append({"agent": "explore_magic", "run_id": self.create_run(actor, request)["id"]})
         else:
             runs.append({"agent": "explore_magic", "run_id": None,
-                         "skipped_reason": "Magic covers the Barcelona demo area only"})
+                         "skipped_reason": "No known map point for this destination yet"})
 
         body = Intake(
             **intake.model_dump(), id=uuid4(), trip_id=trip_id, created_at=now, runs=runs

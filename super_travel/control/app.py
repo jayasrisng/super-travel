@@ -42,11 +42,26 @@ from super_travel.control.store import ControlError, Store
 
 
 def create_app(
-    *, path=None, tokens=None, mode=None, worker=True, now=None, agents=None
+    *,
+    path=None,
+    tokens=None,
+    mode=None,
+    worker=True,
+    now=None,
+    agents=None,
+    demo_auth=None,
 ):
     mode = mode or os.getenv("WONDER_AGENT_MODE", "fixture")
     if mode not in ("fixture", "llm"):
         raise ValueError("WONDER_AGENT_MODE must be fixture or llm")
+
+    demo_auth = (
+        demo_auth
+        if demo_auth is not None
+        else os.getenv("WONDER_DEMO_AUTH", "false") == "true"
+    )
+    if demo_auth and os.getenv("APP_ENV", "local") != "local":
+        raise RuntimeError("Demo authentication is forbidden outside APP_ENV=local")
 
     @asynccontextmanager
     async def lifespan(app):
@@ -61,11 +76,17 @@ def create_app(
                 token: uuid5(NAMESPACE_URL, hashlib.sha256(token.encode()).hexdigest())
             }
         app.state.tokens = configured
+        app.state.demo_auth = demo_auth
+        app.state.demo_secret = next(iter(configured))
+
         app.state.store = Store(
             path or os.getenv("WONDER_DB_PATH", "wonder-control.sqlite3"),
             **({"now": now} if now else {}),
         )
         app.state.service = Service(app.state.store, mode, agents)
+        from super_travel.consumer.service import Notebook
+
+        app.state.notebook = Notebook(app.state.store, app.state.service)
         stop = threading.Event()
 
         def consume():
@@ -93,7 +114,7 @@ def create_app(
                 app.state.store.close()
 
     app = FastAPI(
-        title="Wonder Agent Control API",
+        title="Wonder Consumer & Agent API",
         version="0.1.0",
         lifespan=lifespan,
         # Fixed descriptions keep the exported OpenAPI identical across Python versions
@@ -101,12 +122,13 @@ def create_app(
         responses={
             status: {"model": ErrorEnvelope, "description": description}
             for status, description in {
-                400: "Bad Request", 401: "Unauthorized", 404: "Not Found", 409: "Conflict",
-                412: "Precondition Failed", 413: "Content Too Large", 422: "Unprocessable Content",
-                428: "Precondition Required", 429: "Too Many Requests", 503: "Service Unavailable",
+                400: "Bad Request", 401: "Unauthorized", 403: "Forbidden", 404: "Not Found",
+                409: "Conflict", 412: "Precondition Failed", 413: "Content Too Large",
+                422: "Unprocessable Content", 428: "Precondition Required",
+                429: "Too Many Requests", 503: "Service Unavailable",
             }.items()
         },
-        description="Local integration backend. Fixture defaults; no purchases or domain-plan mutation.",
+        description="Local consumer notebook and agent control. Explicit draft apply; fixture defaults; no external purchases.",
     )
     origins = [
         value.strip()
@@ -118,7 +140,7 @@ def create_app(
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
-        allow_methods=["GET", "POST", "DELETE"],
+        allow_methods=["GET", "POST", "DELETE", "PUT", "PATCH"],
         allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "If-Match"],
         expose_headers=["ETag", "X-Request-ID"],
     )
@@ -144,12 +166,18 @@ def create_app(
         raw = bytearray()
         async for chunk in request.stream():
             raw.extend(chunk)
-            if len(raw) > 32768:
+            limit = (
+                2_800_200
+                if request.url.path.startswith("/v1/consumer/wardrobe/")
+                and request.url.path.endswith("/photo")
+                else 32768
+            )
+            if len(raw) > limit:
                 return error(
                     request,
                     413,
                     "body_too_large",
-                    "Request bodies must be at most 32 KiB",
+                    "Request exceeds the size limit (32 KiB; photo uploads 2 MB)",
                 )
         request._body = bytes(raw)
         response = await call_next(request)
@@ -203,8 +231,14 @@ def create_app(
         for token, identity in request.app.state.tokens.items():
             if hmac.compare_digest(value.encode(), token.encode()):
                 return identity
+        if request.app.state.demo_auth and credentials is None:
+            from super_travel.consumer.auth import verify
+
+            return verify(request, request.app.state.demo_secret)
         raise ControlError(
-            401, "unauthorized", "A valid local API bearer token is required"
+            401,
+            "unauthorized",
+            "A valid local API bearer token or enabled demo session is required",
         )
 
     def key(idempotency_key: UUID = Header(alias="Idempotency-Key")):
@@ -245,6 +279,8 @@ def create_app(
                     ("plan_book", "planning", "Plan & Book"),
                     ("pack_shop", "packing", "Pack & Shop"),
                     ("explore_magic", "explore", "Explore / Magic"),
+                    ("essentials", "essentials", "Travel Essentials"),
+                    ("recovery", "recovery", "Manage & Recover"),
                 ]
             ]
             + [
@@ -454,8 +490,7 @@ def create_app(
 
         def read():
             store.get(identity, "trip", trip_id)
-            values, _ = store.list(identity, "message", limit=500, trip_id=trip_id)
-            return list(reversed(values))  # oldest first, like a chat
+            return store.thread(identity, "message", trip_id)  # oldest first, like a chat
 
         return envelope(request, store.transaction(read))
 
@@ -599,6 +634,9 @@ def create_app(
         store.transaction(remove)
         return Response(status_code=204)
 
+    from super_travel.consumer.api import register
+
+    register(app, actor, key, envelope, set_etag)
     return app
 
 
