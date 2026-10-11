@@ -136,7 +136,11 @@ def register(app, actor, key, envelope, etag):
                 Profile(
                     **{
                         **profile,
-                        **payload.model_dump(),
+                        **payload.model_dump(
+                            exclude={"fashion"}
+                            if "fashion" not in payload.model_fields_set
+                            else set()
+                        ),
                         "version": profile["version"] + 1,
                     }
                 ),

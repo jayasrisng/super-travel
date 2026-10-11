@@ -638,3 +638,105 @@ def test_daily_brief_uses_trip_local_today_and_current_clothing_state(api):
     assert "Updated shirt" in [
         i["name"] for i in notebook(client, t)["packing"]["items"]
     ]
+
+
+def test_fashion_preferences_persist_rank_and_isolate(api):
+    client, _, _ = api
+    profile = data(client.get("/v1/consumer/home"))["profile"]
+    clothing = data(client.get("/v1/consumer/wardrobe"))
+    baseline = data(post(client, "/consumer/outfits/generate"))
+    top = next(item for item in clothing if item["id"] == baseline[-1]["item_ids"][0])
+    payload = {k: v for k, v in top.items() if k not in ("id", "version", "image_mode")}
+    payload["style"] = "relaxed"
+    data(
+        client.put(
+            "/v1/consumer/wardrobe/" + top["id"],
+            json=payload,
+            headers={"If-Match": f'"{top["version"]}"'},
+        )
+    )
+    fashion = {
+        "occasion": "dinner",
+        "temperature_c": 22,
+        "preferred_style": "relaxed",
+        "preferred_colors": [top["color"]],
+        "owned_only": True,
+    }
+    saved = data(
+        client.put(
+            "/v1/consumer/preferences",
+            json={"fashion": fashion},
+            headers={"If-Match": f'"{profile["version"]}"'},
+        )
+    )
+    assert data(client.get("/v1/consumer/home"))["profile"]["fashion"] == fashion
+    looks = data(post(client, "/consumer/outfits/generate"))
+    assert top["id"] in looks[0]["item_ids"]
+    payload["ownership_status"] = "needed"
+    data(
+        client.put(
+            "/v1/consumer/wardrobe/" + top["id"],
+            json=payload,
+            headers={"If-Match": '"2"'},
+        )
+    )
+    assert all(
+        top["id"] not in look["item_ids"]
+        for look in data(post(client, "/consumer/outfits/generate"))
+    )
+    # Older clients omit the additive field: retain the saved fashion settings.
+    old_client = data(
+        client.put(
+            "/v1/consumer/preferences",
+            json={"dietary": "Vegetarian"},
+            headers={"If-Match": f'"{saved["version"]}"'},
+        )
+    )
+    assert old_client["fashion"] == fashion
+    assert (
+        client.put(
+            "/v1/consumer/preferences",
+            json={"fashion": fashion},
+            headers={"If-Match": f'"{saved["version"]}"'},
+        ).status_code
+        == 412
+    )
+    assert (
+        client.put(
+            "/v1/consumer/preferences",
+            json={"fashion": {"temperature_c": 51}},
+            headers={"If-Match": f'"{old_client["version"]}"'},
+        ).status_code
+        == 422
+    )
+    client.headers["Authorization"] = "Bearer bob"
+    assert (
+        data(client.get("/v1/consumer/home"))["profile"]["fashion"]["preferred_style"]
+        == ""
+    )
+
+
+def test_configured_demo_ports_remain_loopback_only(api, monkeypatch):
+    client, _, _ = api
+    monkeypatch.setenv("WONDER_WEB_PORT", "15173")
+    assert client.post(
+        "/v1/demo/session", headers={"Origin": "http://127.0.0.1:15173"}
+    ).is_success
+    assert (
+        client.post(
+            "/v1/demo/session", headers={"Origin": "http://example.com:15173"}
+        ).status_code
+        == 403
+    )
+    assert (
+        client.post(
+            "/v1/demo/session", headers={"Origin": "http://127.0.0.1:15174"}
+        ).status_code
+        == 403
+    )
+    assert (
+        client.post(
+            "/v1/demo/session", headers={"Origin": "https://127.0.0.1:15173"}
+        ).status_code
+        == 403
+    )

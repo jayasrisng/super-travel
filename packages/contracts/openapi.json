@@ -1262,6 +1262,50 @@
         "title": "ExploreRequest",
         "type": "object"
       },
+      "FashionPreferences": {
+        "additionalProperties": false,
+        "properties": {
+          "occasion": {
+            "default": "walking",
+            "enum": [
+              "walking",
+              "dinner",
+              "business",
+              "outdoors"
+            ],
+            "title": "Occasion",
+            "type": "string"
+          },
+          "owned_only": {
+            "default": false,
+            "title": "Owned Only",
+            "type": "boolean"
+          },
+          "preferred_colors": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Preferred Colors",
+            "type": "array"
+          },
+          "preferred_style": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Preferred Style",
+            "type": "string"
+          },
+          "temperature_c": {
+            "default": 18,
+            "maximum": 50.0,
+            "minimum": -30.0,
+            "title": "Temperature C",
+            "type": "integer"
+          }
+        },
+        "title": "FashionPreferences",
+        "type": "object"
+      },
       "HelperInput": {
         "additionalProperties": false,
         "properties": {
@@ -2761,6 +2805,9 @@
             "title": "Dietary",
             "type": "string"
           },
+          "fashion": {
+            "$ref": "#/components/schemas/FashionPreferences"
+          },
           "interests": {
             "items": {
               "maxLength": 2000,
@@ -2800,6 +2847,9 @@
             "maxLength": 500,
             "title": "Dietary",
             "type": "string"
+          },
+          "fashion": {
+            "$ref": "#/components/schemas/FashionPreferences"
           },
           "id": {
             "format": "uuid",

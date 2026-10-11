@@ -1173,6 +1173,32 @@ export interface components {
             /** Trip Id */
             trip_id?: string | null;
         };
+        /** FashionPreferences */
+        FashionPreferences: {
+            /**
+             * Occasion
+             * @default walking
+             * @enum {string}
+             */
+            occasion: "walking" | "dinner" | "business" | "outdoors";
+            /**
+             * Owned Only
+             * @default false
+             */
+            owned_only: boolean;
+            /** Preferred Colors */
+            preferred_colors?: string[];
+            /**
+             * Preferred Style
+             * @default
+             */
+            preferred_style: string;
+            /**
+             * Temperature C
+             * @default 18
+             */
+            temperature_c: number;
+        };
         /** HelperInput */
         HelperInput: {
             /**
@@ -1792,6 +1818,7 @@ export interface components {
              * @default
              */
             dietary: string;
+            fashion?: components["schemas"]["FashionPreferences"];
             /** Interests */
             interests?: string[];
             /**
@@ -1817,6 +1844,7 @@ export interface components {
              * @default
              */
             dietary: string;
+            fashion?: components["schemas"]["FashionPreferences"];
             /**
              * Id
              * Format: uuid

@@ -52,12 +52,37 @@ test("Tokyo consumer journey, swipe controls, persistence, briefing, and Magic",
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: evidence("wardrobe-light"), fullPage: true });
   await page.getByRole("button", { name: "Find my outfits" }).click();
+  await page.getByLabel("Preferred style").selectOption("capsule");
+  await page.getByRole("button", { name: "navy", exact: true }).click();
+  await page.getByLabel("Only clothes I own").check();
+  await page.getByRole("button", { name: "Save fashion settings" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Fashion settings saved",
+  );
+  await page.reload();
+  await expect(page.getByLabel("Preferred style")).toHaveValue("capsule");
+  await expect(
+    page.getByRole("button", { name: "navy", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Only clothes I own")).toBeChecked();
   await page
     .getByRole("button", { name: "Generate outfits", exact: true })
     .click();
   await expect(
     page.getByRole("group", { name: "Outfit swipe card" }),
   ).toBeVisible();
+  await expect(page.locator(".complete-look image")).toHaveCount(4);
+  const placement = await page
+    .locator(".complete-look > svg")
+    .evaluateAll((pieces) =>
+      pieces.map((piece) => ({
+        y: Number(piece.getAttribute("y")),
+        x: Number(piece.getAttribute("x")),
+      })),
+    );
+  expect(placement[0].y).toBeGreaterThan(placement[1].y);
+  expect(placement[2].y).toBeGreaterThan(placement[0].y);
+  expect(placement[3].x).toBeGreaterThan(placement[1].x);
   await page.screenshot({ path: evidence("outfits-light"), fullPage: true });
   await page.getByRole("button", { name: "Like outfit", exact: true }).click();
   await page
@@ -82,8 +107,7 @@ test("Tokyo consumer journey, swipe controls, persistence, briefing, and Magic",
   await page.mouse.move(box.x + box.width / 2 + 150, box.y + 80, { steps: 8 });
   await page.mouse.up();
   await expect(page.locator(".liked-counter")).toContainText("3");
-  await page.getByRole("button", { name: "Review & pack liked looks" }).click();
-  await page.getByRole("button", { name: "Build from liked outfits" }).click();
+  await page.getByRole("button", { name: "Done · What to pack" }).click();
   await expect(page.getByRole("checkbox").first()).toBeVisible();
   const checks = page.getByRole("checkbox");
   const count = await checks.count();
@@ -183,7 +207,7 @@ test("empty, loading, error/retry and local-session isolation", async ({
   await expect(page.locator(".garment")).toHaveCount(34);
   const second = await browser.newContext();
   const another = await second.newPage();
-  await another.goto("http://127.0.0.1:5173");
+  await another.goto(new URL("/", page.url()).href);
   await expect(
     another.getByRole("heading", { name: "An unwritten adventure" }),
   ).toBeVisible();
@@ -251,4 +275,41 @@ test("touch swipes and keyboard alternatives are usable on a phone", async ({
   await expect(page.getByRole("status")).toContainText("Passed");
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await context.close();
+});
+
+test("Done retries packing failures and keeps complete looks scoped to the selected trip", async ({
+  page,
+}) => {
+  await page.goto("/new");
+  await page.getByRole("button", { name: "Next page →" }).click();
+  await page.getByRole("button", { name: "Next page →" }).click();
+  await page.getByRole("button", { name: "Create my notebook →" }).click();
+  await expect(page).toHaveURL(/\/trip\?trip=/);
+  const tripId = new URL(page.url()).searchParams.get("trip");
+  await page.goto("/outfits");
+  await page.getByLabel("Packing for").selectOption(tripId!);
+  const done = page.getByRole("button", { name: "Done · What to pack" });
+  await expect(done).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Generate outfits", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Like outfit", exact: true }).click();
+  await expect(done).toBeEnabled();
+  await page.route("**/consumer/trips/*/packing", (route) =>
+    route.fulfill({
+      status: 503,
+      json: { error: { message: "Packing temporarily unavailable" } },
+    }),
+  );
+  await done.click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Packing temporarily unavailable",
+  );
+  await expect(page).toHaveURL(new RegExp("/outfits\\?trip=" + tripId));
+  await page.unroute("**/consumer/trips/*/packing");
+  await done.click();
+  await expect(page).toHaveURL(new RegExp("/packing\\?trip=" + tripId));
+  await expect(page.locator(".packing-line")).toHaveCount(4);
+  await page.reload();
+  await expect(page.locator(".packing-line")).toHaveCount(4);
 });

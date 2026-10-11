@@ -125,7 +125,7 @@ export default function App() {
           ) : view === "wardrobe" ? (
             <Wardrobe nav={nav} tripId={tripId} />
           ) : view === "outfits" ? (
-            <Outfits nav={nav} tripId={tripId} />
+            <Outfits key={tripId || "standalone"} nav={nav} tripId={tripId} />
           ) : view === "packing" && tripId ? (
             <Packing nav={nav} tripId={tripId} />
           ) : view === "briefing" && tripId ? (
@@ -135,7 +135,7 @@ export default function App() {
           ) : view === "group" && tripId ? (
             <GroupPage id={tripId} />
           ) : view === "preferences" ? (
-            <Preferences profile={home.profile} refresh={refresh} />
+            <Preferences profile={home.profile} refresh={refresh} nav={nav} />
           ) : (
             <Empty title="This page needs a trip">
               <button onClick={() => nav("/")}>Back home</button>
