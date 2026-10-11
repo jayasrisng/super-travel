@@ -1,5 +1,7 @@
 # Wonder architecture
 
+Implemented staging note: the three-agent control backend is now in `super_travel/control/`, with checked OpenAPI and synthetic fixtures. [CONTROL_API.md](docs/CONTROL_API.md) records its local SQLite/token adapter and beta gaps. The architecture below remains the production target.
+
 Status: proposed implementation baseline, October 11, 2026. No services are deployed by this document. Owner decisions: Magic first in Barcelona; private-beta first release; equally complete core web/native iOS. The same-day SpeedHacks demo is separately scoped in [HACKATHON_INTEGRATIONS.md](docs/HACKATHON_INTEGRATIONS.md). The product brief is preserved in [PRODUCT_BRIEF.md](docs/product/PRODUCT_BRIEF.md). Domain records and wire behavior are defined in [DATA_MODEL.md](docs/DATA_MODEL.md) and [CONTRACTS.md](docs/api/CONTRACTS.md).
 
 ## Decisions and trade-offs

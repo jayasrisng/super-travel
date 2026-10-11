@@ -52,7 +52,7 @@ def test_chat_delegates_and_merges(monkeypatch):
     tool = req["tools"][0]
     assert tool["name"] == "delegate"
     assert tool["input_schema"]["properties"]["agent"]["enum"] == ["essentials", "explore", "packing", "planning", "recovery"]
-    assert "NOT YET AVAILABLE" in tool["description"]
+    assert "UNAVAILABLE IN THIS SESSION" in tool["description"]
     assert "Today: 2026-11-17" in req["messages"][-1]["content"]
 
     results = [json.loads(c["content"]) for c in seen[1]["body"]["messages"][-1]["content"]]
@@ -79,7 +79,7 @@ def test_delegation_limit(monkeypatch):
     monkeypatch.setattr(orch_module, "MAX_DELEGATIONS_PER_TURN", 2)
     o = Orchestrator({"recovery": StubAgent("recovery")})
     script = [delegate("recovery", f"t{i}", f"id{i}") for i in range(3)] + [text("done")]
-    with fake_messages_api(script, monkeypatch) as seen:
+    with fake_messages_api(script, monkeypatch):
         result = o.chat("go", load_trip(), today=TODAY)
     assert [d.status for d in result.delegations] == ["ok", "ok", "limit"]
 
@@ -132,3 +132,25 @@ def test_orchestrator_with_real_recovery_agent(monkeypatch):
     assert [t["name"] for t in seen[0]["body"]["tools"]] == ["delegate"]
     assert {"check_compensation", "submit_recovery", "web_search"} <= {t["name"] for t in seen[1]["body"]["tools"]}
     assert result.pending_actions[0]["kind"] == "send_claim" and "EUR 250" in result.reply
+
+
+def test_combined_registry_runs_three_proposal_agents():
+    """The real registry must accept the orchestrator's dated dispatch signature."""
+    from super_travel.agents import REGISTRY
+    trip = load_trip()
+    orchestrator = Orchestrator()
+    assert set(REGISTRY) == {"planning", "packing", "explore", "essentials", "recovery"}
+    assert "UNAVAILABLE" not in orchestrator._delegate_description
+    delegations = []
+    for name, task in [("planning", "Suggest a walk"), ("packing", "Pack light"),
+                       ("explore", json.dumps({"location": {"latitude": 41.385, "longitude": 2.174}, "available_minutes": 120}))]:
+        assert orchestrator._delegate(name, task, trip, TODAY, delegations)["status"] == "ok"
+    assert all(d.result.data["data_mode"] == "fixture" for d in delegations)
+
+
+def test_specialist_errors_do_not_leak_private_details():
+    class PrivateFailure(StubAgent):
+        def run(self, task, trip, today=None):
+            raise RuntimeError("secret-provider-token and private passport record")
+    result = Orchestrator({"recovery": PrivateFailure("recovery")})._delegate("recovery", "help", load_trip(), TODAY, [])
+    assert "secret-provider-token" not in json.dumps(result)

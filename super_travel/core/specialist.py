@@ -35,6 +35,7 @@ def run_specialist(
     submit_name: str,
     effort: str,
     max_iterations: int = 15,
+    timeout_seconds: float | None = None,
 ) -> ResultT:
     """Run the agent loop until the model calls `submit_name` with a valid `result_model`."""
     submitted: list[ResultT] = []
@@ -52,7 +53,10 @@ def run_specialist(
         description="Submit your final result. Call exactly once, when you are done.",
         input_schema=llm.inline_refs(result_model.model_json_schema()),
     )
-    runner = llm.client().beta.messages.tool_runner(
+    api_client = llm.client()
+    if timeout_seconds is not None:
+        api_client = api_client.with_options(timeout=timeout_seconds, max_retries=0)
+    runner = api_client.beta.messages.tool_runner(
         model=llm.MODEL,
         max_tokens=16000,
         system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}],

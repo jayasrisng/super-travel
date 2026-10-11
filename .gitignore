@@ -24,3 +24,7 @@ DerivedData/
 xcuserdata/
 *.xcuserstate
 .DS_Store
+
+# Local agent control persistence
+*.sqlite3
+*.sqlite3-*

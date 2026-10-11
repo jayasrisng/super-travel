@@ -54,14 +54,16 @@ class TurnResult:
 def _delegate_description(registry: dict[str, Agent]) -> str:
     lines = ["Delegate a task to a specialist agent and get its result. Agents:"]
     lines += [f"- {name}: {agent.description}" for name, agent in sorted(registry.items())]
-    lines += [f"- {name} (NOT YET AVAILABLE): {desc}" for name, desc in sorted(PLANNED.items())]
+    unavailable = {name: agent.description for name, agent in REGISTRY.items() if name not in registry}
+    unavailable.update({name: desc for name, desc in PLANNED.items() if name not in registry})
+    lines += [f"- {name} (UNAVAILABLE IN THIS SESSION): {desc}" for name, desc in sorted(unavailable.items())]
     return "\n".join(lines)
 
 
 class Orchestrator:
     def __init__(self, registry: dict[str, Agent] | None = None) -> None:
         self.registry = registry if registry is not None else REGISTRY
-        self._agent_names = sorted({*self.registry, *PLANNED})
+        self._agent_names = sorted({*self.registry, *REGISTRY, *PLANNED})
         self._delegate_schema = {
             "type": "object",
             "properties": {
@@ -135,9 +137,9 @@ class Orchestrator:
             return {"status": "unavailable", "message": f"The {agent} agent is not built yet."}
         try:
             result = self.registry[agent].run(task, trip, today)  # type: ignore[call-arg]
-        except Exception as exc:  # a failing specialist shouldn't kill the whole turn
-            delegations.append(Delegation(agent, task, "error", error=str(exc)))
-            return {"status": "error", "message": f"The {agent} agent failed: {exc}"}
+        except Exception:  # Never echo SDK/provider/private request data into model history.
+            delegations.append(Delegation(agent, task, "error", error="Specialist could not complete this task"))
+            return {"status": "error", "message": f"The {agent} agent could not complete this task."}
         delegations.append(Delegation(agent, task, "ok", result=result))
         return {
             "status": "ok",

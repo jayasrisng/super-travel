@@ -1,6 +1,8 @@
 # Wonder execution plan
 
-Planning only. Product name **Wonder**; repository `jayasrisng/super-travel`. The preserved Super Travel brief remains the product source of truth, updated by these explicit owner decisions on October 11, 2026: Magic first, Barcelona launch area, private beta as the first usable release, equally complete core web/native iOS, and deterministic backend work redistributed to D3. The hackathon demo is a separate milestone, not evidence that beta gates have passed.
+Implementation update: three proposal backends and local run/status/cancel/bookmark API now exist. See [CONTROL_API.md](docs/CONTROL_API.md) and [NEXT_STEPS.md](docs/NEXT_STEPS.md); live Magic, production identity/persistence and app parity remain gates.
+
+Execution baseline. Product name **Wonder**; repository `jayasrisng/super-travel`. The preserved Super Travel brief remains the product source of truth, updated by these explicit owner decisions on October 11, 2026: Magic first, Barcelona launch area, private beta as the first usable release, equally complete core web/native iOS, and deterministic backend work redistributed to D3. The hackathon demo is a separate milestone, not evidence that beta gates have passed.
 
 ## Repository assessment
 

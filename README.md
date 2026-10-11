@@ -1,47 +1,3 @@
-# super-travel
-one super app for all your travel plans
-
-## Setup
-
-```bash
-uv sync
-cp .env.example .env   # then add your ANTHROPIC_API_KEY
-uv run pytest -q
-```
-
-Chat with the orchestrator, which routes to the agents, about the demo trip:
-
-```bash
-uv run python scripts/chat.py
-uv run python scripts/chat.py --event all    # play the scripted demo events
-```
-
-Run the Travel Essentials agent (agent 4) directly on the demo trip:
-
-```bash
-uv run python scripts/run_essentials.py
-uv run python scripts/run_essentials.py "Do we need cash in Lisbon?"
-```
-
-Run the Manage & Recover agent (agent 5) directly on the demo trip's scripted events:
-
-```bash
-uv run python scripts/run_recovery.py        # all events: delay, lost bag, receipt, trip end
-uv run python scripts/run_recovery.py ev1    # just the flight delay
-```
-
-## Agency dashboard
-
-A console for travel advisors: after the intake call, it shows what each of the five agents has done for the trip, plus a human-review queue. It uses the demo scenario.
-
-```bash
-uv run python scripts/build_dashboard_data.py   # regenerate dashboard/data/demo.json
-node dashboard/serve.mjs                        # http://localhost:5180
-```
-
-Use the stage switcher (Onboarded, Pre-trip, Disruption day, Back home) to move through the trip. Agent narratives are sample outputs (`fixtures/demo_agent_outputs.json`). Compensation, baggage rights, settle-up, FX, eSIM search and emergency numbers are computed by the real code.
-
-Architecture: [docs/architecture.md](docs/architecture.md)
 # Wonder
 
 **Less searching. More experiencing.**
@@ -50,8 +6,9 @@ Wonder connects trip planning, preparation, local discovery, essentials, and gro
 
 ## Current status
 
-This repository is in the planning stage. Inspection on October 11, 2026 found only the original README and `docs/TEAM_BUILD_BRIEF.md` at commit `79dc17a`. No application, dependency manifests, migrations, tests, CI, deployed API, or provider integrations existed. This change supplies specifications and development conventions; it does not implement application features. Commands described as future setup are not runnable yet.
+The repository now contains the existing Essentials/Recovery prototypes and a working FastAPI control backend for **Plan & Book, Pack & Shop and Explore/Magic**. All three support labeled synthetic fixtures. Planning and Packing can use the existing Anthropic model runner; live Magic discovery/routing adapters are still required. The teammate-built advisor dashboard is in `dashboard/`; it reads synthetic static data and is not connected to the control API. Main also contains an onboarding HTML demo with missing local asset dependencies. Neither is a shipped consumer web app.
 
+The local backend provides authenticated create/poll/list/cancel, durable SQLite runs, actor-owned minimal trips and Magic bookmarks. It is an integration/demo backend, not a private-beta deployment. See [control API handoff](docs/CONTROL_API.md) for runnable setup, exact endpoints, limitations and [checked OpenAPI](packages/contracts/openapi.json).
 ## Start here
 
 | Document | Purpose |
@@ -65,6 +22,9 @@ This repository is in the planning stage. Inspection on October 11, 2026 found o
 | [API contracts](docs/api/CONTRACTS.md) | Normative v1 operations, schemas and examples |
 | [Hackathon integration plan](docs/HACKATHON_INTEGRATIONS.md) | Sponsor boundaries, event deadline and proof of meaningful use |
 | [Decision register](docs/decisions/DECISIONS.md) | Trade-offs, assumptions and questions for the product owner |
+| [Control API handoff](docs/CONTROL_API.md) | Implemented backend, setup, wire contracts and limitations |
+| [Integration status](docs/INTEGRATION_STATUS.md) | Merged contributions, checks and remaining seams |
+| [Next steps](docs/NEXT_STEPS.md) | Prioritized work from the current implementation |
 | [Agent instructions](AGENTS.md) | Repository-wide contributor and coding-agent rules |
 
 The product is now named Wonder; the repository retains `super-travel`. Product intent comes from the preserved Super Travel brief plus explicit owner decisions in the decision register. Explicitly proposed scope reductions require product-owner agreement; they do not silently replace required MVP capabilities. Technical contracts govern implementation after the Phase 0 review. Conflicts must be resolved through a documented decision, rather than choosing whichever document is convenient.
@@ -77,7 +37,7 @@ The first vertical slice is sign in → ask Magic in Barcelona → receive sourc
 
 ## Chosen foundation
 
-Next.js App Router + TypeScript + Tailwind/shadcn for web; SwiftUI for iOS; Python/FastAPI + Pydantic for a modular backend; Supabase PostgreSQL/Auth; SQLAlchemy and reviewed SQL migrations; pnpm for web workspaces and uv for Python. Exact compatible versions and lockfiles are pinned in Phase 0. No runtime packages have been installed.
+Next.js App Router + TypeScript + Tailwind/shadcn for web; SwiftUI for iOS; Python/FastAPI + Pydantic for a modular backend; Supabase PostgreSQL/Auth; SQLAlchemy and reviewed SQL migrations; pnpm for web workspaces and uv for Python. Python dependencies are installed and locked with uv. The current local adapter uses SQLite and a private bearer token; Supabase/PostgreSQL remains the beta target. Web/iOS tooling belongs to the respective teammate.
 
 REST `/v1` is the application boundary. FastAPI owns all trip reads/writes and authorization; clients use Supabase directly only for authentication. Agents receive scoped trip snapshots and return proposals. Clients never receive database credentials or AI keys. There is no purchase execution or payment processing in MVP.
 
@@ -95,7 +55,7 @@ services/api/src/super_travel/
   domains/operations/              # checklist, essentials, expenses, recovery (D3)
   agents/                         # plan_book, pack_shop, explore_magic (D1)
   integrations/                   # provider interfaces and adapters (D1)
-packages/contracts/               # future OpenAPI and generated clients (D1)
+packages/contracts/               # checked control OpenAPI/fixtures; generated clients follow (D1)
 packages/design-tokens/           # future shared visual tokens (D4)
 database/migrations/              # serialized migration review (D1)
 database/seeds/                   # synthetic demo scenarios (D3)
@@ -103,21 +63,39 @@ docs/                             # specifications and decisions
 .github/workflows/                # future CI (D1)
 ```
 
-This is a target layout, not a claim that these app directories already exist. Agents and integrations are modules of one backend package, not separate deployed services. Domain tests live alongside their owning packages; cross-platform contract fixtures will live in `packages/contracts/fixtures/`.
+This is the beta target layout. Current Python code remains in root `super_travel/`; the app directories are not created by this change. Agents and integrations are modules of one backend package, not separate deployed services. Domain tests live alongside their owning packages; cross-platform contract fixtures will live in `packages/contracts/fixtures/`.
 
 ## Working locally today
 
+Follow [CONTROL_API.md](docs/CONTROL_API.md#run-locally) to generate a local token and launch the three-agent API on port 8000. Fixture mode requires no provider keys.
+
 ```sh
-git clone https://github.com/jayasrisng/super-travel.git
-cd super-travel
-cp .env.example .env.local
+uv sync --frozen
+uv run pytest -q -m 'not network'
+uv run python -m scripts.export_control_contract
 ```
 
-Read the documents and pick an owned task from the roadmap. `.env.local` is an inventory template, not an automatically consumed runtime config. Do not add credentials for a documentation-only task. No install, dev-server, database-reset or test commands currently exist.
+Existing specialist CLI scripts require `ANTHROPIC_API_KEY` in an ignored `.env`:
 
-**Phase 0 setup deliverable:** D1 must document pinned prerequisites and exact commands for pnpm installation, uv synchronization, local Supabase via Docker, migrations/seeds, web/API/worker startup, contract generation and checks. D5 supplies Xcode/simulator instructions and local API URL configuration. Planned ports are web 3000 and API 8000. Local and CI tests use synthetic users and trips, never production data. Backend secrets go in an ignored service-local file; browser-public configuration is copied explicitly. Swift configuration uses ignored xcconfig values, with no server secrets.
+```sh
+uv run python scripts/run_essentials.py
+uv run python scripts/run_recovery.py ev1
+```
 
-**Planned checks, not available today:** TypeScript strict checks, ESLint/Prettier, Vitest/Playwright; Ruff/Pytest; OpenAPI validation and regenerated-client diff; clean-database migration and tenant-isolation checks; XCTest/SwiftLint on a macOS runner. CI must use the same pinned commands as local setup. No fake passing jobs for missing apps.
+The CLI orchestrator is implemented and delegates to all five registered specialists; an HTTP `/chat` endpoint is not implemented. Model chat requires `ANTHROPIC_API_KEY`:
+
+```sh
+uv run python scripts/chat.py
+uv run python scripts/chat.py --event all
+```
+
+The teammate's static advisor dashboard uses committed synthetic data:
+
+```sh
+node dashboard/serve.mjs  # localhost:5180
+```
+
+To regenerate its data, `uv run python scripts/build_dashboard_data.py` fetches a public FX feed with a labeled fallback. Narratives and supplier links remain samples; local Approve/Dismiss does not send, book or mutate server state. The standalone onboarding HTML is a separate presentation demo, not an API-connected intake flow. Production auth/database setup, app builds, generated clients and CI remain subsequent tasks; do not imply those checks exist today.
 
 ## Team workflow
 
@@ -127,7 +105,7 @@ Keep secrets, precise location history, documents and personal expenses out of G
 
 ## Configuration and integrations
 
-[`.env.example`](.env.example) lists planned settings. Default `PROVIDER_MODE=fixture` makes unavailable integrations explicit; fixtures must be visibly marked and disabled in public release. Provider selection requires credential access, usage/cost caps, license review and a successful operational smoke test. Live Magic starts in Barcelona (Europe/Madrid, EUR); the exact coverage boundary and monthly budget remain open. Alike, Darwin, Dial, Keewano and Sparta have independent integration gates. No paid services have been provisioned.
+[`.env.example`](.env.example) lists planned settings. The implemented control uses `WONDER_AGENT_MODE=fixture`; planned domain adapters use `PROVIDER_MODE`. Unavailable integrations remain explicit; fixtures must be visibly marked and disabled in public release. Provider selection requires credential access, usage/cost caps, license review and a successful operational smoke test. Live Magic starts in Barcelona (Europe/Madrid, EUR); the exact coverage boundary and monthly budget remain open. Alike, Darwin, Dial, Keewano and Sparta have independent integration gates. No paid services have been provisioned.
 
 ## Success and release readiness
 
