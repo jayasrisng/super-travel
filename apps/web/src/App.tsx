@@ -5,6 +5,7 @@ import { TripForm, TripPage } from "./trip";
 import { GroupPage } from "./group";
 import { Wardrobe, Outfits, Packing, Briefing, Preferences } from "./wardrobe";
 import { Magic } from "./magic";
+import { Advisor } from "./advisor";
 
 export type Navigate = (path: string) => void;
 export default function App() {
@@ -106,6 +107,12 @@ export default function App() {
             >
               Magic <span aria-hidden>✧</span>
             </button>
+            <button
+              aria-current={view === "advisor" ? "page" : undefined}
+              onClick={() => nav("/advisor")}
+            >
+              My advisor
+            </button>
           </nav>
           <Theme />
         </header>
@@ -149,6 +156,8 @@ export default function App() {
             <Briefing nav={nav} tripId={tripId} />
           ) : view === "magic" ? (
             <Magic tripId={tripId} />
+          ) : view === "advisor" ? (
+            <Advisor />
           ) : view === "group" && tripId ? (
             <GroupPage id={tripId} />
           ) : view === "preferences" ? (

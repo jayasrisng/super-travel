@@ -73,6 +73,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/consumer/advisor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Advisor */
+        get: operations["get_advisor_v1_consumer_advisor_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/consumer/advisor-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link Advisor */
+        post: operations["link_advisor_v1_consumer_advisor_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/consumer/advisor/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Traveler Messages */
+        get: operations["traveler_messages_v1_consumer_advisor_messages_get"];
+        put?: never;
+        /** Traveler Send */
+        post: operations["traveler_send_v1_consumer_advisor_messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/consumer/advisor/policies/{policy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Traveler Policy */
+        get: operations["traveler_policy_v1_consumer_advisor_policies__policy_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/consumer/calendar": {
         parameters: {
             query?: never;
@@ -607,6 +676,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/intakes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Intakes */
+        get: operations["list_intakes_v1_intakes_get"];
+        put?: never;
+        /** Create Intake */
+        post: operations["create_intake_v1_intakes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/intakes/{intake_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Intake */
+        get: operations["get_intake_v1_intakes__intake_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/magic/runs": {
         parameters: {
             query?: never;
@@ -693,6 +797,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{trip_id}/insurance-policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Policy */
+        post: operations["create_policy_v1_trips__trip_id__insurance_policies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{trip_id}/insurance-policies/{policy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Policy */
+        get: operations["get_policy_v1_trips__trip_id__insurance_policies__policy_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{trip_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Messages */
+        get: operations["list_messages_v1_trips__trip_id__messages_get"];
+        put?: never;
+        /** Create Message */
+        post: operations["create_message_v1_trips__trip_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -717,13 +873,82 @@ export interface components {
              */
             type: "save";
         };
+        /** AdvisorEssentialsRequest */
+        AdvisorEssentialsRequest: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            agent: "travel_essentials";
+            input: components["schemas"]["EssentialsInput"];
+            /** Trip Id */
+            trip_id?: string | null;
+        };
+        /**
+         * AdvisorLink
+         * @description A traveler's (consumer actor's) connection to the agency trip created from their intake.
+         */
+        AdvisorLink: {
+            /** Advisor Name */
+            advisor_name: string | null;
+            /** Client Name */
+            client_name: string;
+            /** Destination */
+            destination: string;
+            /**
+             * End Date
+             * Format: date
+             */
+            end_date: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Intake Id
+             * Format: uuid
+             */
+            intake_id: string;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /**
+             * Trip Id
+             * Format: uuid
+             */
+            trip_id: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+        };
+        /** AdvisorLinkCreate */
+        AdvisorLinkCreate: {
+            /** Client Code */
+            client_code: string;
+        };
+        /** AdvisorRecoveryRequest */
+        AdvisorRecoveryRequest: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            agent: "manage_recover";
+            input: components["schemas"]["RecoveryInput"];
+            /** Trip Id */
+            trip_id?: string | null;
+        };
         /** AgentInfo */
         AgentInfo: {
             /**
              * Agent
              * @enum {string}
              */
-            agent: "plan_book" | "pack_shop" | "explore_magic" | "essentials" | "recovery";
+            agent: "plan_book" | "pack_shop" | "explore_magic" | "essentials" | "recovery" | "travel_essentials" | "manage_recover" | "voice_quotes";
             /** Limitation */
             limitation: string;
             /**
@@ -749,7 +974,7 @@ export interface components {
              * Agent
              * @enum {string}
              */
-            agent: "plan_book" | "pack_shop" | "explore_magic" | "essentials" | "recovery";
+            agent: "plan_book" | "pack_shop" | "explore_magic" | "essentials" | "recovery" | "travel_essentials" | "manage_recover" | "voice_quotes";
             /** Context Version */
             context_version: number | null;
             /**
@@ -769,7 +994,7 @@ export interface components {
              */
             id: string;
             /** Proposal */
-            proposal?: components["schemas"]["PlanProposal"] | components["schemas"]["PackProposal"] | components["schemas"]["ExploreProposal"] | null;
+            proposal?: components["schemas"]["PlanProposal"] | components["schemas"]["PackProposal"] | components["schemas"]["ExploreProposal"] | components["schemas"]["EssentialsProposal"] | components["schemas"]["RecoveryProposal"] | components["schemas"]["VoiceQuoteProposal"] | null;
             /**
              * Status
              * @enum {string}
@@ -779,6 +1004,24 @@ export interface components {
             trip_id: string | null;
             /** Version */
             version: number;
+        };
+        /** BaggageRights */
+        BaggageRights: {
+            /** Also Check */
+            also_check: string[];
+            /** Claim Window */
+            claim_window: string;
+            /** First Step */
+            first_step: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "delayed" | "lost" | "damaged";
+            /** Liability Cap */
+            liability_cap: string;
+            /** Regulation */
+            regulation: string;
         };
         /** Briefing */
         Briefing: {
@@ -825,6 +1068,30 @@ export interface components {
              * @constant
              */
             weather_mode: "fixture";
+        };
+        /** BriefingItem */
+        BriefingItem: {
+            /** Detail */
+            detail: string;
+            /** Item Id */
+            item_id: string;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "must" | "should" | "nice";
+            /** Title */
+            title: string;
+        };
+        /** BriefingSection */
+        BriefingSection: {
+            /** Items */
+            items: components["schemas"]["BriefingItem"][];
+            /**
+             * Topic
+             * @enum {string}
+             */
+            topic: "payments_currency" | "connectivity" | "health" | "insurance" | "safety" | "customs_etiquette" | "language" | "emergency";
         };
         /** CalendarConnection */
         CalendarConnection: {
@@ -908,6 +1175,18 @@ export interface components {
              */
             starts_at: string;
         };
+        /** ConnectivityOption */
+        ConnectivityOption: {
+            /** Data */
+            data: string;
+            /** Days */
+            days: number;
+            /** Item Id */
+            item_id: string;
+            price: components["schemas"]["Money"];
+            /** Provider */
+            provider: string;
+        };
         /** Coverage */
         Coverage: {
             /**
@@ -924,6 +1203,50 @@ export interface components {
             partial: boolean;
             /** Providers */
             providers: string[];
+        };
+        /** Disruption */
+        Disruption: {
+            /**
+             * Arrival Delay Minutes
+             * @default 0
+             */
+            arrival_delay_minutes: number;
+            /**
+             * Extraordinary Circumstances
+             * @default false
+             */
+            extraordinary_circumstances: boolean;
+            flight?: components["schemas"]["FlightRef"] | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "delay" | "cancellation" | "denied_boarding" | "baggage_delayed" | "baggage_lost" | "baggage_damaged";
+            /** Notice Days */
+            notice_days?: number | null;
+            /**
+             * Passengers
+             * @default 1
+             */
+            passengers: number;
+            /** Reference */
+            reference?: string | null;
+            /** Reroute Arrival Delay Minutes */
+            reroute_arrival_delay_minutes?: number | null;
+        };
+        /** EmergencyContact */
+        EmergencyContact: {
+            /** Country Code */
+            country_code: string;
+            /** Label */
+            label: string;
+            /** Phone */
+            phone: string;
+        };
+        /** Envelope[AdvisorLink] */
+        Envelope_AdvisorLink_: {
+            data: components["schemas"]["AdvisorLink"];
+            meta: components["schemas"]["Meta"];
         };
         /** Envelope[AgentRun] */
         Envelope_AgentRun_: {
@@ -950,9 +1273,24 @@ export interface components {
             data: components["schemas"]["Home"];
             meta: components["schemas"]["Meta"];
         };
+        /** Envelope[InsurancePolicy] */
+        Envelope_InsurancePolicy_: {
+            data: components["schemas"]["InsurancePolicy"];
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[Intake] */
+        Envelope_Intake_: {
+            data: components["schemas"]["Intake"];
+            meta: components["schemas"]["Meta"];
+        };
         /** Envelope[ItineraryItem] */
         Envelope_ItineraryItem_: {
             data: components["schemas"]["ItineraryItem"];
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[Message] */
+        Envelope_Message_: {
+            data: components["schemas"]["Message"];
             meta: components["schemas"]["Meta"];
         };
         /** Envelope[OutfitVote] */
@@ -1049,6 +1387,18 @@ export interface components {
             data: components["schemas"]["CalendarEvent"][];
             meta: components["schemas"]["Meta"];
         };
+        /** Envelope[list[Intake]] */
+        Envelope_list_Intake__: {
+            /** Data */
+            data: components["schemas"]["Intake"][];
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[list[Message]] */
+        Envelope_list_Message__: {
+            /** Data */
+            data: components["schemas"]["Message"][];
+            meta: components["schemas"]["Meta"];
+        };
         /** Envelope[list[OutfitVote]] */
         Envelope_list_OutfitVote__: {
             /** Data */
@@ -1085,6 +1435,87 @@ export interface components {
             error: components["schemas"]["APIError"];
             meta: components["schemas"]["Meta"];
         };
+        /** EssentialsInput */
+        EssentialsInput: {
+            /**
+             * Accessibility
+             * @default
+             */
+            accessibility: string;
+            /**
+             * Adult Count
+             * @default 1
+             */
+            adult_count: number;
+            /** Child Ages */
+            child_ages?: number[];
+            /**
+             * Child Count
+             * @default 0
+             */
+            child_count: number;
+            /** Destination */
+            destination?: string | null;
+            /**
+             * Dietary
+             * @default
+             */
+            dietary: string;
+            /** End Date */
+            end_date?: string | null;
+            /**
+             * Home Currency
+             * @default USD
+             */
+            home_currency: string;
+            /**
+             * Infant Count
+             * @default 0
+             */
+            infant_count: number;
+            /**
+             * Instructions
+             * @default
+             */
+            instructions: string;
+            /** Interests */
+            interests?: string[];
+            /** Start Date */
+            start_date?: string | null;
+            /**
+             * Timezone
+             * @default Europe/Madrid
+             */
+            timezone: string;
+            /**
+             * Travel Style
+             * @default unhurried
+             */
+            travel_style: string;
+        };
+        /** EssentialsProposal */
+        EssentialsProposal: {
+            /** Assumptions */
+            assumptions: string[];
+            /** Checklist Tasks */
+            checklist_tasks: components["schemas"]["TaskProposal"][];
+            /** Connectivity Options */
+            connectivity_options: components["schemas"]["ConnectivityOption"][];
+            /**
+             * Data Mode
+             * @enum {string}
+             */
+            data_mode: "fixture" | "live";
+            /** Emergency Contacts */
+            emergency_contacts: components["schemas"]["EmergencyContact"][];
+            exchange_rate: components["schemas"]["ExchangeRate"] | null;
+            /** Reply */
+            reply: string;
+            /** Sections */
+            sections: components["schemas"]["BriefingSection"][];
+            /** Sources */
+            sources: components["schemas"]["Source"][];
+        };
         /** EssentialsRequest */
         EssentialsRequest: {
             /**
@@ -1095,6 +1526,20 @@ export interface components {
             input: components["schemas"]["HelperInput"];
             /** Trip Id */
             trip_id?: string | null;
+        };
+        /** ExchangeRate */
+        ExchangeRate: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** From Currency */
+            from_currency: string;
+            /** Rate */
+            rate: number;
+            /** To Currency */
+            to_currency: string;
         };
         /** Expense */
         Expense: {
@@ -1199,6 +1644,19 @@ export interface components {
              */
             temperature_c: number;
         };
+        /** FlightRef */
+        FlightRef: {
+            /** Carrier Code */
+            carrier_code: string;
+            /** From Iata */
+            from_iata: string;
+            /** Number */
+            number: string;
+            /** Scheduled Date */
+            scheduled_date?: string | null;
+            /** To Iata */
+            to_iata: string;
+        };
         /** HelperInput */
         HelperInput: {
             /**
@@ -1261,6 +1719,240 @@ export interface components {
             trips: components["schemas"]["Trip"][];
             /** Wardrobe Count */
             wardrobe_count: number;
+        };
+        /** InsurancePolicy */
+        InsurancePolicy: {
+            /**
+             * Coverage End
+             * Format: date
+             */
+            coverage_end: string;
+            /**
+             * Coverage Start
+             * Format: date
+             */
+            coverage_start: string;
+            deductible: components["schemas"]["Money"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Insured */
+            insured: string[];
+            /** Insurer */
+            insurer: string;
+            /**
+             * Issued At
+             * Format: date-time
+             */
+            issued_at: string;
+            medical_cover: components["schemas"]["Money"];
+            /** Policy Number */
+            policy_number: string;
+            premium: components["schemas"]["Money"];
+            /** Quote Id */
+            quote_id: string;
+            /** Repatriation */
+            repatriation: boolean;
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Schengen Compliant */
+            schengen_compliant: boolean;
+            /**
+             * Status
+             * @default simulated
+             * @constant
+             */
+            status: "simulated";
+            /**
+             * Trip Id
+             * Format: uuid
+             */
+            trip_id: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+        };
+        /** InsuranceQuote */
+        InsuranceQuote: {
+            deductible: components["schemas"]["Money"];
+            /**
+             * Document Delivery
+             * @enum {string}
+             */
+            document_delivery: "instant_pdf" | "email_24h";
+            /** Insurer */
+            insurer: string;
+            medical_cover: components["schemas"]["Money"];
+            /** Meets Requirements */
+            meets_requirements: boolean;
+            /** Notes */
+            notes: string[];
+            premium: components["schemas"]["Money"];
+            /** Quote Id */
+            quote_id: string;
+            /** Repatriation */
+            repatriation: boolean;
+            /** Schengen Compliant */
+            schengen_compliant: boolean;
+        };
+        /** InsurerCall */
+        InsurerCall: {
+            /** Duration Seconds */
+            duration_seconds: number;
+            /** Insurer */
+            insurer: string;
+            /** Item Id */
+            item_id: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "quoted" | "declined" | "no_answer" | "failed";
+            /** Phone */
+            phone: string;
+            /** Provider Call Id */
+            provider_call_id?: string | null;
+            quote: components["schemas"]["InsuranceQuote"] | null;
+            /** Transcript */
+            transcript: components["schemas"]["TranscriptLine"][];
+        };
+        /** Intake */
+        Intake: {
+            /** Accommodation Area */
+            accommodation_area?: string | null;
+            /** Advisor Name */
+            advisor_name?: string | null;
+            /**
+             * Channel
+             * @default phone_call
+             * @enum {string}
+             */
+            channel: "phone_call" | "web_form";
+            /** Child Ages */
+            child_ages?: number[];
+            /**
+             * Client Code
+             * @description Code the traveler enters in the Wonder app to connect
+             * @default
+             */
+            client_code: string;
+            /** Client Name */
+            client_name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Destination */
+            destination: string;
+            /**
+             * End Date
+             * Format: date
+             */
+            end_date: string;
+            /**
+             * Home Currency
+             * @default USD
+             */
+            home_currency: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Interests */
+            interests?: string[];
+            /** Needs */
+            needs?: string[];
+            /**
+             * Purpose
+             * @default Vacation
+             */
+            purpose: string;
+            /** Runs */
+            runs: components["schemas"]["IntakeRun"][];
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            traveler_configuration?: components["schemas"]["TravelerConfiguration"];
+            /**
+             * Trip Id
+             * Format: uuid
+             */
+            trip_id: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+        };
+        /**
+         * IntakeCreate
+         * @description What an advisor captures on the onboarding call.
+         */
+        IntakeCreate: {
+            /** Accommodation Area */
+            accommodation_area?: string | null;
+            /** Advisor Name */
+            advisor_name?: string | null;
+            /**
+             * Channel
+             * @default phone_call
+             * @enum {string}
+             */
+            channel: "phone_call" | "web_form";
+            /** Child Ages */
+            child_ages?: number[];
+            /** Client Name */
+            client_name: string;
+            /** Destination */
+            destination: string;
+            /**
+             * End Date
+             * Format: date
+             */
+            end_date: string;
+            /**
+             * Home Currency
+             * @default USD
+             */
+            home_currency: string;
+            /** Interests */
+            interests?: string[];
+            /** Needs */
+            needs?: string[];
+            /**
+             * Purpose
+             * @default Vacation
+             */
+            purpose: string;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            traveler_configuration?: components["schemas"]["TravelerConfiguration"];
+        };
+        /** IntakeRun */
+        IntakeRun: {
+            /**
+             * Agent
+             * @enum {string}
+             */
+            agent: "plan_book" | "pack_shop" | "explore_magic" | "essentials" | "recovery" | "travel_essentials" | "manage_recover" | "voice_quotes";
+            /** Run Id */
+            run_id: string | null;
+            /** Skipped Reason */
+            skipped_reason?: string | null;
         };
         /** ItineraryCreate */
         ItineraryCreate: {
@@ -1430,6 +2122,49 @@ export interface components {
             travel_mode: "walk" | "transit";
             /** Trip Id */
             trip_id?: string | null;
+        };
+        /** Message */
+        Message: {
+            attachment?: components["schemas"]["PolicyAttachment"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Sender
+             * @enum {string}
+             */
+            sender: "traveler" | "advisor";
+            /** Text */
+            text: string;
+            triage?: components["schemas"]["Triage"] | null;
+            /**
+             * Trip Id
+             * Format: uuid
+             */
+            trip_id: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+        };
+        /** MessageCreate */
+        MessageCreate: {
+            attachment?: components["schemas"]["PolicyAttachment"] | null;
+            /**
+             * Sender
+             * @enum {string}
+             */
+            sender: "traveler" | "advisor";
+            /** Text */
+            text: string;
         };
         /** Meta */
         Meta: {
@@ -1806,6 +2541,30 @@ export interface components {
             /** Trip Id */
             trip_id?: string | null;
         };
+        /** PolicyAttachment */
+        PolicyAttachment: {
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Type
+             * @default insurance_policy
+             * @constant
+             */
+            type: "insurance_policy";
+        };
+        /** PolicyCreate */
+        PolicyCreate: {
+            /** Quote Id */
+            quote_id: string;
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+        };
         /** Preferences */
         Preferences: {
             /**
@@ -1873,6 +2632,25 @@ export interface components {
              */
             version: number;
         };
+        /** ProposedAction */
+        ProposedAction: {
+            amount?: components["schemas"]["Money"] | null;
+            /** Draft */
+            draft: string;
+            /** High Stakes */
+            high_stakes: boolean;
+            /** Item Id */
+            item_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "send_claim" | "contact_airline" | "request_refund" | "notify_traveler";
+            /** Recipient */
+            recipient: string;
+            /** Summary */
+            summary: string;
+        };
         /** Recommendation */
         Recommendation: {
             /** Allowed Actions */
@@ -1927,6 +2705,81 @@ export interface components {
              */
             valid_until: string;
         };
+        /** RecoveryInput */
+        RecoveryInput: {
+            /**
+             * Accessibility
+             * @default
+             */
+            accessibility: string;
+            /**
+             * Adult Count
+             * @default 1
+             */
+            adult_count: number;
+            /** Child Ages */
+            child_ages?: number[];
+            /**
+             * Child Count
+             * @default 0
+             */
+            child_count: number;
+            /** Destination */
+            destination?: string | null;
+            /**
+             * Dietary
+             * @default
+             */
+            dietary: string;
+            disruption?: components["schemas"]["Disruption"] | null;
+            /** End Date */
+            end_date?: string | null;
+            /**
+             * Infant Count
+             * @default 0
+             */
+            infant_count: number;
+            /**
+             * Instructions
+             * @default
+             */
+            instructions: string;
+            /** Interests */
+            interests?: string[];
+            /** Start Date */
+            start_date?: string | null;
+            /**
+             * Timezone
+             * @default Europe/Madrid
+             */
+            timezone: string;
+            /**
+             * Travel Style
+             * @default unhurried
+             */
+            travel_style: string;
+        };
+        /** RecoveryProposal */
+        RecoveryProposal: {
+            /** Actions */
+            actions: components["schemas"]["ProposedAction"][];
+            /** Assumptions */
+            assumptions: string[];
+            baggage: components["schemas"]["BaggageRights"] | null;
+            /** Checklist Tasks */
+            checklist_tasks: components["schemas"]["TaskProposal"][];
+            /**
+             * Data Mode
+             * @enum {string}
+             */
+            data_mode: "fixture" | "live";
+            /** Reply */
+            reply: string;
+            /** Rights */
+            rights: components["schemas"]["RightsAssessment"][];
+            /** Sources */
+            sources: components["schemas"]["Source"][];
+        };
         /** RecoveryRequest */
         RecoveryRequest: {
             /**
@@ -1937,6 +2790,27 @@ export interface components {
             input: components["schemas"]["HelperInput"];
             /** Trip Id */
             trip_id?: string | null;
+        };
+        /** RightsAssessment */
+        RightsAssessment: {
+            /** Applies */
+            applies: boolean;
+            /** Caveats */
+            caveats: string[];
+            /** Eligible For Compensation */
+            eligible_for_compensation: boolean;
+            /** Passengers */
+            passengers: number;
+            per_passenger: components["schemas"]["Money"] | null;
+            /** Reasoning */
+            reasoning: string[];
+            /** Regulation */
+            regulation: string;
+            /** Right To Care */
+            right_to_care: string[];
+            /** Right To Refund */
+            right_to_refund: boolean;
+            total: components["schemas"]["Money"] | null;
         };
         /** RunError */
         RunError: {
@@ -2219,7 +3093,7 @@ export interface components {
              */
             requires_approval: boolean;
             /** Result */
-            result?: components["schemas"]["PlanProposal"] | components["schemas"]["PackProposal"] | components["schemas"]["ExploreProposal"] | null;
+            result?: components["schemas"]["PlanProposal"] | components["schemas"]["PackProposal"] | components["schemas"]["ExploreProposal"] | components["schemas"]["EssentialsProposal"] | components["schemas"]["RecoveryProposal"] | components["schemas"]["VoiceQuoteProposal"] | null;
             /**
              * Status
              * @default not_started
@@ -2305,15 +3179,33 @@ export interface components {
         };
         /** TaskProposal */
         TaskProposal: {
+            /** Due Date */
+            due_date?: string | null;
             /** Item Id */
             item_id: string;
+            /**
+             * Priority
+             * @default should
+             * @enum {string}
+             */
+            priority: "must" | "should" | "nice";
             /**
              * System
              * @enum {string}
              */
-            system: "plan_book" | "pack_shop" | "explore_magic" | "essentials" | "recovery";
+            system: "plan_book" | "pack_shop" | "explore_magic" | "essentials" | "recovery" | "travel_essentials" | "manage_recover" | "voice_quotes";
             /** Title */
             title: string;
+        };
+        /** TranscriptLine */
+        TranscriptLine: {
+            /**
+             * Speaker
+             * @enum {string}
+             */
+            speaker: "voice_agent" | "insurer";
+            /** Text */
+            text: string;
         };
         /** TravelerConfiguration */
         TravelerConfiguration: {
@@ -2332,6 +3224,31 @@ export interface components {
              * @default 0
              */
             infant_count: number;
+        };
+        /** TravelerMessageCreate */
+        TravelerMessageCreate: {
+            /** Text */
+            text: string;
+        };
+        /** Triage */
+        Triage: {
+            /** Reason */
+            reason: string;
+            /**
+             * Suggested Action
+             * @enum {string}
+             */
+            suggested_action: "voice_quotes" | "manage_recover" | "reply";
+            /**
+             * Topic
+             * @enum {string}
+             */
+            topic: "insurance_proof" | "disruption" | "general";
+            /**
+             * Urgency
+             * @enum {string}
+             */
+            urgency: "urgent" | "normal";
         };
         /** Trip */
         Trip: {
@@ -2497,6 +3414,101 @@ export interface components {
             /** Tasks */
             tasks: components["schemas"]["Task"][];
             trip: components["schemas"]["Trip"];
+        };
+        /**
+         * VoiceQuoteInput
+         * @description Ask the voice agent to phone insurers for an urgent travel-insurance quote.
+         */
+        VoiceQuoteInput: {
+            /**
+             * Accessibility
+             * @default
+             */
+            accessibility: string;
+            /**
+             * Adult Count
+             * @default 1
+             */
+            adult_count: number;
+            /** Child Ages */
+            child_ages?: number[];
+            /**
+             * Child Count
+             * @default 0
+             */
+            child_count: number;
+            /** Destination */
+            destination?: string | null;
+            /**
+             * Dietary
+             * @default
+             */
+            dietary: string;
+            /** End Date */
+            end_date?: string | null;
+            /**
+             * Infant Count
+             * @default 0
+             */
+            infant_count: number;
+            /**
+             * Instructions
+             * @default
+             */
+            instructions: string;
+            /** Interests */
+            interests?: string[];
+            /** Message Id */
+            message_id?: string | null;
+            min_medical?: components["schemas"]["Money"];
+            /**
+             * Need Document Now
+             * @default true
+             */
+            need_document_now: boolean;
+            /** Start Date */
+            start_date?: string | null;
+            /**
+             * Timezone
+             * @default Europe/Madrid
+             */
+            timezone: string;
+            /**
+             * Travel Style
+             * @default unhurried
+             */
+            travel_style: string;
+        };
+        /** VoiceQuoteProposal */
+        VoiceQuoteProposal: {
+            /** Assumptions */
+            assumptions: string[];
+            /** Calls */
+            calls: components["schemas"]["InsurerCall"][];
+            /**
+             * Data Mode
+             * @enum {string}
+             */
+            data_mode: "fixture" | "live";
+            /** Recommended Quote Id */
+            recommended_quote_id: string | null;
+            /** Reply */
+            reply: string;
+            /** Requirements */
+            requirements: string[];
+            /** Sources */
+            sources: components["schemas"]["Source"][];
+        };
+        /** VoiceQuoteRequest */
+        VoiceQuoteRequest: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            agent: "voice_quotes";
+            input: components["schemas"]["VoiceQuoteInput"];
+            /** Trip Id */
+            trip_id?: string | null;
         };
         /** VoteRequest */
         VoteRequest: {
@@ -2712,6 +3724,7 @@ export interface operations {
             query?: {
                 cursor?: string | null;
                 limit?: number;
+                trip_id?: string | null;
             };
             header?: never;
             path?: never;
@@ -2840,7 +3853,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlanRequest"] | components["schemas"]["PackRequest"] | components["schemas"]["ExploreRequest"] | components["schemas"]["EssentialsRequest"] | components["schemas"]["RecoveryRequest"];
+                "application/json": components["schemas"]["PlanRequest"] | components["schemas"]["PackRequest"] | components["schemas"]["ExploreRequest"] | components["schemas"]["EssentialsRequest"] | components["schemas"]["RecoveryRequest"] | components["schemas"]["AdvisorEssentialsRequest"] | components["schemas"]["AdvisorRecoveryRequest"] | components["schemas"]["VoiceQuoteRequest"];
             };
         };
         responses: {
@@ -3215,6 +4228,615 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope_list_AgentInfo__"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_advisor_v1_consumer_advisor_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_AdvisorLink_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    link_advisor_v1_consumer_advisor_link_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdvisorLinkCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_AdvisorLink_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    traveler_messages_v1_consumer_advisor_messages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_list_Message__"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    traveler_send_v1_consumer_advisor_messages_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TravelerMessageCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_Message_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    traveler_policy_v1_consumer_advisor_policies__policy_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_InsurancePolicy_"];
                 };
             };
             /** @description Bad Request */
@@ -8019,6 +9641,374 @@ export interface operations {
             };
         };
     };
+    list_intakes_v1_intakes_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_list_Intake__"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    create_intake_v1_intakes_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntakeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_Intake_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_intake_v1_intakes__intake_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                intake_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_Intake_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     create_magic_v1_magic_runs_post: {
         parameters: {
             query?: never;
@@ -8655,6 +10645,503 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope_Trip_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    create_policy_v1_trips__trip_id__insurance_policies_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                trip_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_InsurancePolicy_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_policy_v1_trips__trip_id__insurance_policies__policy_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                trip_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_InsurancePolicy_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    list_messages_v1_trips__trip_id__messages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                trip_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_list_Message__"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    create_message_v1_trips__trip_id__messages_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                trip_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_Message_"];
                 };
             };
             /** @description Bad Request */

@@ -7,7 +7,6 @@ from uuid import UUID
 from pydantic import AwareDatetime, Field, model_validator
 
 from super_travel.control.schemas import (
-    AgentKey,
     MagicInput,
     Model,
     Money,
@@ -15,6 +14,10 @@ from super_travel.control.schemas import (
     Text,
     Trip,
 )
+
+ConsumerAgentKey = Literal[
+    "plan_book", "pack_shop", "explore_magic", "essentials", "recovery"
+]
 
 TaskStatus = Literal[
     "not_started",
@@ -33,7 +36,7 @@ class TaskCreate(Model):
     title: Text
     description: str = Field(default="", max_length=2000)
     agent_instructions: str = Field(default="", max_length=2000)
-    assigned_agent: AgentKey = "plan_book"
+    assigned_agent: ConsumerAgentKey = "plan_book"
     priority: Literal["must", "should", "could"] = "should"
     due_date: date | None = None
     requires_approval: bool = True
@@ -43,7 +46,7 @@ class TaskPatch(Model):
     title: Text | None = None
     description: str | None = Field(default=None, max_length=2000)
     agent_instructions: str | None = Field(default=None, max_length=2000)
-    assigned_agent: AgentKey | None = None
+    assigned_agent: ConsumerAgentKey | None = None
     priority: Literal["must", "should", "could"] | None = None
     due_date: date | None = None
     requires_approval: bool | None = None
