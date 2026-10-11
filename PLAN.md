@@ -1,8 +1,17 @@
 # Wonder execution plan
 
+> Current consumer implementation: [CONSUMER_APP.md](docs/CONSUMER_APP.md) and the latest [owner brief](docs/product/CONSUMER_BRIEF.md) supersede the earlier consumer priority and frontend ownership below. React/Vite and SQLite are implemented locally; production identity, native parity and live integrations remain release gates. The earlier beta design is retained for migration planning, not presented as shipped behavior.
+
+
 Implementation update: three proposal backends and local run/status/cancel/bookmark API now exist. See [CONTROL_API.md](docs/CONTROL_API.md) and [NEXT_STEPS.md](docs/NEXT_STEPS.md); live Magic, production identity/persistence and app parity remain gates.
 
 Execution baseline. Product name **Wonder**; repository `jayasrisng/super-travel`. The preserved Super Travel brief remains the product source of truth, updated by these explicit owner decisions on October 11, 2026: Magic first, Barcelona launch area, private beta as the first usable release, equally complete core web/native iOS, and deterministic backend work redistributed to D3. The hackathon demo is a separate milestone, not evidence that beta gates have passed.
+
+## Current consumer execution status
+
+The new owner briefs authorize implementation and supersede the earlier local priorities. Phases 1–4 now form one working fixture journey: Home/onboarding/checklist/five agents, wardrobe/swipes/packing, Magic/bookmarks, and selected synthetic calendar/daily brief. Backend security/invariant and browser journey checks validate this slice. Original advisor/onboarding artifacts remain preserved.
+
+Phase 5 includes automated tests, responsive paper/chalkboard previews and generated-contract checks. Live providers, production accounts/collaboration, automated notifications and native parity are not complete. Use [NEXT_STEPS](docs/NEXT_STEPS.md) as the active prioritized execution plan and [CONSUMER_APP](docs/CONSUMER_APP.md) for current contracts and trade-offs. The prior production milestone design below is historical planning, not current implementation status.
 
 ## Repository assessment
 

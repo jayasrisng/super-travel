@@ -1,5 +1,8 @@
 # Wonder agent control API — implementation handoff
 
+> Current consumer supplement: [CONSUMER_APP.md](CONSUMER_APP.md). Checked OpenAPI defines implemented local routes. Latest consumer scope supersedes older Magic-first/website ownership; production beta gates below remain separate.
+
+
 This change implements the three requested agent backends and their local control API. The website belongs to D4; no frontend is included. Python remains in the existing `super_travel/` package to avoid moving teammates' Essentials/Recovery code.
 
 ## Run locally

@@ -4,13 +4,15 @@ These instructions apply to all repository paths. App name **Wonder**; repo rema
 
 ## Current scope and truthful status
 
-The owner has explicitly authorized the three agent backends and control API. See docs/CONTROL_API.md for the implemented local adapter and remaining beta gates. Website work belongs to another teammate. Further scoped implementation requests need not reapprove every routine technical choice. Do not imply that planned commands, tests, API routes, integrations or deployment already exist.
+The latest owner instruction explicitly requests implementation of the complete consumer notebook. Read docs/product/CONSUMER_BRIEF.md and docs/product/NOTEBOOK_DESIGN.md as current consumer truth. They supersede earlier website ownership and Magic-first local delivery. Preserve teammate demos and working backend code. See docs/CONSUMER_APP.md for actual behavior and remaining gates; README commands must remain runnable.
 
-Priorities: Magic first in Barcelona; first usable release is private beta with web/native iOS core parity. Hackathon demo is separately gated. Preserve the full connected-travel roadmap. Integrations are maximized through meaningful, demonstrated use, not speculative claims or logos. No unrelated architecture rewrite or unbounded infrastructure additions.
+Current local app: responsive React/TypeScript/Vite in apps/web, five agent runs through existing FastAPI/SQLite control, editable tasks, 34-piece wardrobe, deterministic outfits/votes/packing, selected synthetic calendar/briefing, fixture Magic, owner group records and redacted shares. Paper/pencil and chalkboard themes are required. Generated DTOs must follow exported OpenAPI.
+
+Fixture locations may include Tokyo/home cities; this is not live coverage. Barcelona live launch and web/native beta parity remain gated. No native target, OAuth, real discovery, automated delivery, transaction execution or production account system is shipped. Integrations need meaningful permitted use and explicit truthful labeling.
 
 ## Ownership and independent work
 
-Use team brief path ownership. D1 owns shared core/contracts/migration coordination; D2 coordination/Dial/assigned Swift sources; D3 operations/feasibility/Keewano/Sparta evidence; D4 web/tokens; D5 host iOS/Widget and exclusive Xcode project editor. Shared files have one editor at a time. Coordinate through a scoped PR; do not overwrite teammates' changes or reset a dirty checkout.
+Use team brief path ownership and the consumer supplement. D1 owns control/models/API registration/shared contracts; D2 owns consumer/coordination.py and apps/web/src/group.tsx; D3 owns consumer/service.py and consumer/wardrobe.py; D4 owns other web source/tokens; D5 owns future native work and WIDGET_CONTRACT. D1 owns shared core/contracts/migration coordination; D2 coordination/Dial/assigned Swift sources; D3 operations/feasibility/Keewano/Sparta evidence; D4 web/tokens; D5 host iOS/Widget and exclusive Xcode project editor. Shared files have one editor at a time. Coordinate through a scoped PR; do not overwrite teammates' changes or reset a dirty checkout.
 
 Do not spawn/delegate agents merely because five developers are mentioned. Only delegate when requested by the user or applicable task instructions. A proposed human collaboration workflow does not authorize tool-driven messages, feedback posts or submissions. Do not push directly to main. Do not push, create issues or submit the hackathon project unless the task authorizes that external action.
 
@@ -40,7 +42,7 @@ No purchases, cancellations, payments, outbound calls or messages from agent out
 
 ## Development conventions
 
-Future tooling: pnpm + strict TypeScript/ESLint/Prettier; uv + Python/Ruff/Pytest; SwiftUI/XCTest/SwiftLint. Exact compatible versions are pinned during Phase 0; commit lockfiles. No invented version claims. Tests near owning modules; shared fixtures in packages/contracts/fixtures after scaffolding. Python service exposes interfaces instead of clients importing internal repositories. Keep UI implementation details out of consumer workflows.
+Current tooling: pnpm + strict TypeScript/Vite/Prettier/Playwright; uv + Python/Ruff/Pytest. ESLint is not configured. Future native tooling: SwiftUI/XCTest/SwiftLint. Exact compatible versions are pinned during Phase 0; commit lockfiles. No invented version claims. Tests near owning modules; shared fixtures in packages/contracts/fixtures after scaffolding. Python service exposes interfaces instead of clients importing internal repositories. Keep UI implementation details out of consumer workflows.
 
 Branches docs/topic, feat/domain-topic, fix/domain-topic. Small PRs state acceptance/task ID, changes, checks, contract/migration impact, fallback and material limits. No unrelated formatting churn. Keep secrets out of tracked files; .env.example documents names/placeholders only. Root setup commands must be runnable and verified before README labels them current.
 
