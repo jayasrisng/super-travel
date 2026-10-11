@@ -69,12 +69,21 @@ class TaskDecision(Model):
     action: Literal["complete", "reopen", "approve", "reject"]
 
 
+class FashionPreferences(Model):
+    occasion: Literal["walking", "dinner", "business", "outdoors"] = "walking"
+    temperature_c: int = Field(default=18, ge=-30, le=50, strict=True)
+    preferred_style: str = Field(default="", max_length=100)
+    preferred_colors: list[str] = Field(default_factory=list, max_length=10)
+    owned_only: bool = False
+
+
 class Preferences(Model):
     dietary: str = Field(default="", max_length=500)
     accessibility: str = Field(default="", max_length=500)
     travel_style: str = Field(default="unhurried", max_length=100)
     interests: list[Text] = Field(default_factory=list, max_length=20)
     notification_preference: bool = False
+    fashion: FashionPreferences = Field(default_factory=FashionPreferences)
 
 
 class Profile(Preferences):

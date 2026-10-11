@@ -3,14 +3,14 @@ export default defineConfig({
   testDir: "tests",
   timeout: 60000,
   use: {
-    baseURL: "http://127.0.0.1:5173",
+    baseURL: `http://127.0.0.1:${process.env.WONDER_WEB_PORT || 5173}`,
     viewport: { width: 1280, height: 900 },
     trace: "retain-on-failure",
   },
   webServer: [
     {
       command: "uv run python ../../scripts/run_consumer.py",
-      url: "http://127.0.0.1:8000/openapi.json",
+      url: `http://127.0.0.1:${process.env.WONDER_API_PORT || 8000}/openapi.json`,
       reuseExistingServer: !process.env.CI,
       timeout: 30000,
       env: {
@@ -20,7 +20,7 @@ export default defineConfig({
     },
     {
       command: "pnpm dev",
-      url: "http://127.0.0.1:5173",
+      url: `http://127.0.0.1:${process.env.WONDER_WEB_PORT || 5173}`,
       reuseExistingServer: !process.env.CI,
       timeout: 30000,
     },

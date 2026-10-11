@@ -1,0 +1,9 @@
+{
+  "fashion": {
+    "occasion": "dinner",
+    "temperature_c": 22,
+    "preferred_style": "capsule",
+    "preferred_colors": ["cream", "navy"],
+    "owned_only": true
+  }
+}
