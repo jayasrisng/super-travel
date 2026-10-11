@@ -38,14 +38,16 @@ All paths include `/v1`. GET entity responses carry `ETag: "version"`. JSON is s
 
 | Method and path | Behavior |
 |---|---|
-| GET `/agents` | Three agent keys, prototype-name mapping, configured mode, readiness and limitations |
+| GET `/agents` | Five agent keys, prototype-name mapping, configured mode, readiness and limitations |
 | POST `/agent-runs` | Discriminated agent request; returns 202 and queued run |
 | POST `/magic/runs` | Convenient Magic input shape; returns the same run contract |
-| GET `/agent-runs` | Actor-owned runs, cursor/limit pagination |
+| GET `/agent-runs` | Actor-owned runs, cursor/limit pagination, optional `trip_id` filter |
 | GET `/agent-runs/{run_id}` | Current state, typed result or redacted failure |
 | POST `/agent-runs/{run_id}/cancel` | Cancel queued/running work; requires current `If-Match` |
 | POST `/trips` | Minimal owner-only integration context; destination/dates/timezone/traveler counts/interests |
 | GET `/trips/{trip_id}` | Same actor only; versioned minimal context |
+| POST `/intakes` | Advisor intake from the onboarding call: creates the trip and queues all five agents in one transaction (Magic only inside the Barcelona demo area) |
+| GET `/intakes`, GET `/intakes/{intake_id}` | Actor-owned intakes with their trip and run IDs |
 | POST `/me/saved-experiences` | Save an unexpired recommendation from the actor's succeeded Magic run |
 | GET `/me/saved-experiences` | Actor-owned minimal saved records, cursor/limit pagination |
 | DELETE `/me/saved-experiences/{saved_id}` | Actor-owned deletion; requires `If-Match` |
@@ -63,12 +65,14 @@ Create → poll after one second → increase interval up to ten seconds → sto
 | `plan_book` | `planning` | Itinerary items, checklist tasks and budget estimates; no booking tools or verified inventory |
 | `pack_shop` | `packing` | Categorized item quantities and preparation tasks; no purchases or packing-state mutation |
 | `explore_magic` | `explore` | Normalized provider candidates filtered/ranked by deterministic feasibility; saving creates only a private saved record |
+| `travel_essentials` | `essentials` | Deterministic briefing from curated country data, the ECB exchange rate and mock eSIM plans; no advisories or entry rules |
+| `manage_recover` | `recovery` | Deterministic EU261 / US DOT / Montreal rights for a reported disruption, with claim drafts as proposals; without a disruption, a home-prep and follow-up checklist. No flight monitoring |
 
 Standalone Plan/Pack require destination, start_date and end_date. Trip mode can omit those fields: the service reads only an actor-owned snapshot. Explicit null remains explicit and fails if a required constraint becomes absent. Unknown fields fail rather than silently accepting private documents. Traveler counts default to one adult; trip counts fill omitted fields. The model sees only the resolved input, never full TripContext, documents, passenger names, PNRs or ledger rows. The existing prototype `.run(task, trip)` adapter uses a destination/date allowlist and returns `AgentResult` without mutating the trip. Explore's prototype `.run` expects a JSON-encoded MagicInput, since free text cannot safely supply location/time.
 
 Model-generated planning/packing drafts have `data_mode=live` meaning a real model execution, **not verified travel data**. Sources are cleared by the service because no research tools were called. Always show “model-generated, unverified” and the agent limitation; never infer booking, weather, price or source verification from this field. Synthetic fixtures have `data_mode=fixture` throughout. Budget estimates are proposals, not authoritative arithmetic or quotes.
 
-Magic's primary list fits outbound + activity + onward + buffer against the earlier of the requested window and next commitment, using UTC arithmetic across Barcelona DST. Known costs must fit any supplied EUR budget. Unknown route/hours/required cost or unverified live availability excludes primary results; separately listed uncertain results require `allow_unknown_feasibility=true`. No return leg is inferred when no next commitment was supplied. Candidates and origins must be within a temporary Barcelona demo rectangle (latitude 41.32–41.47, longitude 2.05–2.23); this is explicitly **not** the reviewed private-beta polygon. Dates/hours/routes/costs in the fixture adapter are simulated, irrespective of wall-clock time or origin.
+Magic's primary list fits outbound + activity + onward + buffer against the earlier of the requested window and next commitment, using UTC arithmetic across Barcelona DST. Known costs must fit any supplied EUR budget. Unknown route/hours/required cost or unverified live availability excludes primary results; separately listed uncertain results require `allow_unknown_feasibility=true`. No return leg is inferred when no next commitment was supplied. Advisor intake automatically queues Magic only within a temporary Barcelona demo rectangle (latitude 41.32–41.47, longitude 2.05–2.23); this is explicitly **not** the reviewed private-beta polygon. The consumer fixture adapter accepts manually entered origins globally; that is not live coverage. Dates/hours/routes/costs in the fixture adapter are simulated, irrespective of wall-clock time or origin.
 
 Recommendation validity is capped at 15 minutes and shortened by provider expiry, closing time and the time window. Save checks validity again. Saved records retain title, scope and fixture/live label, not precise origin or route history; they are bookmarks, not reservations. Agent-run retention does not extend recommendation validity.
 
@@ -93,3 +97,5 @@ uv run ruff check super_travel/control super_travel/agents/proposals.py super_tr
 Tests cover token/actor/trip isolation, strict inputs/money, replay/conflict including omitted overrides, queue limits/pagination, cancellation/late completion, lease recovery/restart, expiry redaction, saving/deletion, three-agent results, fake model API execution, private-context nonmutation, DST/onward/budget/unknown feasibility and checked artifact drift. Existing Essentials/Recovery tests are retained. Tests use synthetic tokens and localhost fake servers; no provider credentials are needed.
 
 Future domain prose in DATA_MODEL/CONTRACTS remains the private-beta design. This local TripCreate adds a required destination and interests, excludes membership/budget/guest lifecycle and does not imply the full Trip is shipped. See decision T14 for this deliberate staging boundary. D1 and affected web/iOS owners should review the exported contract before wiring clients.
+
+Consumer `essentials`/`recovery` retain their existing proposal contracts. Advisor `travel_essentials`/`manage_recover` retain their richer deterministic briefing/rights contracts. `/agents` exposes both sets without renaming persisted runs; the consumer task picker keeps its five specialist choices.

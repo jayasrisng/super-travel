@@ -6,7 +6,7 @@ October 11, 2026. This snapshot reconciles the latest main onboarding commit (`6
 
 | Contribution | What it supplies | Current limit |
 |---|---|---|
-| [PR #5](https://github.com/jayasrisng/super-travel/pull/5) | CLI orchestrator, deterministic event dispatch, in-memory sessions, static five-agent advisor dashboard, generated synthetic dashboard data, installable Python packaging | Dashboard reads `data/demo.json`; local review actions do not call the control API or execute external actions |
+| [PR #5](https://github.com/jayasrisng/super-travel/pull/5) | CLI orchestrator, deterministic event dispatch, in-memory sessions, static five-agent advisor dashboard, generated synthetic dashboard data, installable Python packaging | Superseded: the dashboard now reads the control API (intakes, runs, saved ideas); review actions are still browser-local |
 | [PR #4](https://github.com/jayasrisng/super-travel/pull/4) | Three proposal backends, authenticated FastAPI run controls, durable local runs, minimal trips, Magic bookmarks, checked OpenAPI and fixtures | Local token/SQLite adapter; Magic live discovery/routes are not configured |
 | Main onboarding commit | Saved landing-page HTML plus a scripted intake conversation and editable form | Nine referenced local assets are absent; no live call, auth, persistence or backend intake integration |
 | Earlier PR #2 | Essentials/Recovery prototypes, deterministic helpers and CLI examples | Prototype tools can mutate an in-memory TripContext; not exposed through the production domain API |

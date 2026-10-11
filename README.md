@@ -100,6 +100,20 @@ REST `/v1` is the domain boundary. Pydantic models define the wire contract; gen
 
 Vite is the implemented local frontend choice; the earlier Next.js/Supabase deployment plan remains a separate beta architecture. This keeps a small static client and reuses FastAPI directly. It sacrifices server-rendered pages and production account infrastructure, which this local implementation does not need. Production requires reviewed identity/membership, PostgreSQL/RLS, managed workers, quotas, migrations and licensed live providers.
 
+### Agency dashboard (live)
+
+The advisor console reads the control API through a small Node server that keeps the token server-side. After an intake call, all five agents run for the client's trip and their proposals appear on the dashboard.
+
+```sh
+uv run uvicorn super_travel.control.app:app --host 127.0.0.1 --port 8000 --env-file .env   # terminal 1
+node dashboard/serve.mjs                                                                    # terminal 2: http://localhost:5180
+uv run python scripts/seed_demo.py                                                          # optional: demo client + sample delay
+```
+
+- **Onboarding:** `http://localhost:5180/onboarding/#onboard`. Play the scripted call, then **Send to Wonder agents**. It posts to `POST /v1/intakes`, which creates the trip and queues Plan & Book, Pack & Shop, Explore/Magic (Barcelona only), Travel Essentials and Manage & Recover.
+- **Dashboard:** pick a client, see each agent's proposal, report a disruption (Manage & Recover computes EU261/US DOT/baggage rights and drafts the claim), save Magic ideas, re-run an agent.
+- Approve/Dismiss in the review queue is recorded in the browser only; nothing is sent. The onboarding page's images, fonts and analytics script are still missing from the repo (see INTEGRATION_STATUS.md).
+
 The teammate's `dashboard/` advisor demo, `super_travel/onboarding/` saved HTML and CLI orchestrator are preserved. Their limitations are recorded in [integration status](docs/INTEGRATION_STATUS.md). For the model-based CLI: `uv run python scripts/chat.py` or `uv run python scripts/chat.py --event all`.
 
 ## Continue here

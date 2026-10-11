@@ -46,6 +46,68 @@
         "title": "Action",
         "type": "object"
       },
+      "AdvisorEssentialsRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "agent": {
+            "const": "travel_essentials",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/components/schemas/EssentialsInput"
+          },
+          "trip_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trip Id"
+          }
+        },
+        "required": [
+          "agent",
+          "input"
+        ],
+        "title": "AdvisorEssentialsRequest",
+        "type": "object"
+      },
+      "AdvisorRecoveryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "agent": {
+            "const": "manage_recover",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/components/schemas/RecoveryInput"
+          },
+          "trip_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trip Id"
+          }
+        },
+        "required": [
+          "agent",
+          "input"
+        ],
+        "title": "AdvisorRecoveryRequest",
+        "type": "object"
+      },
       "AgentInfo": {
         "additionalProperties": false,
         "properties": {
@@ -55,7 +117,9 @@
               "pack_shop",
               "explore_magic",
               "essentials",
-              "recovery"
+              "recovery",
+              "travel_essentials",
+              "manage_recover"
             ],
             "title": "Agent",
             "type": "string"
@@ -110,7 +174,9 @@
               "pack_shop",
               "explore_magic",
               "essentials",
-              "recovery"
+              "recovery",
+              "travel_essentials",
+              "manage_recover"
             ],
             "title": "Agent",
             "type": "string"
@@ -163,6 +229,12 @@
                 "$ref": "#/components/schemas/ExploreProposal"
               },
               {
+                "$ref": "#/components/schemas/EssentialsProposal"
+              },
+              {
+                "$ref": "#/components/schemas/RecoveryProposal"
+              },
+              {
                 "type": "null"
               }
             ],
@@ -209,6 +281,63 @@
           "expires_at"
         ],
         "title": "AgentRun",
+        "type": "object"
+      },
+      "BaggageRights": {
+        "additionalProperties": false,
+        "properties": {
+          "also_check": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Also Check",
+            "type": "array"
+          },
+          "claim_window": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Claim Window",
+            "type": "string"
+          },
+          "first_step": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "First Step",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "delayed",
+              "lost",
+              "damaged"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "liability_cap": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Liability Cap",
+            "type": "string"
+          },
+          "regulation": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Regulation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "regulation",
+          "kind",
+          "claim_window",
+          "liability_cap",
+          "first_step",
+          "also_check"
+        ],
+        "title": "BaggageRights",
         "type": "object"
       },
       "Briefing": {
@@ -298,6 +427,79 @@
           "disruptions"
         ],
         "title": "Briefing",
+        "type": "object"
+      },
+      "BriefingItem": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Detail",
+            "type": "string"
+          },
+          "item_id": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Item Id",
+            "type": "string"
+          },
+          "priority": {
+            "enum": [
+              "must",
+              "should",
+              "nice"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "title",
+          "detail",
+          "priority"
+        ],
+        "title": "BriefingItem",
+        "type": "object"
+      },
+      "BriefingSection": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BriefingItem"
+            },
+            "maxItems": 30,
+            "title": "Items",
+            "type": "array"
+          },
+          "topic": {
+            "enum": [
+              "payments_currency",
+              "connectivity",
+              "health",
+              "insurance",
+              "safety",
+              "customs_etiquette",
+              "language",
+              "emergency"
+            ],
+            "title": "Topic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic",
+          "items"
+        ],
+        "title": "BriefingSection",
         "type": "object"
       },
       "CalendarConnection": {
@@ -446,6 +648,47 @@
         "title": "Commitment",
         "type": "object"
       },
+      "ConnectivityOption": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Data",
+            "type": "string"
+          },
+          "days": {
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Days",
+            "type": "integer"
+          },
+          "item_id": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Item Id",
+            "type": "string"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "provider": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "provider",
+          "data",
+          "days",
+          "price"
+        ],
+        "title": "ConnectivityOption",
+        "type": "object"
+      },
       "Coverage": {
         "additionalProperties": false,
         "properties": {
@@ -480,6 +723,124 @@
           "partial"
         ],
         "title": "Coverage",
+        "type": "object"
+      },
+      "Disruption": {
+        "additionalProperties": false,
+        "properties": {
+          "arrival_delay_minutes": {
+            "default": 0,
+            "maximum": 4320.0,
+            "minimum": 0.0,
+            "title": "Arrival Delay Minutes",
+            "type": "integer"
+          },
+          "extraordinary_circumstances": {
+            "default": false,
+            "title": "Extraordinary Circumstances",
+            "type": "boolean"
+          },
+          "flight": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FlightRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "enum": [
+              "delay",
+              "cancellation",
+              "denied_boarding",
+              "baggage_delayed",
+              "baggage_lost",
+              "baggage_damaged"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "notice_days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notice Days"
+          },
+          "passengers": {
+            "default": 1,
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Passengers",
+            "type": "integer"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "reroute_arrival_delay_minutes": {
+            "anyOf": [
+              {
+                "maximum": 4320.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reroute Arrival Delay Minutes"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "Disruption",
+        "type": "object"
+      },
+      "EmergencyContact": {
+        "additionalProperties": false,
+        "properties": {
+          "country_code": {
+            "pattern": "^[A-Z]{2}$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "phone": {
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "country_code",
+          "label",
+          "phone"
+        ],
+        "title": "EmergencyContact",
         "type": "object"
       },
       "Envelope_AgentRun_": {
@@ -565,6 +926,23 @@
           "meta"
         ],
         "title": "Envelope[Home]",
+        "type": "object"
+      },
+      "Envelope_Intake_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Intake"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Envelope[Intake]",
         "type": "object"
       },
       "Envelope_ItineraryItem_": {
@@ -906,6 +1284,27 @@
         "title": "Envelope[list[CalendarEvent]]",
         "type": "object"
       },
+      "Envelope_list_Intake__": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/Intake"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Envelope[list[Intake]]",
+        "type": "object"
+      },
       "Envelope_list_OutfitVote__": {
         "additionalProperties": false,
         "properties": {
@@ -1026,6 +1425,214 @@
         "title": "ErrorEnvelope",
         "type": "object"
       },
+      "EssentialsInput": {
+        "additionalProperties": false,
+        "properties": {
+          "accessibility": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Accessibility",
+            "type": "string"
+          },
+          "adult_count": {
+            "default": 1,
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Adult Count",
+            "type": "integer"
+          },
+          "child_ages": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 30,
+            "title": "Child Ages",
+            "type": "array"
+          },
+          "child_count": {
+            "default": 0,
+            "maximum": 30.0,
+            "minimum": 0.0,
+            "title": "Child Count",
+            "type": "integer"
+          },
+          "destination": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination"
+          },
+          "dietary": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Dietary",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "home_currency": {
+            "default": "USD",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Home Currency",
+            "type": "string"
+          },
+          "infant_count": {
+            "default": 0,
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Infant Count",
+            "type": "integer"
+          },
+          "instructions": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Interests",
+            "type": "array"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "timezone": {
+            "default": "Europe/Madrid",
+            "title": "Timezone",
+            "type": "string"
+          },
+          "travel_style": {
+            "default": "unhurried",
+            "maxLength": 100,
+            "title": "Travel Style",
+            "type": "string"
+          }
+        },
+        "title": "EssentialsInput",
+        "type": "object"
+      },
+      "EssentialsProposal": {
+        "additionalProperties": false,
+        "properties": {
+          "assumptions": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "checklist_tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskProposal"
+            },
+            "maxItems": 100,
+            "title": "Checklist Tasks",
+            "type": "array"
+          },
+          "connectivity_options": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectivityOption"
+            },
+            "maxItems": 5,
+            "title": "Connectivity Options",
+            "type": "array"
+          },
+          "data_mode": {
+            "enum": [
+              "fixture",
+              "live"
+            ],
+            "title": "Data Mode",
+            "type": "string"
+          },
+          "emergency_contacts": {
+            "items": {
+              "$ref": "#/components/schemas/EmergencyContact"
+            },
+            "maxItems": 20,
+            "title": "Emergency Contacts",
+            "type": "array"
+          },
+          "exchange_rate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExchangeRate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reply": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reply",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/BriefingSection"
+            },
+            "maxItems": 8,
+            "title": "Sections",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "reply",
+          "assumptions",
+          "sources",
+          "data_mode",
+          "sections",
+          "emergency_contacts",
+          "exchange_rate",
+          "connectivity_options",
+          "checklist_tasks"
+        ],
+        "title": "EssentialsProposal",
+        "type": "object"
+      },
       "EssentialsRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1055,6 +1662,39 @@
           "input"
         ],
         "title": "EssentialsRequest",
+        "type": "object"
+      },
+      "ExchangeRate": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "from_currency": {
+            "pattern": "^[A-Z]{3}$",
+            "title": "From Currency",
+            "type": "string"
+          },
+          "rate": {
+            "exclusiveMinimum": 0.0,
+            "title": "Rate",
+            "type": "number"
+          },
+          "to_currency": {
+            "pattern": "^[A-Z]{3}$",
+            "title": "To Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_currency",
+          "to_currency",
+          "rate",
+          "as_of"
+        ],
+        "title": "ExchangeRate",
         "type": "object"
       },
       "Expense": {
@@ -1262,6 +1902,51 @@
         "title": "ExploreRequest",
         "type": "object"
       },
+      "FlightRef": {
+        "additionalProperties": false,
+        "properties": {
+          "carrier_code": {
+            "pattern": "^[A-Z0-9]{2}$",
+            "title": "Carrier Code",
+            "type": "string"
+          },
+          "from_iata": {
+            "pattern": "^[A-Z]{3}$",
+            "title": "From Iata",
+            "type": "string"
+          },
+          "number": {
+            "pattern": "^[A-Z0-9]{2}\\d{1,4}$",
+            "title": "Number",
+            "type": "string"
+          },
+          "scheduled_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Date"
+          },
+          "to_iata": {
+            "pattern": "^[A-Z]{3}$",
+            "title": "To Iata",
+            "type": "string"
+          }
+        },
+        "required": [
+          "carrier_code",
+          "number",
+          "from_iata",
+          "to_iata"
+        ],
+        "title": "FlightRef",
+        "type": "object"
+      },
       "HelperInput": {
         "additionalProperties": false,
         "properties": {
@@ -1406,6 +2091,309 @@
           "wardrobe_count"
         ],
         "title": "Home",
+        "type": "object"
+      },
+      "Intake": {
+        "additionalProperties": false,
+        "properties": {
+          "accommodation_area": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accommodation Area"
+          },
+          "advisor_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advisor Name"
+          },
+          "channel": {
+            "default": "phone_call",
+            "enum": [
+              "phone_call",
+              "web_form"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "child_ages": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 30,
+            "title": "Child Ages",
+            "type": "array"
+          },
+          "client_name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Client Name",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "destination": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Destination",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "home_currency": {
+            "default": "USD",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Home Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Interests",
+            "type": "array"
+          },
+          "needs": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Needs",
+            "type": "array"
+          },
+          "purpose": {
+            "default": "Vacation",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Purpose",
+            "type": "string"
+          },
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/IntakeRun"
+            },
+            "title": "Runs",
+            "type": "array"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "traveler_configuration": {
+            "$ref": "#/components/schemas/TravelerConfiguration"
+          },
+          "trip_id": {
+            "format": "uuid",
+            "title": "Trip Id",
+            "type": "string"
+          },
+          "version": {
+            "default": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "client_name",
+          "destination",
+          "start_date",
+          "end_date",
+          "id",
+          "trip_id",
+          "created_at",
+          "runs"
+        ],
+        "title": "Intake",
+        "type": "object"
+      },
+      "IntakeCreate": {
+        "additionalProperties": false,
+        "description": "What an advisor captures on the onboarding call.",
+        "properties": {
+          "accommodation_area": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accommodation Area"
+          },
+          "advisor_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advisor Name"
+          },
+          "channel": {
+            "default": "phone_call",
+            "enum": [
+              "phone_call",
+              "web_form"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "child_ages": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 30,
+            "title": "Child Ages",
+            "type": "array"
+          },
+          "client_name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Client Name",
+            "type": "string"
+          },
+          "destination": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Destination",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "home_currency": {
+            "default": "USD",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Home Currency",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Interests",
+            "type": "array"
+          },
+          "needs": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Needs",
+            "type": "array"
+          },
+          "purpose": {
+            "default": "Vacation",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Purpose",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "traveler_configuration": {
+            "$ref": "#/components/schemas/TravelerConfiguration"
+          }
+        },
+        "required": [
+          "client_name",
+          "destination",
+          "start_date",
+          "end_date"
+        ],
+        "title": "IntakeCreate",
+        "type": "object"
+      },
+      "IntakeRun": {
+        "additionalProperties": false,
+        "properties": {
+          "agent": {
+            "enum": [
+              "plan_book",
+              "pack_shop",
+              "explore_magic",
+              "essentials",
+              "recovery",
+              "travel_essentials",
+              "manage_recover"
+            ],
+            "title": "Agent",
+            "type": "string"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "skipped_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skipped Reason"
+          }
+        },
+        "required": [
+          "agent",
+          "run_id"
+        ],
+        "title": "IntakeRun",
         "type": "object"
       },
       "ItineraryCreate": {
@@ -2844,6 +3832,68 @@
         "title": "Profile",
         "type": "object"
       },
+      "ProposedAction": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "draft": {
+            "maxLength": 4000,
+            "title": "Draft",
+            "type": "string"
+          },
+          "high_stakes": {
+            "title": "High Stakes",
+            "type": "boolean"
+          },
+          "item_id": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Item Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "send_claim",
+              "contact_airline",
+              "request_refund",
+              "notify_traveler"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "recipient": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Recipient",
+            "type": "string"
+          },
+          "summary": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "kind",
+          "summary",
+          "recipient",
+          "draft",
+          "high_stakes"
+        ],
+        "title": "ProposedAction",
+        "type": "object"
+      },
       "Recommendation": {
         "additionalProperties": false,
         "properties": {
@@ -3006,6 +4056,209 @@
         "title": "Recommendation",
         "type": "object"
       },
+      "RecoveryInput": {
+        "additionalProperties": false,
+        "properties": {
+          "accessibility": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Accessibility",
+            "type": "string"
+          },
+          "adult_count": {
+            "default": 1,
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Adult Count",
+            "type": "integer"
+          },
+          "child_ages": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 30,
+            "title": "Child Ages",
+            "type": "array"
+          },
+          "child_count": {
+            "default": 0,
+            "maximum": 30.0,
+            "minimum": 0.0,
+            "title": "Child Count",
+            "type": "integer"
+          },
+          "destination": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination"
+          },
+          "dietary": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Dietary",
+            "type": "string"
+          },
+          "disruption": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Disruption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "infant_count": {
+            "default": 0,
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Infant Count",
+            "type": "integer"
+          },
+          "instructions": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Interests",
+            "type": "array"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "timezone": {
+            "default": "Europe/Madrid",
+            "title": "Timezone",
+            "type": "string"
+          },
+          "travel_style": {
+            "default": "unhurried",
+            "maxLength": 100,
+            "title": "Travel Style",
+            "type": "string"
+          }
+        },
+        "title": "RecoveryInput",
+        "type": "object"
+      },
+      "RecoveryProposal": {
+        "additionalProperties": false,
+        "properties": {
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/ProposedAction"
+            },
+            "maxItems": 10,
+            "title": "Actions",
+            "type": "array"
+          },
+          "assumptions": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "baggage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BaggageRights"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checklist_tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskProposal"
+            },
+            "maxItems": 100,
+            "title": "Checklist Tasks",
+            "type": "array"
+          },
+          "data_mode": {
+            "enum": [
+              "fixture",
+              "live"
+            ],
+            "title": "Data Mode",
+            "type": "string"
+          },
+          "reply": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reply",
+            "type": "string"
+          },
+          "rights": {
+            "items": {
+              "$ref": "#/components/schemas/RightsAssessment"
+            },
+            "maxItems": 5,
+            "title": "Rights",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "reply",
+          "assumptions",
+          "sources",
+          "data_mode",
+          "rights",
+          "baggage",
+          "actions",
+          "checklist_tasks"
+        ],
+        "title": "RecoveryProposal",
+        "type": "object"
+      },
       "RecoveryRequest": {
         "additionalProperties": false,
         "properties": {
@@ -3035,6 +4288,95 @@
           "input"
         ],
         "title": "RecoveryRequest",
+        "type": "object"
+      },
+      "RightsAssessment": {
+        "additionalProperties": false,
+        "properties": {
+          "applies": {
+            "title": "Applies",
+            "type": "boolean"
+          },
+          "caveats": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Caveats",
+            "type": "array"
+          },
+          "eligible_for_compensation": {
+            "title": "Eligible For Compensation",
+            "type": "boolean"
+          },
+          "passengers": {
+            "minimum": 1.0,
+            "title": "Passengers",
+            "type": "integer"
+          },
+          "per_passenger": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reasoning": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Reasoning",
+            "type": "array"
+          },
+          "regulation": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Regulation",
+            "type": "string"
+          },
+          "right_to_care": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Right To Care",
+            "type": "array"
+          },
+          "right_to_refund": {
+            "title": "Right To Refund",
+            "type": "boolean"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "regulation",
+          "applies",
+          "eligible_for_compensation",
+          "per_passenger",
+          "total",
+          "passengers",
+          "right_to_care",
+          "right_to_refund",
+          "reasoning",
+          "caveats"
+        ],
+        "title": "RightsAssessment",
         "type": "object"
       },
       "RunError": {
@@ -3585,6 +4927,12 @@
                 "$ref": "#/components/schemas/ExploreProposal"
               },
               {
+                "$ref": "#/components/schemas/EssentialsProposal"
+              },
+              {
+                "$ref": "#/components/schemas/RecoveryProposal"
+              },
+              {
                 "type": "null"
               }
             ],
@@ -3830,10 +5178,32 @@
       "TaskProposal": {
         "additionalProperties": false,
         "properties": {
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
           "item_id": {
             "maxLength": 2000,
             "minLength": 1,
             "title": "Item Id",
+            "type": "string"
+          },
+          "priority": {
+            "default": "should",
+            "enum": [
+              "must",
+              "should",
+              "nice"
+            ],
+            "title": "Priority",
             "type": "string"
           },
           "system": {
@@ -3842,7 +5212,9 @@
               "pack_shop",
               "explore_magic",
               "essentials",
-              "recovery"
+              "recovery",
+              "travel_essentials",
+              "manage_recover"
             ],
             "title": "System",
             "type": "string"
@@ -4720,6 +6092,23 @@
               "title": "Limit",
               "type": "integer"
             }
+          },
+          {
+            "in": "query",
+            "name": "trip_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Trip Id"
+            }
           }
         ],
         "responses": {
@@ -4873,9 +6262,11 @@
                   "mapping": {
                     "essentials": "#/components/schemas/EssentialsRequest",
                     "explore_magic": "#/components/schemas/ExploreRequest",
+                    "manage_recover": "#/components/schemas/AdvisorRecoveryRequest",
                     "pack_shop": "#/components/schemas/PackRequest",
                     "plan_book": "#/components/schemas/PlanRequest",
-                    "recovery": "#/components/schemas/RecoveryRequest"
+                    "recovery": "#/components/schemas/RecoveryRequest",
+                    "travel_essentials": "#/components/schemas/AdvisorEssentialsRequest"
                   },
                   "propertyName": "agent"
                 },
@@ -4894,6 +6285,12 @@
                   },
                   {
                     "$ref": "#/components/schemas/RecoveryRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AdvisorEssentialsRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AdvisorRecoveryRequest"
                   }
                 ],
                 "title": "Payload"
@@ -11419,6 +12816,468 @@
           }
         },
         "summary": "Session"
+      }
+    },
+    "/v1/intakes": {
+      "get": {
+        "operationId": "list_intakes_v1_intakes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_Intake__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Precondition Required"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "LocalBearer": []
+          }
+        ],
+        "summary": "List Intakes"
+      },
+      "post": {
+        "operationId": "create_intake_v1_intakes_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_Intake_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Precondition Required"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "LocalBearer": []
+          }
+        ],
+        "summary": "Create Intake"
+      }
+    },
+    "/v1/intakes/{intake_id}": {
+      "get": {
+        "operationId": "get_intake_v1_intakes__intake_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "intake_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Intake Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_Intake_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Precondition Required"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "LocalBearer": []
+          }
+        ],
+        "summary": "Get Intake"
       }
     },
     "/v1/magic/runs": {

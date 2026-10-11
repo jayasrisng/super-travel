@@ -6,11 +6,29 @@ from uuid import uuid4
 
 from pydantic import TypeAdapter, ValidationError
 
+from super_travel.agents.essentials.proposal import EssentialsProposalAgent
 from super_travel.agents.explore import ExploreAgent, ProviderUnavailable
 from super_travel.agents.proposals import PackingAgent, PlanningAgent
+from super_travel.agents.recovery.proposal import RecoveryProposalAgent
 from super_travel.consumer.agents import HelperAdapter
-from super_travel.control.schemas import AgentRun, RunRequest
+from super_travel.control.schemas import AgentRun, Intake, Location, RunRequest, Trip
 from super_travel.control.store import ControlError
+from super_travel.core.geo import destination
+
+# Intake interests (free text) -> Magic candidate categories.
+MAGIC_CATEGORIES = {
+    "food": ("food", "eat", "restaurant", "tapas", "market", "cafe", "coffee"),
+    "nature": ("park", "beach", "garden", "nature", "outdoor", "hike"),
+    "culture": (
+        "museum",
+        "aquarium",
+        "art",
+        "history",
+        "architecture",
+        "culture",
+        "gothic",
+    ),
+}
 
 
 class Service:
@@ -20,6 +38,8 @@ class Service:
             "plan_book": PlanningAgent(mode),
             "pack_shop": PackingAgent(mode),
             "explore_magic": ExploreAgent(mode),
+            "travel_essentials": EssentialsProposalAgent(mode),
+            "manage_recover": RecoveryProposalAgent(mode),
             "essentials": HelperAdapter("essentials", mode),
             "recovery": HelperAdapter("recovery", mode),
         }
@@ -92,9 +112,16 @@ class Service:
                 "invalid_constraints",
                 "Trip overrides produce invalid dates or constraints",
             ) from exc
-        if request.agent != "explore_magic" and any(
-            getattr(resolved.input, field) is None
-            for field in ("destination", "start_date", "end_date")
+        disruption_only = (
+            request.agent == "manage_recover" and resolved.input.disruption is not None
+        )
+        if (
+            request.agent != "explore_magic"
+            and not disruption_only
+            and any(
+                getattr(resolved.input, field) is None
+                for field in ("destination", "start_date", "end_date")
+            )
         ):
             raise ControlError(
                 422,
@@ -115,6 +142,96 @@ class Service:
             "error": None,
         }
         self.store.insert(actor, "run", body, resolved.model_dump(mode="json"))
+        return body
+
+    def create_intake(self, actor, intake):
+        """Create the trip, record the intake and queue every agent that can run for it.
+
+        Runs inside the caller's store transaction, so all of it commits or none does.
+        """
+        now = self.store.now()
+        place = destination(intake.destination)
+        timezone = place["timezone"] if place else "Europe/Madrid"
+        trip = Trip(
+            id=uuid4(),
+            owner_user_id=actor,
+            title=f"{intake.client_name.split()[0]}'s {intake.destination.split(',')[0]} trip",
+            destination=intake.destination,
+            start_date=intake.start_date,
+            end_date=intake.end_date,
+            timezone=timezone,
+            currency=place["currency"]
+            if place and place["currency"] in ("EUR", "USD", "JPY")
+            else "EUR",
+            traveler_configuration=intake.traveler_configuration,
+            interests=intake.interests,
+        ).model_dump(mode="json")
+        self.store.insert(actor, "trip", trip)
+
+        trip_id = trip["id"]
+        runs = []
+        requests = {
+            "plan_book": {},
+            "pack_shop": {},
+            "travel_essentials": {"home_currency": intake.home_currency},
+            "manage_recover": {},
+        }
+        for agent, values in requests.items():
+            request = TypeAdapter(RunRequest).validate_python(
+                {"agent": agent, "trip_id": trip_id, "input": values}
+            )
+            runs.append(
+                {"agent": agent, "run_id": self.create_run(actor, request)["id"]}
+            )
+
+        center = place and Location(latitude=place["lat"], longitude=place["lon"])
+        # Preserve the advisor demo's declared Barcelona coverage; the consumer
+        # fixture adapter separately accepts entered origins in other cities.
+        if (
+            center
+            and 41.32 <= center.latitude <= 41.47
+            and 2.05 <= center.longitude <= 2.23
+        ):
+            text = " ".join(intake.interests).lower()
+            categories = [
+                c
+                for c, words in MAGIC_CATEGORIES.items()
+                if any(w in text for w in words)
+            ]
+            request = TypeAdapter(RunRequest).validate_python(
+                {
+                    "agent": "explore_magic",
+                    "trip_id": trip_id,
+                    "input": {
+                        "location": center.model_dump(),
+                        "available_minutes": 120,
+                        "interests": categories,
+                    },
+                }
+            )
+            runs.append(
+                {
+                    "agent": "explore_magic",
+                    "run_id": self.create_run(actor, request)["id"],
+                }
+            )
+        else:
+            runs.append(
+                {
+                    "agent": "explore_magic",
+                    "run_id": None,
+                    "skipped_reason": "Magic covers the Barcelona demo area only",
+                }
+            )
+
+        body = Intake(
+            **intake.model_dump(),
+            id=uuid4(),
+            trip_id=trip_id,
+            created_at=now,
+            runs=runs,
+        ).model_dump(mode="json")
+        self.store.insert(actor, "intake", body)
         return body
 
     def work_once(self):

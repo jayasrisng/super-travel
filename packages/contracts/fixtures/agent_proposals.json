@@ -6,12 +6,16 @@
     "budget_estimates": [],
     "checklist_tasks": [
       {
+        "due_date": null,
         "item_id": "essentials-0",
+        "priority": "should",
         "system": "essentials",
         "title": "Review connectivity options"
       },
       {
+        "due_date": null,
         "item_id": "essentials-1",
+        "priority": "should",
         "system": "essentials",
         "title": "Check official entry and emergency information"
       }
@@ -190,6 +194,74 @@
       "No verified feasible options for this window; try a longer window or review uncertain options."
     ]
   },
+  "manage_recover": {
+    "actions": [
+      {
+        "amount": {
+          "amount_minor": 50000,
+          "currency": "EUR"
+        },
+        "draft": "Flight VY7821 LHR-BCN arrived 220 minutes late for a reason within the airline\u2019s control. Under Regulation (EC) 261/2004 we claim EUR 250 per passenger for 2 passengers (EUR 500 total). Passenger names: [add from booking].",
+        "high_stakes": true,
+        "item_id": "rec-claim-eu261",
+        "kind": "send_claim",
+        "recipient": "VY customer relations",
+        "summary": "Send EU261 claim to VY for 2 passengers"
+      }
+    ],
+    "assumptions": [
+      "Rights are computed by Wonder's rules code from the details reported; verify them against the airline's notice."
+    ],
+    "baggage": null,
+    "checklist_tasks": [
+      {
+        "due_date": "2026-11-10",
+        "item_id": "rec-claim-followup",
+        "priority": "should",
+        "system": "manage_recover",
+        "title": "Follow up on the VY EU261 claim if there's no reply"
+      },
+      {
+        "due_date": "2026-10-11",
+        "item_id": "rec-receipts",
+        "priority": "must",
+        "system": "manage_recover",
+        "title": "Keep receipts for meals and calls while waiting"
+      }
+    ],
+    "data_mode": "fixture",
+    "reply": "VY7821 arrived 220 minutes late. The airline owes EUR 500 under EU261; a claim draft is ready for review.",
+    "rights": [
+      {
+        "applies": true,
+        "caveats": [
+          "Care thresholds are measured from departure delay; arrival delay used as a proxy."
+        ],
+        "eligible_for_compensation": true,
+        "passengers": 2,
+        "per_passenger": {
+          "amount_minor": 25000,
+          "currency": "EUR"
+        },
+        "reasoning": [
+          "Arrives in the EU on an EU carrier.",
+          "Distance 1148 km: band EUR 250.",
+          "Arrival delay 220 min is 3h or more."
+        ],
+        "regulation": "EU261",
+        "right_to_care": [
+          "meals and refreshments",
+          "two phone calls or emails"
+        ],
+        "right_to_refund": false,
+        "total": {
+          "amount_minor": 50000,
+          "currency": "EUR"
+        }
+      }
+    ],
+    "sources": []
+  },
   "pack_shop": {
     "assumptions": [
       "Synthetic fixture; weather and airline baggage rules have not been checked.",
@@ -197,7 +269,9 @@
     ],
     "checklist_tasks": [
       {
+        "due_date": null,
         "item_id": "pack-review",
+        "priority": "should",
         "system": "pack_shop",
         "title": "Check baggage allowance and forecast"
       }
@@ -243,7 +317,9 @@
     "budget_estimates": [],
     "checklist_tasks": [
       {
+        "due_date": null,
         "item_id": "plan-review",
+        "priority": "should",
         "system": "plan_book",
         "title": "Confirm dates and transport independently"
       }
@@ -269,12 +345,16 @@
     "budget_estimates": [],
     "checklist_tasks": [
       {
+        "due_date": null,
         "item_id": "recovery-0",
+        "priority": "should",
         "system": "recovery",
         "title": "Keep booking receipts and provider contacts"
       },
       {
+        "due_date": null,
         "item_id": "recovery-1",
+        "priority": "should",
         "system": "recovery",
         "title": "Review disruption options before taking action"
       }
@@ -283,5 +363,202 @@
     "itinerary_items": [],
     "reply": "Sample recovery preparation note for Barcelona. No live advice or external action.",
     "sources": []
+  },
+  "travel_essentials": {
+    "assumptions": [
+      "Facts come from Wonder's curated country data; advisories, entry rules and health notices are not included and must be checked with official sources.",
+      "eSIM plans are mock catalogue data."
+    ],
+    "checklist_tasks": [
+      {
+        "due_date": "2026-11-03",
+        "item_id": "ess-insurance",
+        "priority": "must",
+        "system": "travel_essentials",
+        "title": "Buy travel insurance"
+      },
+      {
+        "due_date": "2026-11-08",
+        "item_id": "ess-adapters",
+        "priority": "should",
+        "system": "travel_essentials",
+        "title": "Get plug adapters (type C/F)"
+      },
+      {
+        "due_date": "2026-11-12",
+        "item_id": "ess-esim",
+        "priority": "should",
+        "system": "travel_essentials",
+        "title": "Install eSIM before the flight"
+      }
+    ],
+    "connectivity_options": [
+      {
+        "data": "3 GB",
+        "days": 7,
+        "item_id": "esim-esim_es_3",
+        "price": {
+          "amount_minor": 600,
+          "currency": "USD"
+        },
+        "provider": "GlobeData (mock)"
+      },
+      {
+        "data": "5 GB",
+        "days": 15,
+        "item_id": "esim-esim_eu_5",
+        "price": {
+          "amount_minor": 1300,
+          "currency": "USD"
+        },
+        "provider": "RoamLite (mock)"
+      },
+      {
+        "data": "10 GB",
+        "days": 30,
+        "item_id": "esim-esim_eu_10",
+        "price": {
+          "amount_minor": 2100,
+          "currency": "USD"
+        },
+        "provider": "RoamLite (mock)"
+      }
+    ],
+    "data_mode": "fixture",
+    "emergency_contacts": [
+      {
+        "country_code": "ES",
+        "label": "General",
+        "phone": "112"
+      },
+      {
+        "country_code": "ES",
+        "label": "National police",
+        "phone": "091"
+      },
+      {
+        "country_code": "ES",
+        "label": "Guardia civil",
+        "phone": "062"
+      },
+      {
+        "country_code": "ES",
+        "label": "Ambulance",
+        "phone": "061"
+      }
+    ],
+    "exchange_rate": {
+      "as_of": "2026-10-09",
+      "from_currency": "EUR",
+      "rate": 1.12,
+      "to_currency": "USD"
+    },
+    "reply": "Pre-departure briefing for Spain: pay in EUR, use type C/F plugs, and save 112 for emergencies.",
+    "sections": [
+      {
+        "items": [
+          {
+            "detail": "Spain uses EUR. When a card terminal offers to charge in USD, choose EUR: the conversion is usually worse.",
+            "item_id": "money-local",
+            "priority": "must",
+            "title": "Pay in EUR"
+          },
+          {
+            "detail": "1 EUR \u2248 1.12 USD (ECB reference, 2026-10-09). Card and ATM rates are usually 1\u20133% worse.",
+            "item_id": "money-rate",
+            "priority": "should",
+            "title": "Exchange rate"
+          },
+          {
+            "detail": "Not expected; leaving small change or ~5-10% for good service is common.",
+            "item_id": "money-tipping",
+            "priority": "nice",
+            "title": "Tipping"
+          }
+        ],
+        "topic": "payments_currency"
+      },
+      {
+        "items": [
+          {
+            "detail": "Bring adapters for type C or F sockets; check that chargers accept 230V.",
+            "item_id": "conn-plugs",
+            "priority": "must",
+            "title": "Plugs C/F, 230V"
+          },
+          {
+            "detail": "GlobeData (mock): 3 GB for 7 days at $6.00. Install before the flight.",
+            "item_id": "conn-esim",
+            "priority": "should",
+            "title": "Get an eSIM"
+          }
+        ],
+        "topic": "connectivity"
+      },
+      {
+        "items": [
+          {
+            "detail": "Safe to drink",
+            "item_id": "health-water",
+            "priority": "nice",
+            "title": "Tap water"
+          }
+        ],
+        "topic": "health"
+      },
+      {
+        "items": [
+          {
+            "detail": "Choose a policy with medical, trip-delay and baggage-delay cover.",
+            "item_id": "ins-cover",
+            "priority": "must",
+            "title": "Travel insurance"
+          }
+        ],
+        "topic": "insurance"
+      },
+      {
+        "items": [
+          {
+            "detail": "Save 112 in everyone's phone.",
+            "item_id": "safety-number",
+            "priority": "must",
+            "title": "Emergency: 112"
+          }
+        ],
+        "topic": "safety"
+      },
+      {
+        "items": [
+          {
+            "detail": "Spanish, Catalan (Catalonia), Basque, Galician. A few words of greeting and thanks go a long way.",
+            "item_id": "lang-main",
+            "priority": "nice",
+            "title": "Languages"
+          }
+        ],
+        "topic": "language"
+      }
+    ],
+    "sources": [
+      {
+        "availability": "not_applicable",
+        "cost_status": "unknown",
+        "data_mode": "manual",
+        "expires_at": null,
+        "observed_at": "2026-10-11T12:00:00Z",
+        "provider": "wonder-country-data",
+        "source_url": "https://github.com/jayasrisng/super-travel/blob/main/super_travel/agents/essentials/data/country_info.json"
+      },
+      {
+        "availability": "not_applicable",
+        "cost_status": "verified",
+        "data_mode": "live",
+        "expires_at": null,
+        "observed_at": "2026-10-11T12:00:00Z",
+        "provider": "ecb-via-frankfurter",
+        "source_url": "https://api.frankfurter.dev/v1/latest"
+      }
+    ]
   }
 }
