@@ -16,6 +16,7 @@ struct NearbyAlertPolicyTests {
         precondition(NearbyAlertPolicy.phone("4155550123 bad") == nil)
         precondition(NearbyAlertPolicy.phone("＋１４１５５５５０１２３") == nil)
         precondition(NearbyAlertPolicy.phone("++14155550123") == nil)
+        precondition(NearbyAlertPolicy.phone("0123456789") == nil)
         var delivery = NearbyDeliveryLedger()
         precondition(delivery.shouldDeliver("pick-a"))
         delivery.record("pick-a", succeeded: false)
