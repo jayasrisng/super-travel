@@ -5,7 +5,9 @@ import pytest
 
 from super_travel.agents import REGISTRY
 from super_travel.agents.essentials import tools
-from super_travel.agents.essentials.agent import _CLIENT_TOOLS, _SUBMIT_SCHEMA, EssentialsAgent
+from super_travel.agents.essentials.agent import _CLIENT_TOOLS, EssentialsAgent
+from super_travel.agents.essentials.schema import EssentialsResult
+from super_travel.core.llm import inline_refs
 from super_travel.core.trip_context import Task, demo_today, load_trip
 
 
@@ -37,8 +39,9 @@ def test_exchange_rate_live():
 def test_tool_definitions_serialize():
     names = [t.to_dict()["name"] for t in _CLIENT_TOOLS]
     assert names == ["get_country_info", "get_exchange_rate", "find_esim_plans"]
-    assert "$ref" not in json.dumps(_SUBMIT_SCHEMA)
-    assert set(_SUBMIT_SCHEMA["required"]) >= {"reply", "sections", "checklist_items", "handoffs"}
+    schema = inline_refs(EssentialsResult.model_json_schema())
+    assert "$ref" not in json.dumps(schema)
+    assert set(schema["required"]) >= {"reply", "sections", "checklist_items", "handoffs"}
 
 
 def test_demo_trip_loads_and_prompt_strips_demo_annotations():
@@ -61,3 +64,25 @@ def test_checklist_dedupes_by_title():
 
 def test_registered():
     assert isinstance(REGISTRY["essentials"], EssentialsAgent)
+
+
+def test_run_end_to_end_with_fake_api(monkeypatch):
+    from tests.fake_api import fake_messages_api, text, tool_use
+
+    result_payload = {
+        "reply": "Bring a Type F adapter.", "sections": [], "emergency_contacts": [], "phrases": [], "sources": [],
+        "checklist_items": [{"title": "Install eSIM", "due": "2026-11-11", "traveler_id": "", "priority": "should"}],
+        "handoffs": [{"to_agent": "packing", "task": "Buy a Type F adapter"}],
+    }
+    script = [
+        tool_use("get_country_info", {"country_code": "PT"}, "t1"),
+        tool_use("submit_essentials", result_payload, "t2"),
+        text("Done."),
+    ]
+    trip = load_trip()
+    with fake_messages_api(script, monkeypatch) as seen:
+        result = EssentialsAgent().run("briefing", trip, today=date(2026, 11, 3))
+    assert seen[0]["body"]["output_config"] == {"effort": "medium"}
+    assert '"112"' in seen[1]["body"]["messages"][-1]["content"][0]["content"]
+    assert result.handoffs[0].to_agent == "packing"
+    assert trip.checklist[-1].title == "Install eSIM" and trip.checklist[-1].owner_agent == "essentials"

@@ -1,0 +1,11 @@
+{
+  "_meta": "MOCK DATA for the demo. Schedules and seat counts are fictional. Swap for a flight-search API later.",
+  "flights": [
+    {"carrier": "TAP Air Portugal", "carrier_code": "TP", "number": "TP1032", "from": "LIS", "to": "BCN", "depart": "2026-11-17T11:25:00+00:00", "arrive": "2026-11-17T14:35:00+01:00", "seats_left": 4, "same_alliance_as": []},
+    {"carrier": "Vueling", "carrier_code": "VY", "number": "VY8465", "from": "LIS", "to": "BCN", "depart": "2026-11-17T15:10:00+00:00", "arrive": "2026-11-17T18:25:00+01:00", "seats_left": 9, "same_alliance_as": ["VY"]},
+    {"carrier": "Iberia", "carrier_code": "IB", "number": "IB3107", "from": "LIS", "to": "MAD", "depart": "2026-11-17T10:05:00+00:00", "arrive": "2026-11-17T12:25:00+01:00", "seats_left": 2, "same_alliance_as": ["VY", "IB"], "connects_to": "IB2734 MAD-BCN dep 13:30 arr 14:45"},
+    {"carrier": "Level", "carrier_code": "IB", "number": "IB2621", "from": "BCN", "to": "SFO", "depart": "2026-11-22T13:15:00+01:00", "arrive": "2026-11-22T16:20:00-08:00", "seats_left": 11, "same_alliance_as": ["IB"]},
+    {"carrier": "United", "carrier_code": "UA", "number": "UA121", "from": "BCN", "to": "EWR", "depart": "2026-11-21T10:30:00+01:00", "arrive": "2026-11-21T13:35:00-05:00", "seats_left": 3, "same_alliance_as": [], "connects_to": "UA1520 EWR-SFO dep 16:00 arr 19:25"},
+    {"carrier": "TAP Air Portugal", "carrier_code": "TP", "number": "TP238", "from": "SFO", "to": "LIS", "depart": "2026-11-13T15:30:00-08:00", "arrive": "2026-11-14T11:05:00+00:00", "seats_left": 6, "same_alliance_as": ["TP"]}
+  ]
+}

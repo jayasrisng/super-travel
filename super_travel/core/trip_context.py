@@ -83,8 +83,20 @@ class TripContext(_Model):
         self.checklist.extend(added)
         return added
 
-    def next_checklist_id(self) -> str:
-        return f"c{len(self.checklist) + 1}"
+    def add_tasks(self, items: list[Any], owner_agent: str) -> list[Task]:
+        """Add checklist items from an agent result (objects with title, due, traveler_id, priority)."""
+        start = len(self.checklist)
+        return self.add_checklist_items([
+            Task(
+                id=f"c{start + i + 1}",
+                title=item.title,
+                owner_agent=owner_agent,
+                traveler_id=item.traveler_id or None,
+                due=date.fromisoformat(item.due) if item.due else None,
+                priority=item.priority,
+            )
+            for i, item in enumerate(items)
+        ])
 
 
 def _strip_private(value: Any) -> Any:

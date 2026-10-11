@@ -121,15 +121,20 @@ carries the approval gates.
 
 | Tool | Type | Notes |
 |---|---|---|
-| `get_flight_status(segment_id)` | client | mock; can be swapped for AviationStack later |
-| `search_alternative_flights(from, to, date)` | client | mock JSON |
-| `check_compensation(segment_id, delay_min, cause)` | client, **deterministic code** | EU261 / US DOT rules in `rules/compensation.py`. Eligibility should come from code, not the LLM |
-| `open_incident(type, segment_id, details)` | client, writes TripContext | lost bag, cancellation, ... |
-| `draft_claim(incident_id, kind)` | client | returns letter text for an airline, insurer or card benefit |
-| `propose_action(kind, summary, payload)` | client | creates a `PendingAction`; **the only path to rebooking or sending anything** |
-| `extract_receipt(image)` | Claude vision + structured output | becomes an `Expense` |
-| `reconcile_expenses()` | client, deterministic | totals per person and settle-up, in home currency (uses agent 4's FX tool) |
-| `add_post_trip_tasks(items)` | client | refunds pending, claim follow-ups, reviews |
+| `get_flight_status(segment_id)` | client | mock: reads `live_status` set by app events; can be swapped for AviationStack later |
+| `search_alternative_flights(from, to, date)` | client | mock JSON. Recovery finds options; planning books |
+| `check_compensation(segment_id, event, delay, ...)` | client, **deterministic code** | EU261 + US DOT refund rule in `rules/compensation.py`. Eligibility comes from code, not the LLM |
+| `get_baggage_rights(kind)` | client, deterministic | Montreal Convention claim windows and liability cap |
+| `reconcile_expenses()` | client, deterministic | split math + settle-up in `core/expenses.py`, converted with the shared FX tool |
+| `open_incident(...)` | client, writes TripContext | lost bag, cancellation, ... |
+| `record_expense(...)` | client, writes TripContext | out-of-pocket costs; flags claimable ones |
+| `web_search` | server | airline claim forms and contacts only (max 4) |
+
+Claim letters, refund requests and anything else irreversible come back as `pending_actions`
+in the result (with a ready-to-send draft), never as a tool that acts. Follow-ups and
+post-trip tasks come back as checklist items. App events (flight feed, receipt upload, trip
+end) go through `RecoveryAgent.handle_event`. Receipt photo extraction (vision) is not built
+yet; the demo event carries the extracted fields.
 
 Handoffs: emergency **replanning** returns `Handoff(to_agent="planning", ...)` instead of
 rebuilding the itinerary itself. If the change affects prep (new country, extra nights), it
@@ -174,10 +179,10 @@ through `propose_action`, so the UI has a single confirm-card flow.
 
 - Model `claude-opus-5-5` for all agents. Set effort explicitly: orchestrator `low`,
   Essentials `medium`, Recover `high`. Adaptive thinking is on by default.
-- Each specialist uses the Python SDK **tool runner** (`client.beta.messages.tool_runner` +
-  `@beta_tool`), which saves writing a manual loop. Note: the Python runner does not resume
-  `pause_turn` from server tools (web_search). Agent 4 needs the restart wrapper described in
-  the SDK docs.
+- Each specialist uses the shared loop in `core/specialist.py`: the SDK **tool runner**
+  (`client.beta.messages.tool_runner` + `@beta_tool`, which also resumes `pause_turn` from web
+  search) plus a `submit_<agent>` tool whose input is the agent's Pydantic result model. An
+  invalid result goes back to the model as a tool error so it can fix and resubmit.
 - Server-side refusal fallback (`fallbacks: "default"`) is enabled on every call.
 - Forced `tool_choice` is not supported on Opus 5.5. Use `auto` plus prompt instructions,
   and `strict: true` on tool schemas.
