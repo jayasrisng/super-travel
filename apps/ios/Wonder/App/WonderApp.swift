@@ -19,6 +19,7 @@ struct WonderApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { store.saveNow() }
+            NearbyModel.shared.setForeground(phase == .active)
         }
     }
 }
@@ -32,6 +33,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 }
 
 struct RootView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(WonderStore.self) private var store
 
     var body: some View {
@@ -46,6 +48,7 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: 0.6), value: store.hasOnboarded)
         .onAppear {
+            NearbyModel.shared.setForeground(scenePhase == .active)
             ImagePipeline.shared.prefetch(Catalog.all.map(\.hero))
         }
     }

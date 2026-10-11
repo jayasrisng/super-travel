@@ -18,6 +18,9 @@ final class NearbyModel {
     private var location: CLLocation?
     private var session: CLServiceSession?
     private var observer: NSObjectProtocol?
+    private var autoTask: Task<Void, Never>?
+    private var delivery = NearbyDeliveryLedger()
+    private var foreground = false
 
     private init() {
         // The Lock Screen buttons switch category from an intent; keep the app in step.
@@ -87,6 +90,63 @@ final class NearbyModel {
     func removeFromLockScreen() async {
         await NearbyLiveActivity.end()
         isOnLockScreen = false
+    }
+
+    /// (Re)starts the timer that fetches new suggestions every N seconds. Runs while the app
+    /// is alive; iOS suspends it in the background.
+    func configureAutoRefresh() {
+        autoTask?.cancel()
+        autoTask = nil
+        if !NearbyAlertSettings.shared.alertsEnabled { NearbyNotifier.shared.cancelAutomaticRequests() }
+        let seconds = NearbyAlertSettings.shared.intervalSeconds
+        guard NearbyAlertPolicy.canRefresh(enabled: NearbyAlertSettings.shared.alertsEnabled, interval: seconds, foreground: foreground) else { return }
+        autoTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(seconds))
+                if Task.isCancelled { break }
+                await self?.tick()
+            }
+        }
+    }
+
+    func setForeground(_ active: Bool) {
+        foreground = active
+        configureAutoRefresh()
+    }
+
+    private var mayRefresh: Bool {
+        !Task.isCancelled && NearbyAlertPolicy.canRefresh(
+            enabled: NearbyAlertSettings.shared.alertsEnabled,
+            interval: NearbyAlertSettings.shared.intervalSeconds, foreground: foreground
+        )
+    }
+
+    private func tick() async {
+        guard mayRefresh else { return }
+        if status == .idle || status == .needsPermission { await start() }
+        guard mayRefresh, status != .denied, status != .needsPermission,
+              status != .locating, status != .searching else { return }
+        guard let fresh = await CurrentLocation.fetch(timeout: .seconds(10)), mayRefresh else { return }
+        location = fresh
+        await refresh()
+        guard mayRefresh, let top, delivery.shouldDeliver(top.id) else { return }
+        await deliver(top)
+    }
+
+    func deliver(_ pick: NearbyPick) async {
+        guard mayRefresh else { return }
+        let scheduled = await NearbyNotifier.shared.notify(pick: pick, locality: result?.locality, delay: 1, identifier: "nearby-auto")
+        delivery.record(pick.id, succeeded: scheduled)
+    }
+
+    /// Captures the currently selected recipient only when the user opens the composer.
+    func makeTextDraft() -> NearbyTextDraft? {
+        let settings = NearbyAlertSettings.shared
+        guard settings.alertsEnabled, settings.channel == .text,
+              let recipient = settings.e164Phone, let top else { return nil }
+        let place = result?.locality.map { " in \($0)" } ?? ""
+        return NearbyTextDraft(id:top.id,recipient:recipient,
+            body:"Wonder found something nearby\(place): \(top.name) · \(top.walkText). \(top.note)")
     }
 
     /// A category tapped on the notification: find that kind of place and notify again.

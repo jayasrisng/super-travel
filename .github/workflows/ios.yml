@@ -1,0 +1,23 @@
+name: iOS checks
+on:
+  pull_request:
+    paths: ['apps/ios/**', '.github/workflows/ios.yml']
+  push:
+    branches: [main]
+    paths: ['apps/ios/**', '.github/workflows/ios.yml']
+permissions:
+  contents: read
+jobs:
+  ios:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Alert policy regression checks
+        run: |
+          swiftc apps/ios/Wonder/App/NearbyAlertPolicy.swift apps/ios/Tests/NearbyAlertPolicyTests.swift -o /tmp/wonder-alert-policy-tests
+          /tmp/wonder-alert-policy-tests
+      - name: Configure empty demo secrets
+        run: cp apps/ios/Secrets.example.xcconfig apps/ios/Secrets.xcconfig
+      - name: Build app and widgets without signing
+        run: |
+          xcodebuild -project apps/ios/Wonder.xcodeproj -scheme Wonder -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/wonder-ios-build CODE_SIGNING_ALLOWED=NO build
