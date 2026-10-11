@@ -19,17 +19,24 @@ from starlette.exceptions import HTTPException
 # FastAPI evaluates dependency defaults as declarations.
 # ruff: noqa: B008
 from super_travel.control.schemas import (
+    AdvisorLink,
+    AdvisorLinkCreate,
     AgentInfo,
     AgentRun,
     Envelope,
     ErrorEnvelope,
     ExploreRequest,
+    InsurancePolicy,
     Intake,
     IntakeCreate,
     MagicRequest,
+    Message,
+    MessageCreate,
+    PolicyCreate,
     RunRequest,
     SavedExperience,
     SaveRequest,
+    TravelerMessageCreate,
     Trip,
     TripCreate,
 )
@@ -308,6 +315,12 @@ def create_app(
                         "Manage & Recover",
                         "Deterministic rules on reported disruptions; no flight monitoring; claims are drafts",
                     ),
+                    (
+                        "voice_quotes",
+                        "voice",
+                        "Voice agent: insurance quotes",
+                        request.app.state.service.agents["voice_quotes"].describe(),
+                    ),
                 ]
             ],
         )
@@ -471,6 +484,133 @@ def create_app(
         body = request.app.state.store.transaction(
             lambda: request.app.state.store.get(identity, "intake", intake_id)
         )
+        set_etag(response, body)
+        return envelope(request, body)
+
+    # ---- traveler side (consumer app): linked to the agency trip by client code ----
+
+    @app.post("/v1/consumer/advisor-link", status_code=201, response_model=Envelope[AdvisorLink])
+    def link_advisor(
+        payload: AdvisorLinkCreate,
+        request: Request,
+        response: Response,
+        identity=Depends(actor),
+        replay_key=Depends(key),
+    ):
+        service = request.app.state.service
+        result = service.store.create(
+            identity, "/v1/consumer/advisor-link", replay_key, payload.model_dump(mode="json"),
+            lambda: envelope(request, service.link_advisor(identity, payload.client_code)),
+        )
+        set_etag(response, result["data"])
+        return result
+
+    @app.get("/v1/consumer/advisor", response_model=Envelope[AdvisorLink])
+    def get_advisor(request: Request, identity=Depends(actor)):
+        service = request.app.state.service
+        return envelope(request, service.store.transaction(lambda: service.advisor_link(identity)[0]))
+
+    @app.get("/v1/consumer/advisor/messages", response_model=Envelope[list[Message]])
+    def traveler_messages(request: Request, identity=Depends(actor)):
+        service = request.app.state.service
+        return envelope(request, service.store.transaction(lambda: service.traveler_messages(identity)))
+
+    @app.post("/v1/consumer/advisor/messages", status_code=201, response_model=Envelope[Message])
+    def traveler_send(
+        payload: TravelerMessageCreate,
+        request: Request,
+        identity=Depends(actor),
+        replay_key=Depends(key),
+    ):
+        service = request.app.state.service
+        return service.store.create(
+            identity, "/v1/consumer/advisor/messages", replay_key, payload.model_dump(mode="json"),
+            lambda: envelope(request, service.traveler_send(identity, payload.text)),
+        )
+
+    @app.get("/v1/consumer/advisor/policies/{policy_id}", response_model=Envelope[InsurancePolicy])
+    def traveler_policy(policy_id: UUID, request: Request, identity=Depends(actor)):
+        service = request.app.state.service
+        return envelope(request, service.store.transaction(lambda: service.traveler_policy(identity, policy_id)))
+
+    @app.post(
+        "/v1/trips/{trip_id}/messages",
+        status_code=201,
+        response_model=Envelope[Message],
+    )
+    def create_message(
+        trip_id: UUID,
+        payload: MessageCreate,
+        request: Request,
+        response: Response,
+        identity=Depends(actor),
+        replay_key=Depends(key),
+    ):
+        result = request.app.state.store.create(
+            identity,
+            f"/v1/trips/{trip_id}/messages",
+            replay_key,
+            payload.model_dump(mode="json"),
+            lambda: envelope(
+                request,
+                request.app.state.service.create_message(identity, trip_id, payload),
+            ),
+        )
+        set_etag(response, result["data"])
+        return result
+
+    @app.get("/v1/trips/{trip_id}/messages", response_model=Envelope[list[Message]])
+    def list_messages(trip_id: UUID, request: Request, identity=Depends(actor)):
+        store = request.app.state.store
+
+        def read():
+            store.get(identity, "trip", trip_id)
+            return store.thread(identity, "message", trip_id)  # oldest first, like a chat
+
+        return envelope(request, store.transaction(read))
+
+    @app.post(
+        "/v1/trips/{trip_id}/insurance-policies",
+        status_code=201,
+        response_model=Envelope[InsurancePolicy],
+    )
+    def create_policy(
+        trip_id: UUID,
+        payload: PolicyCreate,
+        request: Request,
+        response: Response,
+        identity=Depends(actor),
+        replay_key=Depends(key),
+    ):
+        result = request.app.state.store.create(
+            identity,
+            f"/v1/trips/{trip_id}/insurance-policies",
+            replay_key,
+            payload.model_dump(mode="json"),
+            lambda: envelope(
+                request,
+                request.app.state.service.create_policy(identity, trip_id, payload),
+            ),
+        )
+        set_etag(response, result["data"])
+        return result
+
+    @app.get(
+        "/v1/trips/{trip_id}/insurance-policies/{policy_id}",
+        response_model=Envelope[InsurancePolicy],
+    )
+    def get_policy(
+        trip_id: UUID,
+        policy_id: UUID,
+        request: Request,
+        response: Response,
+        identity=Depends(actor),
+    ):
+        body = request.app.state.store.transaction(
+            lambda: request.app.state.store.get(identity, "policy", policy_id)
+        )
+        if body["trip_id"] != str(trip_id):
+            raise ControlError(404, "not_found", "Resource not found")
         set_etag(response, body)
         return envelope(request, body)
 

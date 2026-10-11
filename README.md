@@ -100,19 +100,30 @@ REST `/v1` is the domain boundary. Pydantic models define the wire contract; gen
 
 Vite is the implemented local frontend choice; the earlier Next.js/Supabase deployment plan remains a separate beta architecture. This keeps a small static client and reuses FastAPI directly. It sacrifices server-rendered pages and production account infrastructure, which this local implementation does not need. Production requires reviewed identity/membership, PostgreSQL/RLS, managed workers, quotas, migrations and licensed live providers.
 
-### Agency dashboard (live)
+### Agency dashboard, customer app and the border scenario
 
-The advisor console reads the control API through a small Node server that keeps the token server-side. After an intake call, all five agents run for the client's trip and their proposals appear on the dashboard.
+One Node server serves the advisor dashboard (`/`), Sarah's customer app (`/app/`) and onboarding (`/onboarding/`). It proxies `/api/*` to the control API and keeps the token server-side.
 
 ```sh
 uv run uvicorn super_travel.control.app:app --host 127.0.0.1 --port 8000 --env-file .env   # terminal 1
-node dashboard/serve.mjs                                                                    # terminal 2: http://localhost:5180
-uv run python scripts/seed_demo.py                                                          # optional: demo client + sample delay
+node dashboard/serve.mjs                                                                    # terminal 2
+uv run python scripts/seed_demo.py                                                          # Sarah's trip, starting today
 ```
 
-- **Onboarding:** `http://localhost:5180/onboarding/#onboard`. Play the scripted call, then **Send to Wonder agents**. It posts to `POST /v1/intakes`, which creates the trip and queues Plan & Book, Pack & Shop, Explore/Magic (Barcelona only), Travel Essentials and Manage & Recover.
-- **Dashboard:** pick a client, see each agent's proposal, report a disruption (Manage & Recover computes EU261/US DOT/baggage rights and drafts the claim), save Magic ideas, re-run an agent.
-- Approve/Dismiss in the review queue is recorded in the browser only; nothing is sent. The onboarding page's images, fonts and analytics script are still missing from the repo (see INTEGRATION_STATUS.md).
+**Demo: Sarah at the border.** Run the API with `WONDER_DEMO_AUTH=true` (for the consumer web app), `node dashboard/serve.mjs`, and the web app (`cd apps/web && pnpm dev`).
+
+1. Seed or onboard Sarah. Her intake card on the dashboard shows a **client app code**. In the consumer web app (`localhost:5173/advisor`), Sarah enters it under **My advisor**. The lightweight `/app/` page on the dashboard server works too.
+2. Sarah messages "I'm at border control… asking for proof of travel insurance". It's triaged as urgent by code, and the dashboard shows an urgent case.
+3. The advisor clicks **Call insurers for the cheapest quote**, which runs the voice agent:
+   - **With Dial on**, it places real AI voice calls through Dial to the numbers in `DIAL_INSURER_NUMBERS` (two at a time), waits for each call to end, and reads the quote from the transcript. Claude reads it if `ANTHROPIC_API_KEY` is set; otherwise keyword rules do.
+   - **With Dial off**, it simulates calls to fictional insurers.
+   - Either way, Wonder code checks the Schengen-standard requirements and recommends the cheapest quote that qualifies.
+4. The advisor clicks **Approve & send to Sarah**. A *simulated* policy is issued and appears in Sarah's app as a card.
+5. Sarah taps **Show to officer**, then **I'm through ✓**. The dashboard case resolves.
+
+**Turning on real calls (Dial).** In `.env` set `DIAL_ENABLED=true`, `DIAL_API_KEY`, `DIAL_SENDER_NUMBER` (your Dial number ID or E.164) and `DIAL_INSURER_NUMBERS="Name=+1555…;Other=+1555…"`, then restart the API. Only those numbers are ever dialled: use team test phones playing insurers, not real businesses. Each call is capped by `DIAL_MAX_CALL_SECONDS` and placed with an idempotency key, so a retried run never re-dials the same number. The voice agent never gives personal or payment details and never buys anything.
+
+Other dashboard features: per-agent proposals for all five agents, report-a-disruption (EU261 / US DOT / baggage), save Magic ideas, re-run agents. Onboarding's **Send to Wonder agents** creates a new client. Approve/Dismiss on the five agents' proposals is browser-local. No real calls, purchases or insurance policies are made; the onboarding page's images, fonts and analytics script are still missing.
 
 The teammate's `dashboard/` advisor demo, `super_travel/onboarding/` saved HTML and CLI orchestrator are preserved. Their limitations are recorded in [integration status](docs/INTEGRATION_STATUS.md). For the model-based CLI: `uv run python scripts/chat.py` or `uv run python scripts/chat.py --event all`.
 

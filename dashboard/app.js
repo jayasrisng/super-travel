@@ -19,10 +19,11 @@ const store = {
 };
 
 const state = {
-  agentsInfo: [], intakes: [], intake: null, trip: null, runs: [],
+  agentsInfo: [], intakes: [], intake: null, trip: null, runs: [], messages: [], policies: {},
   agent: store.get("wonder.agent", "plan_book"), decisions: store.get("wonder.decisions", {}),
-  poll: null, error: null,
+  poll: null, error: null, animate: {}, animTimer: null, draft: "",
 };
+const CALL_SECONDS = 1.6; // on-screen pacing for the voice agent's calls (the run itself is instant in fixture mode)
 
 // ---------- helpers ----------
 const $ = (id) => document.getElementById(id);
@@ -129,8 +130,141 @@ function agentStatus(key) {
   return open ? { cls: "attention", text: "Needs review" } : { cls: "done", text: "Up to date" };
 }
 
+// ---------- live case (client messages + voice agent) ----------
+function currentCase() {
+  const msgs = state.messages;
+  const request = [...msgs].reverse().find((m) => m.sender === "traveler" && m.triage?.topic === "insurance_proof");
+  if (!request) return null;
+  const after = (m) => ms(m.created_at) >= ms(request.created_at);
+  const voice = runsFor("voice_quotes").find((r) => ms(r.created_at) >= ms(request.created_at));
+  const sent = msgs.find((m) => m.sender === "advisor" && m.attachment && after(m));
+  const through = sent && msgs.find((m) => m.sender === "traveler" && ms(m.created_at) > ms(sent.created_at));
+  // step = the current step (1-5); 6 means everything is done.
+  const step = through ? 6 : sent ? 5 : voice?.status === "succeeded" && !animating(voice) ? 3 : voice ? 2 : 1;
+  return { request, voice, sent, through, step, open: !through };
+}
+
+const voiceInfo = () => state.agentsInfo.find((a) => a.agent === "voice_quotes");
+const voiceLive = () => /Dial/.test(voiceInfo()?.limitation || "");
+// Simulated calls are instant, so they're paced on screen; live Dial calls show real progress.
+const animating = (run) => run && run.proposal?.data_mode !== "live" && state.animate[run.id] && revealed(run) < run.proposal?.calls.length;
+function revealed(run) {
+  const started = state.animate[run.id];
+  if (!started) return Infinity;
+  return Math.floor((Date.now() - started) / 1000 / CALL_SECONDS);
+}
+
+function tickAnimation() {
+  clearTimeout(state.animTimer);
+  const c = currentCase();
+  if (c?.voice && (animating(c.voice) || ACTIVE.includes(c.voice.status))) {
+    renderCase();
+    state.animTimer = setTimeout(tickAnimation, 400);
+  } else {
+    render();
+  }
+}
+
+function threadHtml() {
+  if (!state.messages.length) return `<p class="empty">No messages yet. ${esc(firstName(state.intake.client_name))} can message you from the Wonder app.</p>`;
+  return state.messages.map((m) => {
+    const mine = m.sender === "advisor";
+    const policy = m.attachment && state.policies[m.attachment.policy_id];
+    return `<div class="msg ${mine ? "mine" : "theirs"} ${m.triage?.urgency === "urgent" ? "urgent" : ""}">
+      <div class="msg-bubble">${esc(m.text)}${policy ? `<div class="msg-attach">📄 ${esc(policy.insurer)} · ${esc(policy.policy_number)}</div>` : ""}</div>
+      <span class="msg-meta">${mine ? "You" : esc(firstName(state.intake.client_name))} · ${esc(localTime(m.created_at))}${m.triage && m.triage.topic !== "general" ? ` · <span class="tag ${m.triage.urgency === "urgent" ? "bad" : "warn"}">${esc(m.triage.reason)}</span>` : ""}</span>
+    </div>`;
+  }).join("");
+}
+
+function callRow(call, index, run) {
+  const shown = revealed(run);
+  if (index > shown) return `<li class="call pending"><span class="call-dot"></span><b>${esc(call.insurer)}</b><span class="call-state">Waiting</span></li>`;
+  if (index === shown && animating(run)) return `<li class="call live"><span class="spinner" aria-hidden="true"></span><b>${esc(call.insurer)}</b><span class="call-state">On the call · ${esc(call.phone)}</span></li>`;
+  const q = call.quote;
+  const best = run.proposal.recommended_quote_id && q?.quote_id === run.proposal.recommended_quote_id;
+  const outcome = { quoted: q && money(q.premium), declined: "No quote", no_answer: "No answer", failed: "Call failed" }[call.outcome];
+  return `<li class="call done ${best ? "best" : ""} ${q && !q.meets_requirements ? "fails" : ""}">
+    <details><summary>
+      <span class="call-dot ${call.outcome}"></span><b>${esc(call.insurer)}</b>
+      <span class="call-state">${esc(outcome)}${q ? ` · ${esc(money(q.medical_cover))} medical` : ""}${call.duration_seconds ? ` · ${Math.round(call.duration_seconds / 60 * 10) / 10} min` : ""}</span>
+      ${best ? `<span class="tag ok">Cheapest that qualifies</span>` : q && !q.meets_requirements ? `<span class="tag bad">Doesn't qualify</span>` : ""}
+    </summary>
+    ${q ? `<ul class="list call-notes">${q.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+    <ol class="transcript">${call.transcript.map((t) => `<li class="${t.speaker}"><span>${t.speaker === "voice_agent" ? "Wonder voice agent" : esc(call.insurer)}</span>${esc(t.text)}</li>`).join("")}</ol>
+    </details>
+    ${q?.meets_requirements ? `<button class="btn ${best ? "primary" : ""}" type="button" data-approve-quote="${esc(run.id)}|${esc(q.quote_id)}" ${currentCase()?.sent ? "disabled" : ""}>Approve &amp; send to ${esc(firstName(state.intake.client_name))}</button>` : ""}
+  </li>`;
+}
+
+function voicePanel(c) {
+  const name = firstName(state.intake.client_name);
+  if (!c.voice) {
+    return `<div class="voice-cta"><p class="micro">Suggested action</p>
+      <h4>Deploy the voice agent</h4>
+      <p>It phones travel insurers, asks for Schengen-standard cover for ${esc(partyLabel(state.intake))} and brings back quotes. Nothing is bought until you approve.</p>
+      <p class="voice-mode">${voiceLive() ? `<span class="tag ok">Live calls via Dial</span> ${esc(voiceInfo().limitation)}` : `<span class="tag mock">Simulated calls</span> Set DIAL_ENABLED=true to place real calls.`}</p>
+      <button class="btn primary" type="button" data-deploy-voice="${esc(c.request.id)}">Call insurers for the cheapest quote</button></div>`;
+  }
+  const run = c.voice;
+  if (ACTIVE.includes(run.status)) {
+    const secs = Math.max(0, Math.round((Date.now() - ms(run.created_at)) / 1000));
+    return `<div class="working-note"><span class="spinner" aria-hidden="true"></span>${voiceLive()
+      ? `On calls via Dial · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")} · quotes appear when the calls end`
+      : "Dialing insurers…"}</div>`;
+  }
+  if (run.status === "failed") return `<div class="note warn-note">${esc(run.error?.message || "The voice agent could not finish.")}</div>`;
+  const p = run.proposal;
+  const done = !animating(run);
+  const modeTag = p.data_mode === "live" ? `<span class="tag ok">Live calls via Dial</span>` : `<span class="tag mock">Simulated calls</span>`;
+  return `<p class="micro">${done ? esc(p.reply) : `Calling ${p.calls.length} insurers…`} ${modeTag}</p>
+    <ol class="calls">${p.calls.map((call, i) => callRow(call, i, run)).join("")}</ol>
+    ${done ? `<details class="fine"><summary>Requirements checked by Wonder code</summary><ul class="list">${p.requirements.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></details>` : ""}
+    ${c.sent ? `<p class="q-done">✓ Approved and sent to ${esc(name)}</p>` : ""}`;
+}
+
+function renderCase() {
+  const el = $("case");
+  if (!state.intake) return;
+  const c = currentCase();
+  const name = firstName(state.intake.client_name);
+  const steps = ["Request received", "Voice agent calling", "Review quotes", `Sent to ${name}`, `${name} is through`];
+  el.classList.toggle("urgent", Boolean(c?.open && c.request.triage.urgency === "urgent"));
+  el.innerHTML = `
+    <div class="case-grid">
+      <div class="case-chat">
+        <div class="card-head"><div><p class="micro">Messages · Wonder app</p><h3>${esc(state.intake.client_name)}</h3></div>
+          <a class="btn" href="/app/?intake=${esc(state.intake.id)}" target="_blank" rel="noopener">Open ${esc(name)}'s app ↗</a></div>
+        <div class="chat-scroll" id="chat-scroll">${threadHtml()}</div>
+        <form class="reply" id="reply-form"><label class="sr-only" for="reply-text">Reply to ${esc(name)}</label>
+          <input id="reply-text" placeholder="Reply to ${esc(name)}…" maxlength="2000" value="${esc(state.draft)}"><button class="btn primary" type="submit">Send</button></form>
+      </div>
+      <div class="case-work">
+        ${c ? `<div class="card-head"><div><p class="micro">${c.open ? (c.request.triage.urgency === "urgent" ? "Urgent case" : "Open case") : "Resolved"}</p>
+            <h3>${c.open ? `${esc(name)} needs travel insurance${c.request.triage.urgency === "urgent" ? " at the border" : ""}` : `${esc(name)} entered Spain`}</h3></div>
+            <span class="tag ${c.open ? "bad" : "ok"}"><span class="dot"></span>${c.open ? esc(localTime(c.request.created_at)) : "Done"}</span></div>
+          <ol class="steps">${steps.map((label, i) => `<li class="${i + 1 < c.step ? "done" : i + 1 === c.step ? "now" : ""}"><span>${i + 1 < c.step ? "✓" : i + 1}</span>${esc(label)}</li>`).join("")}</ol>
+          ${voicePanel(c)}`
+        : `<div class="card-head"><div><p class="micro">No open requests</p><h3>All quiet</h3></div></div>
+           <p class="empty">When ${esc(name)} asks for help in the app, it shows up here, triaged, with the agent you can deploy.</p>`}
+      </div>
+    </div>`;
+  const scroll = $("chat-scroll");
+  if (scroll) scroll.scrollTop = scroll.scrollHeight;
+}
+
 // ---------- render: chrome ----------
 function renderStrip() {
+  const c = state.intake && currentCase();
+  const strip = $("mode-strip");
+  if (c?.open && c.request.triage.urgency === "urgent") {
+    strip.classList.add("alert");
+    strip.innerHTML = c.sent
+      ? `Insurance sent to ${esc(state.intake.client_name)} · waiting for her to get through the border · <a href="#case">Case ↓</a>`
+      : `URGENT · ${esc(state.intake.client_name)}: ${esc(c.request.triage.reason.toLowerCase())} · <a href="#case">Open case ↓</a>`;
+    return;
+  }
+  strip.classList.remove("alert");
   const mode = state.agentsInfo[0]?.mode;
   $("mode-strip").textContent = mode
     ? `Wonder Agency Console · agents in ${mode === "fixture" ? "fixture mode (synthetic outputs)" : "model mode (unverified drafts)"} · rules and rates computed live`
@@ -150,7 +284,9 @@ function renderHero() {
   const phase = toGo > 0 ? `${plural(toGo, "day")} to departure` : daysBetween(today, i.end_date) >= 0 ? `Day ${1 - toGo} of ${daysBetween(i.start_date, i.end_date) + 1}` : "Trip complete";
   const done = AGENTS.filter((a) => latest(a.key)?.status === "succeeded").length;
   const working = state.runs.filter((r) => ACTIVE.includes(r.status)).length;
-  const pending = reviewItems().filter((x) => !state.decisions[x.id]);
+  const c = currentCase();
+  const caseItems = c?.open && !c.sent ? [{ high: true }] : [];
+  const pending = [...caseItems, ...reviewItems().filter((x) => !state.decisions[x.id])];
   $("hero").innerHTML = `
     <div>
       <div class="eyebrow"><p class="micro">Client · ${esc(i.purpose)}</p><span class="rule"></span><p class="micro">${esc(rangeLabel(i.start_date, i.end_date))}</p></div>
@@ -183,6 +319,8 @@ function renderOnboarding() {
       <span class="tag ok"><span class="dot"></span>Sent to agents</span>
     </div>
     <dl class="kv">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    ${i.client_code ? `<div class="client-code"><div><p class="micro">Client app code</p><b>${esc(i.client_code)}</b></div>
+      <a class="btn" href="http://localhost:5173/advisor?code=${encodeURIComponent(i.client_code)}" target="_blank" rel="noopener">Open in Wonder app ↗</a></div>` : ""}
     <div class="note"><p class="micro">What the agents received</p>
       <ul><li>Destination, dates, party size and interests only. The client's name and needs stay with the agency.</li>
       ${i.runs.filter((r) => !r.run_id).map((r) => `<li>${esc(AGENT[r.agent].title)} skipped: ${esc(r.skipped_reason)}</li>`).join("")}</ul></div>`;
@@ -357,8 +495,14 @@ function renderTimeline() {
   const i = state.intake;
   const items = [
     { at: i.created_at, kind: "human", who: i.advisor_name ? `Advisor · ${i.advisor_name}` : "Advisor", what: `Intake for ${i.client_name} sent to the agents.` },
-    ...state.runs.map((r) => ({
-      at: r.created_at, kind: r.status === "failed" ? "event" : "agent", who: `${AGENT[r.agent].num} ${AGENT[r.agent].title}`,
+    ...state.messages.map((m) => ({
+      at: m.created_at, kind: m.sender === "traveler" ? "event" : "human",
+      who: m.sender === "traveler" ? `Message · ${i.client_name}` : "Advisor reply",
+      what: m.attachment ? `${m.text} (insurance certificate attached)` : m.text,
+    })),
+    ...state.runs.filter((r) => AGENT[r.agent] || r.agent === "voice_quotes").map((r) => ({
+      at: r.created_at, kind: r.status === "failed" ? "event" : "agent",
+      who: AGENT[r.agent] ? `${AGENT[r.agent].num} ${AGENT[r.agent].title}` : "Voice agent",
       what: r.status === "succeeded" ? r.proposal.reply : r.status === "failed" ? `Failed: ${r.error?.message || ""}` : `Run ${r.status}`,
     })),
   ].sort((a, b) => ms(b.at) - ms(a.at));
@@ -376,22 +520,39 @@ function renderEmpty() {
 function render() {
   renderStrip();
   if (!state.intake) return;
-  renderPicker(); renderHero(); renderOnboarding(); renderQueue(); renderAgentList(); renderAgentDetail(); renderTimeline();
+  $("customer-link").href = `/app/?intake=${encodeURIComponent(state.intake.id)}`;
+  renderPicker(); renderHero(); renderCase(); renderOnboarding(); renderQueue(); renderAgentList(); renderAgentDetail(); renderTimeline();
 }
 
 // ---------- data loading ----------
 async function refreshRuns() {
-  const res = await api(`/agent-runs?trip_id=${encodeURIComponent(state.intake.trip_id)}&limit=100`);
-  state.runs = res.data;
+  const trip = encodeURIComponent(state.intake.trip_id);
+  const [runs, messages] = await Promise.all([
+    api(`/agent-runs?trip_id=${trip}&limit=100`),
+    api(`/trips/${trip}/messages`),
+  ]);
+  for (const m of messages.data) {
+    const id = m.attachment?.policy_id;
+    if (id && !state.policies[id]) state.policies[id] = (await api(`/trips/${trip}/insurance-policies/${id}`)).data;
+  }
+  const changed = JSON.stringify([runs.data, messages.data]) !== JSON.stringify([state.runs, state.messages]);
+  state.runs = runs.data;
+  state.messages = messages.data;
+  return changed;
 }
 
+// Always poll: client messages can arrive at any time.
 function schedulePoll() {
   clearTimeout(state.poll);
-  if (!state.runs.some((r) => ACTIVE.includes(r.status))) return;
+  const fast = state.runs.some((r) => ACTIVE.includes(r.status));
   state.poll = setTimeout(async () => {
-    try { await refreshRuns(); showBanner(""); render(); } catch (err) { showBanner(err.message); }
+    try {
+      const changed = await refreshRuns();
+      showBanner("");
+      if (changed) tickAnimation();
+    } catch (err) { showBanner(err.message); }
     schedulePoll();
-  }, 1500);
+  }, fast ? 1000 : 2000);
 }
 
 async function selectIntake(id) {
@@ -449,10 +610,19 @@ function disruptionInput(form) {
 }
 
 document.addEventListener("click", async (e) => {
-  const el = e.target.closest("[data-agent],[data-approve],[data-dismiss],[data-undo],[data-agent-jump],[data-rerun],[data-save]");
+  const el = e.target.closest("[data-agent],[data-approve],[data-dismiss],[data-undo],[data-agent-jump],[data-rerun],[data-save],[data-deploy-voice],[data-approve-quote]");
   if (!el) return;
   try {
-    if (el.dataset.agent) { state.agent = el.dataset.agent; store.set("wonder.agent", state.agent); renderAgentList(); renderAgentDetail(); }
+    if (el.dataset.deployVoice) {
+      el.disabled = true;
+      await deployVoice(el.dataset.deployVoice);
+      toast("Voice agent is calling insurers");
+    } else if (el.dataset.approveQuote) {
+      el.disabled = true;
+      const [runId, quoteId] = el.dataset.approveQuote.split("|");
+      await approveQuote(runId, quoteId);
+      toast(`Policy sent to ${firstName(state.intake.client_name)}`);
+    } else if (el.dataset.agent) { state.agent = el.dataset.agent; store.set("wonder.agent", state.agent); renderAgentList(); renderAgentDetail(); }
     else if (el.dataset.approve) decide(el.dataset.approve, "approved");
     else if (el.dataset.dismiss) decide(el.dataset.dismiss, "dismissed");
     else if (el.dataset.undo) decide(el.dataset.undo, null);
@@ -472,11 +642,51 @@ document.addEventListener("click", async (e) => {
     }
   } catch (err) {
     toast(err.message);
-    if (el.dataset.save || el.dataset.rerun) el.disabled = false;
+    if (el.dataset.save || el.dataset.rerun || el.dataset.deployVoice || el.dataset.approveQuote) el.disabled = false;
   }
 });
 
+async function deployVoice(requestId) {
+  const intake = state.intake;
+  const run = (await api("/agent-runs", { method: "POST", body: {
+    agent: "voice_quotes", trip_id: intake.trip_id, input: { child_ages: intake.child_ages, message_id: requestId },
+  } })).data;
+  state.animate[run.id] = null;
+  await refreshRuns();
+  const fresh = state.runs.find((r) => r.id === run.id);
+  state.animate[run.id] = Date.now();
+  if (fresh) renderCase();
+  tickAnimation();
+}
+
+async function approveQuote(runId, quoteId) {
+  const trip = state.intake.trip_id;
+  const policy = (await api(`/trips/${trip}/insurance-policies`, { method: "POST", body: { run_id: runId, quote_id: quoteId } })).data;
+  const name = firstName(state.intake.client_name);
+  await api(`/trips/${trip}/messages`, { method: "POST", body: {
+    sender: "advisor",
+    text: `Hi ${name}, you're covered. ${policy.insurer} policy ${policy.policy_number} is active from today. Tap "Show to officer" to open your certificate.`,
+    attachment: { type: "insurance_policy", policy_id: policy.id },
+  } });
+  await refreshRuns();
+  render();
+}
+
+document.addEventListener("input", (e) => { if (e.target.id === "reply-text") state.draft = e.target.value; });
+
 document.addEventListener("submit", async (e) => {
+  if (e.target.id === "reply-form") {
+    e.preventDefault();
+    const text = state.draft.trim();
+    if (!text) return;
+    try {
+      await api(`/trips/${state.intake.trip_id}/messages`, { method: "POST", body: { sender: "advisor", text } });
+      state.draft = "";
+      await refreshRuns();
+      render();
+    } catch (err) { toast(err.message); }
+    return;
+  }
   if (e.target.id !== "disruption-form") return;
   e.preventDefault();
   const note = $("disruption-note");

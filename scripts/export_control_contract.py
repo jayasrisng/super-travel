@@ -8,9 +8,11 @@ from super_travel.agents.essentials.proposal import EssentialsProposalAgent
 from super_travel.agents.explore import ExploreAgent
 from super_travel.agents.proposals import PackingAgent, PlanningAgent
 from super_travel.agents.recovery.proposal import RecoveryProposalAgent
+from super_travel.consumer.agents import HelperAdapter
 from super_travel.control.app import create_app
 from super_travel.control.schemas import (
     EssentialsInput,
+    HelperInput,
     MagicInput,
     PackInput,
     PlanInput,
@@ -30,8 +32,6 @@ DISRUPTION = {
         "to_iata": "BCN",
     },
 }
-from super_travel.consumer.agents import HelperAdapter
-from super_travel.control.schemas import HelperInput
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -84,6 +84,7 @@ def artifacts():
             "travel_essentials",
             "essentials",
             "recovery",
+            "travel_essentials",
         )
     }
     requests["manage_recover"] = {

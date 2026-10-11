@@ -103,7 +103,8 @@ def test_intake_validation(api):
     assert post(client, "/v1/intakes", {**SARAH, "ssn": "x"}).status_code == 422
 
 
-def test_magic_skipped_outside_barcelona(api):
+def test_advisor_magic_stays_in_barcelona_demo_area(api):
+    # Advisor intakes keep the declared Barcelona Magic coverage; other agents still run.
     client, app = api
     intake = post(client, "/v1/intakes", {**SARAH, "destination": "Lisbon"}).json()["data"]
     magic = next(r for r in intake["runs"] if r["agent"] == "explore_magic")
@@ -151,4 +152,4 @@ def test_unknown_airport_fails_safely(api):
 def test_agents_endpoint_preserves_consumer_and_advisor_contracts(api):
     client, _ = api
     agents = [a["agent"] for a in client.get("/v1/agents").json()["data"]]
-    assert set(agents) == {"plan_book", "pack_shop", "explore_magic", "travel_essentials", "manage_recover", "essentials", "recovery"}
+    assert set(agents) == {"plan_book", "pack_shop", "explore_magic", "travel_essentials", "manage_recover", "essentials", "recovery", "voice_quotes"}
