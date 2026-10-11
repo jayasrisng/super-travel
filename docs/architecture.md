@@ -1,6 +1,6 @@
 # super-travel: Agent Architecture
 
-Implementation status: registry now includes all five names. The three requested proposal agents use the [local control API](CONTROL_API.md), not the planned /chat orchestrator below. Existing Essentials/Recovery tools retain prototype behavior; they are not exposed by the new control API.
+Implementation status: registry now includes all five names. The three requested proposal agents use the [local control API](CONTROL_API.md). The CLI orchestrator now dispatches to the combined five-agent registry; HTTP /chat is still not implemented. Existing Essentials/Recovery tools retain prototype behavior; they are not exposed by the new control API.
 
 Status: draft · Scope: hackathon/demo · Stack: Python (FastAPI) + Claude API
 
@@ -23,6 +23,15 @@ flowchart TD
     A1 & A2 & A3 & A4 & A5 <--> T[(TripContext<br/>SQLite / JSON)]
     A5 -->|handoff: replan| O
 ```
+
+Implementation: `super_travel/orchestrator/`. `Orchestrator.chat()` runs Claude (effort `low`)
+with one `delegate(agent, task)` tool; its `agent` enum is built from `REGISTRY` plus `PLANNED`
+(agents that aren't built yet return `unavailable`, and the orchestrator says so rather than
+doing their job). At most 6 delegations per turn; a failing specialist returns an error instead
+of killing the turn. `Orchestrator.handle_event()` routes app events by type (`EVENT_ROUTES`,
+no model involved), then follows the specialist's handoffs one level. `Session` keeps
+append-only text history per trip. Each turn returns the merged reply, pending actions with ids
+for confirm cards, per-agent data for UI cards, and any open handoffs.
 
 Why delegation through the orchestrator rather than a plain classifier: real requests cross
 domains ("my flight got cancelled, will my eSIM still work for the extra day?"). With

@@ -113,7 +113,7 @@ class ExploreAgent:
             41.32 <= location.latitude <= 41.47 and 2.05 <= location.longitude <= 2.23
         )
 
-    def run(self, task, trip):
+    def run(self, task, trip, today=None):
         request = MagicInput.model_validate_json(task)
         proposal = self.propose(request, datetime.now(UTC))
         return AgentResult(reply=proposal.reply, data=proposal.model_dump(mode="json"))

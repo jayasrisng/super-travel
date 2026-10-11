@@ -29,7 +29,7 @@ class ProposalAgent:
     def __init__(self, mode="fixture"):
         self.mode = mode
 
-    def run(self, task, trip):
+    def run(self, task, trip, today=None):
         values = safe_input(trip)
         values["interests"] = [task[:2000]] if task else []
         proposal = self.propose(

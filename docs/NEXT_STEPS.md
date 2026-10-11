@@ -9,9 +9,10 @@ Main inspected at `5ecbe06` contains the planning foundation and Essentials/Reco
 - Minimal owner-only trip creation/read and private Magic save/list/delete.
 - Synthetic requests/proposals and canonical implemented OpenAPI in `packages/contracts/`.
 - Fixture engines, optional Planning/Packing model runner, deterministic Magic feasibility and a discovery-provider interface.
-- Existing Essentials/Recovery prototype modules, CLI scripts and tests preserved.
+- Existing Essentials/Recovery prototypes preserved; CLI orchestrator dispatches across the combined five-agent registry.
+- Teammate advisor dashboard preserved as a static synthetic demo; API-connected UI is the next seam.
 
-Use [CONTROL_API.md](CONTROL_API.md) for exact launch commands and limitations. Model access was tested with a local fake API, not paid providers. No production authentication, migrations, live POI/routing adapter, website/iOS implementation or deployment is claimed.
+Use [CONTROL_API.md](CONTROL_API.md) for exact launch commands and limitations. Model access was tested with a local fake API, not paid providers. No production authentication, migrations, live POI/routing adapter, native iOS implementation or deployment is claimed. A teammate-built static advisor dashboard and onboarding HTML now exist; see INTEGRATION_STATUS.md.
 
 ## Priority order and ownership
 

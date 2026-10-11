@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
@@ -36,4 +37,4 @@ class Agent(Protocol):
     name: str
     description: str
 
-    def run(self, task: str, trip: TripContext) -> AgentResult: ...
+    def run(self, task: str, trip: TripContext, today: date | None = None) -> AgentResult: ...

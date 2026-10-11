@@ -6,7 +6,7 @@ Wonder connects trip planning, preparation, local discovery, essentials, and gro
 
 ## Current status
 
-The repository now contains the existing Essentials/Recovery prototypes and a working FastAPI control backend for **Plan & Book, Pack & Shop and Explore/Magic**. All three support labeled synthetic fixtures. Planning and Packing can use the existing Anthropic model runner; live Magic discovery/routing adapters are still required. The website is owned by another teammate. No website is added by this backend work.
+The repository now contains the existing Essentials/Recovery prototypes and a working FastAPI control backend for **Plan & Book, Pack & Shop and Explore/Magic**. All three support labeled synthetic fixtures. Planning and Packing can use the existing Anthropic model runner; live Magic discovery/routing adapters are still required. The teammate-built advisor dashboard is in `dashboard/`; it reads synthetic static data and is not connected to the control API. Main also contains an onboarding HTML demo with missing local asset dependencies. Neither is a shipped consumer web app.
 
 The local backend provides authenticated create/poll/list/cancel, durable SQLite runs, actor-owned minimal trips and Magic bookmarks. It is an integration/demo backend, not a private-beta deployment. See [control API handoff](docs/CONTROL_API.md) for runnable setup, exact endpoints, limitations and [checked OpenAPI](packages/contracts/openapi.json).
 ## Start here
@@ -23,6 +23,7 @@ The local backend provides authenticated create/poll/list/cancel, durable SQLite
 | [Hackathon integration plan](docs/HACKATHON_INTEGRATIONS.md) | Sponsor boundaries, event deadline and proof of meaningful use |
 | [Decision register](docs/decisions/DECISIONS.md) | Trade-offs, assumptions and questions for the product owner |
 | [Control API handoff](docs/CONTROL_API.md) | Implemented backend, setup, wire contracts and limitations |
+| [Integration status](docs/INTEGRATION_STATUS.md) | Merged contributions, checks and remaining seams |
 | [Next steps](docs/NEXT_STEPS.md) | Prioritized work from the current implementation |
 | [Agent instructions](AGENTS.md) | Repository-wide contributor and coding-agent rules |
 
@@ -81,7 +82,20 @@ uv run python scripts/run_essentials.py
 uv run python scripts/run_recovery.py ev1
 ```
 
-The prototype delegation proposal is preserved in [docs/architecture.md](docs/architecture.md); its `/chat` orchestrator is planned, not implemented. Production auth/database setup, app builds, generated clients and CI remain subsequent tasks; do not imply those checks exist today.
+The CLI orchestrator is implemented and delegates to all five registered specialists; an HTTP `/chat` endpoint is not implemented. Model chat requires `ANTHROPIC_API_KEY`:
+
+```sh
+uv run python scripts/chat.py
+uv run python scripts/chat.py --event all
+```
+
+The teammate's static advisor dashboard uses committed synthetic data:
+
+```sh
+node dashboard/serve.mjs  # localhost:5180
+```
+
+To regenerate its data, `uv run python scripts/build_dashboard_data.py` fetches a public FX feed with a labeled fallback. Narratives and supplier links remain samples; local Approve/Dismiss does not send, book or mutate server state. The standalone onboarding HTML is a separate presentation demo, not an API-connected intake flow. Production auth/database setup, app builds, generated clients and CI remain subsequent tasks; do not imply those checks exist today.
 
 ## Team workflow
 
