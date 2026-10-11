@@ -28,7 +28,7 @@ class RecoveryAgent:
         "and settle-up, home preparation, and post-trip tasks."
     )
 
-    def run(self, task: str, trip: TripContext, today: date | None = None) -> AgentResult:
+    def run(self, task: str, trip: TripContext, today: date | None = None, timeout_seconds: float | None = None) -> AgentResult:
         trip_tools = RecoveryTools(trip)
         result = run_specialist(
             system_prompt=SYSTEM_PROMPT,
@@ -37,6 +37,8 @@ class RecoveryAgent:
             result_model=RecoveryResult,
             submit_name="submit_recovery",
             effort="high",
+            timeout_seconds=timeout_seconds,
+            max_iterations=4 if timeout_seconds else 15,
         )
         added = trip.add_tasks(result.checklist_items, owner_agent=self.name)
         data = result.model_dump()

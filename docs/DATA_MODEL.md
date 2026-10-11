@@ -1,5 +1,8 @@
 # Wonder shared data model v1
 
+> Current consumer supplement: [CONSUMER_APP.md](CONSUMER_APP.md). Checked OpenAPI defines implemented local routes. Latest consumer scope supersedes older Magic-first/website ownership; production beta gates below remain separate.
+
+
 Status: normative proposed contract; implementation and SQL migrations follow Phase 0 review. Entity names here are logical; SQL uses plural snake_case in the private `app` schema. Full vision entities are not all first-beta tables. Read [architecture](../ARCHITECTURE.md) and [API](api/CONTRACTS.md) together.
 
 ## Shared primitives

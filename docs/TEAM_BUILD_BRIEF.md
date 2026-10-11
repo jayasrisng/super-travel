@@ -1,5 +1,8 @@
 # Wonder — team build brief
 
+> Current consumer supplement: [CONSUMER_APP.md](CONSUMER_APP.md). Checked OpenAPI defines implemented local routes. Latest consumer scope supersedes older Magic-first/website ownership; production beta gates below remain separate.
+
+
 **Less searching. More experiencing.** Repository: `jayasrisng/super-travel`. Product renamed Wonder by owner; original brief retained in [PRODUCT_BRIEF.md](product/PRODUCT_BRIEF.md).
 
 ## Agreed direction
@@ -51,3 +54,15 @@ Private beta must additionally pass real auth, private saves/preferences, locati
 ## Operating rhythm
 
 Discuss contract blockers first, integrate continuously, and keep one canonical fixture set. Every PR states task ID, owned paths, contract/migration implications, validation and known limitations. Review against acceptance criteria, not feature count. Measure TTUA including review/correction time. A successful venue navigation/share is distinct from a reservation or attendance.
+
+## Consumer work boundaries
+
+| Developer | Current exclusive paths | Handoff |
+|---|---|---|
+| D1 | control/, consumer/models.py, consumer/api.py, contracts/export + API drift CI | Serialize schema/route registration changes; generate client atomically |
+| D2 | consumer/coordination.py, apps/web/src/group.tsx | Same-trip participants/segments/expenses and redacted guest access; request shared API/model edits through D1 |
+| D3 | consumer/service.py, consumer/wardrobe.py | Task lifecycle, preferences, briefing, wardrobe/votes/packing invariants; request shared contracts through D1 |
+| D4 | apps/web except group.tsx, design assets | Notebook themes, primary consumer flows, browser tests and accessibility |
+| D5 | future apps/ios, docs/WIDGET_CONTRACT.md | Native parity, account/deep-link/cache/signing gates; no native target is currently shipped |
+
+API registration, root docs and CI are coordinated shared files with one editor. Keep new changes additive and avoid cross-domain formatting churn. Python domain mixins share Notebook's transaction/ownership primitives; they must not create their own authoritative stores. Teammate advisor/onboarding artifacts remain intact; the consumer app is a separately reviewable feature branch.

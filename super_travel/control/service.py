@@ -8,6 +8,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from super_travel.agents.explore import ExploreAgent, ProviderUnavailable
 from super_travel.agents.proposals import PackingAgent, PlanningAgent
+from super_travel.consumer.agents import HelperAdapter
 from super_travel.control.schemas import AgentRun, RunRequest
 from super_travel.control.store import ControlError
 
@@ -19,6 +20,8 @@ class Service:
             "plan_book": PlanningAgent(mode),
             "pack_shop": PackingAgent(mode),
             "explore_magic": ExploreAgent(mode),
+            "essentials": HelperAdapter("essentials", mode),
+            "recovery": HelperAdapter("recovery", mode),
         }
 
     def create_run(self, actor, request):
@@ -28,7 +31,7 @@ class Service:
             raise ControlError(
                 422,
                 "unsupported_area",
-                "Magic currently covers the Barcelona demo rectangle only",
+                "Invalid geographic origin",
             )
         now = self.store.now()
         trip = (
@@ -67,8 +70,14 @@ class Service:
                     "end_date",
                     "timezone",
                     "interests",
+                    "dietary",
+                    "accessibility",
+                    "travel_style",
+                    "child_ages",
                 )
             }
+            if request.agent == "plan_book" and trip.get("budget") is not None:
+                defaults["budget"] = trip["budget"]
             defaults.update(trip["traveler_configuration"])
             for field, value in defaults.items():
                 if field not in request.input.model_fields_set:

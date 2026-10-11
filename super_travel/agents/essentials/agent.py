@@ -33,7 +33,7 @@ class EssentialsAgent:
         "Not for visas or passports (planning) or buying items (packing)."
     )
 
-    def run(self, task: str, trip: TripContext, today: date | None = None) -> AgentResult:
+    def run(self, task: str, trip: TripContext, today: date | None = None, timeout_seconds: float | None = None) -> AgentResult:
         result = run_specialist(
             system_prompt=SYSTEM_PROMPT,
             tools=[llm.WEB_SEARCH_TOOL, *_CLIENT_TOOLS],
@@ -41,6 +41,8 @@ class EssentialsAgent:
             result_model=EssentialsResult,
             submit_name="submit_essentials",
             effort="medium",
+            timeout_seconds=timeout_seconds,
+            max_iterations=4 if timeout_seconds else 15,
         )
         added = trip.add_tasks(result.checklist_items, owner_agent=self.name)
         data = result.model_dump()

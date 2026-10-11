@@ -17,7 +17,7 @@ from pydantic import (
     model_validator,
 )
 
-AgentKey = Literal["plan_book", "pack_shop", "explore_magic"]
+AgentKey = Literal["plan_book", "pack_shop", "explore_magic", "essentials", "recovery"]
 Mode = Literal["fixture", "llm"]
 Status = Literal["queued", "running", "succeeded", "failed", "cancelled", "expired"]
 Minor = Annotated[int, Field(ge=0, le=9_007_199_254_740_991, strict=True)]
@@ -73,6 +73,11 @@ class TravelInput(Model):
     child_count: int = Field(default=0, ge=0, le=30, strict=True)
     infant_count: int = Field(default=0, ge=0, le=10, strict=True)
     interests: list[Text] = Field(default_factory=list, max_length=20)
+    instructions: str = Field(default="", max_length=2000)
+    dietary: str = Field(default="", max_length=500)
+    accessibility: str = Field(default="", max_length=500)
+    travel_style: str = Field(default="unhurried", max_length=100)
+    child_ages: list[int] = Field(default_factory=list, max_length=30)
 
     @field_validator("timezone")
     @classmethod
@@ -115,13 +120,13 @@ class MagicInput(Model):
     next_commitment: Commitment | None = None
     travel_mode: Literal["walk", "transit"] = "walk"
     buffer_minutes: int = Field(default=15, ge=0, le=60, strict=True)
-    timezone: Literal["Europe/Madrid"] = "Europe/Madrid"
+    timezone: str = "Europe/Madrid"
+    city: str = Field(default="Barcelona", min_length=1, max_length=120)
     allow_unknown_feasibility: bool = False
 
     @model_validator(mode="after")
-    def eur_budget(self):
-        if self.budget and self.budget.currency != "EUR":
-            raise ValueError("Barcelona Magic supports EUR; no implicit conversion")
+    def valid_timezone(self):
+        TravelInput(timezone=self.timezone)
         return self
 
 
@@ -144,8 +149,23 @@ class ExploreRequest(RunBase):
     input: MagicInput
 
 
+class HelperInput(TravelInput):
+    pass
+
+
+class EssentialsRequest(RunBase):
+    agent: Literal["essentials"]
+    input: HelperInput
+
+
+class RecoveryRequest(RunBase):
+    agent: Literal["recovery"]
+    input: HelperInput
+
+
 RunRequest = Annotated[
-    PlanRequest | PackRequest | ExploreRequest, Field(discriminator="agent")
+    PlanRequest | PackRequest | ExploreRequest | EssentialsRequest | RecoveryRequest,
+    Field(discriminator="agent"),
 ]
 
 
@@ -156,7 +176,7 @@ class MagicRequest(MagicInput):
 class TaskProposal(Model):
     item_id: Text
     title: Text
-    system: Literal["plan_book", "pack_shop"]
+    system: AgentKey
 
 
 class ItineraryProposal(Model):
@@ -237,7 +257,7 @@ class Recommendation(Model):
 
 
 class Coverage(Model):
-    area: Literal["barcelona"] = "barcelona"
+    area: str = "barcelona"
     data_mode: Literal["fixture", "live"]
     providers: list[str]
     partial: bool
@@ -278,6 +298,8 @@ class AgentRun(Model):
             "plan_book": PlanProposal,
             "pack_shop": PackProposal,
             "explore_magic": ExploreProposal,
+            "essentials": PlanProposal,
+            "recovery": PlanProposal,
         }[self.agent]
         if self.proposal is not None and not isinstance(self.proposal, expected):
             raise ValueError("Proposal type must match the run agent")
@@ -309,9 +331,18 @@ class TravelerConfiguration(Model):
 
 class TripCreate(Model):
     title: str = Field(min_length=1, max_length=120)
-    destination: str = Field(min_length=1, max_length=120)
-    start_date: date
-    end_date: date
+    destination: str = Field(default="Undecided", min_length=1, max_length=120)
+    start_date: date | None = None
+    end_date: date | None = None
+    date_certainty: Literal["confirmed", "tentative", "flexible"] = "confirmed"
+    dietary: str = Field(default="", max_length=500)
+    accessibility: str = Field(default="", max_length=500)
+    travel_style: str = Field(default="unhurried", max_length=100)
+    activities: list[Text] = Field(default_factory=list, max_length=20)
+    child_ages: list[int] = Field(default_factory=list, max_length=30)
+    budget: Money | None = None
+    existing_bookings: str = Field(default="", max_length=1000)
+    status: Literal["planned", "ongoing", "completed", "archived"] = "planned"
     timezone: str = "Europe/Madrid"
     currency: Literal["EUR", "USD", "JPY"] = "EUR"
     traveler_configuration: TravelerConfiguration = Field(
@@ -321,6 +352,16 @@ class TripCreate(Model):
 
     @model_validator(mode="after")
     def validate_trip(self):
+        if self.date_certainty == "confirmed" and (
+            not self.start_date or not self.end_date
+        ):
+            raise ValueError("Confirmed dates require both start and end")
+        if any(age < 0 or age > 17 for age in self.child_ages):
+            raise ValueError("Child ages must be 0 to 17; no child names requested")
+        if self.budget and self.budget.currency != self.currency:
+            raise ValueError("Budget must use the trip currency")
+        if len(self.child_ages) > self.traveler_configuration.child_count:
+            raise ValueError("Child ages must correspond to the child traveler count")
         TravelInput(
             destination=self.destination,
             start_date=self.start_date,

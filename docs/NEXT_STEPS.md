@@ -1,36 +1,14 @@
-# Wonder — next steps from the implemented backend
+# Wonder — next steps after the consumer implementation
 
-Main inspected at `5ecbe06` contains the planning foundation and Essentials/Recovery prototypes. This backend change adds Planning, Packing, Explore/Magic, an actor-scoped FastAPI control API, durable local runs and checked OpenAPI. The website belongs to another teammate; no frontend is included.
+The complete local Tokyo journey now connects real persisted tasks/agent runs, a 34-piece wardrobe, swiping, deduplicated packing, selected synthetic calendar/briefing, Magic and bookmarks. See [consumer handoff](CONSUMER_APP.md) and README. This updates the earlier backend-only handoff.
 
-## What is ready to integrate
+1. **P0 — team review and merge this consumer branch.** Run the same journey, review checked OpenAPI/client changes, assess mobile/screenshots, assign exclusive paths from the team brief and retain teammate prototypes. Hosted CI must pass before merge. Do not deploy the localhost demo authentication.
+2. **P0 — finish real account/persistence infrastructure.** Verified authentication/current trip membership, relational migration/PostgreSQL/RLS, managed job workers, retention/account deletion, quotas and recovery. Prove cross-tenant restrictions using the runtime DB role. Owner approves paid budget before provider activation.
+3. **P0 — live Magic in the reviewed launch area.** Permitted places/event/hours/routes adapters, licensing, coverage polygon and budget caps. Use fixture tests for outage, time/budget/onward feasibility; add explicitly authorized budget-bounded live smoke tests. Do not present sample coordinates as real discoveries.
+4. **P1 — wardrobe intelligence and assignment.** Destination weather and selected-event activity inference, configurable layering, day-specific assignment/substitutions, better capsule ranking, owned-versus-needed choice, optional recognition with confirmed tags and renderer upgrades. Preserve vote and packing invariants.
+5. **P1 — Google read-only consent and real briefs.** Implement selected calendars/events, encrypted backend tokens, refresh/expiry/revocation/permission errors and licensed weather. Native widget cache fields must be added contract-first. Add delivery scheduling and permissions only when independently tested.
+6. **P1 — collaborative group workflow.** Account-backed invites/memberships and roles; participant/segment/itinerary editing/removal, selected payer/split controls, custom equal/weighted splits and audited settlement design. Existing public links remain narrowly redacted/read-only.
+7. **P1 — native parity.** SwiftUI project, generated contracts, authentication/deep links, offline privacy and device/signing tests; WidgetKit only after host app readiness. Earlier equal web/native private-beta gate is still unmet.
+8. **P2 — transactions and sponsor proof.** Meaningful licensed integrations and documented evidence; booking/payment/outbound claim/message execution needs explicit confirmation and reliable result verification. No sponsor integration is inferred from logos or installed tools.
 
-- Three agent keys: `plan_book`, `pack_shop`, `explore_magic`, mapped to the five-specialist registry's `planning`, `packing`, `explore` names.
-- Create/list/poll/cancel with typed proposals, 24-hour replay protection, versions, bounded queue, lease recovery and expiry redaction.
-- Minimal owner-only trip creation/read and private Magic save/list/delete.
-- Synthetic requests/proposals and canonical implemented OpenAPI in `packages/contracts/`.
-- Fixture engines, optional Planning/Packing model runner, deterministic Magic feasibility and a discovery-provider interface.
-- Existing Essentials/Recovery prototypes preserved; CLI orchestrator dispatches across the combined five-agent registry.
-- Teammate advisor dashboard preserved as a static synthetic demo; API-connected UI is the next seam.
-
-Use [CONTROL_API.md](CONTROL_API.md) for exact launch commands and limitations. Model access was tested with a local fake API, not paid providers. No production authentication, migrations, live POI/routing adapter, native iOS implementation or deployment is claimed. A teammate-built static advisor dashboard and onboarding HTML now exist; see INTEGRATION_STATUS.md.
-
-## Priority order and ownership
-
-| Priority | Owner | Concrete next step | Acceptance |
-|---|---|---|---|
-| P0 | D1 + D4 + D5 | Review local OpenAPI; generate TypeScript/Swift clients; wire three dashboard panels | Both clients decode the same result fixtures; create/poll/cancel/error/expiry states reflect server status. Keep local token out of shipped clients. |
-| P0 | Owner + D1 | Choose monthly budget, provider access and reviewed Barcelona polygon | Explicit costs/quotas/license boundaries and kill switch before paid/live enablement |
-| P0 | D1 + D3 | Implement licensed discovery/hours/routes adapter behind DiscoveryProvider | Real origin/onward routes, source freshness, partial failures and costs; live candidates cannot borrow fixture data |
-| P0 | D1 | Replace local identity/store with verified JWT/Postgres and managed worker | Current trip membership checks, runtime-role RLS isolation, restart/lease/cancel/replay tests and revocation |
-| P1 | D4 + D5 | Complete Barcelona Magic core with saved state parity | Web/native iOS support manual origin, unknown/empty/error states, refresh expired recommendations and private saves |
-| P1 | D1 + D3 | Add explicit selected-item proposal apply and packing/checklist domain | Context-version/ETag conflict tests; no silent overwrite or purchase/completion inference |
-| P1 | D1 | Enrich Plan/Pack with sourced adapters after Magic core | Current drafts stay unverified until sources are actually consulted; structured items remain proposals |
-| P1 | D2/D3 | Integrate sponsor boundaries from hackathon plan | Dial only approved recipient/content; Keewano outcome query changes a follow-up; Sparta synthetic evaluation proof; Darwin search separate from execution |
-| P2 | D1/D2/D3 | Connected trip workflows | Coordination, expenses, share permissions, essentials/recovery behind reviewed domain boundaries |
-| Gate | All | Private-beta validation | Real Barcelona feasibility, costs/privacy/restore/rollback, equally complete web/native Magic core |
-
-The first teammate handoff is a local fixture request through the real API, followed by shared client decoding and saving. It is demo integration evidence; live-beta acceptance still requires the P0 gates. The hackathon submission and external communications remain team-owned; none have been submitted by this change.
-
-## Keep five developers independent
-
-D1 owns `super_travel/control`, the new proposal agents, checked contracts and serialized shared-core edits. D4 owns website presentation and server-side development proxy. D5 owns native host/configuration and generated Swift consumption. D2 owns coordination/Dial; D3 owns deterministic domains, provider feasibility validation and sponsor evaluation. Preserve existing root Python paths until a separately coordinated migration. Use focused PRs; do not overwrite another developer's shared-file work.
+The current branch implements a working local prototype. Remaining live/native gates are intentionally separate from fixture success. These steps are a prioritized handoff, not authorization to spend, provision or submit the hackathon project.
