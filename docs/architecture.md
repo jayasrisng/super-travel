@@ -51,6 +51,7 @@ class AgentResult:
     reply: str                                  # text for the orchestrator to relay/merge
     pending_actions: list[PendingAction] = field(default_factory=list)
     handoffs: list[Handoff] = field(default_factory=list)
+    data: dict = field(default_factory=dict)    # structured payload for UI cards
 
 class Agent(Protocol):
     name: str            # "planning", "packing", "explore", "essentials", "recovery"

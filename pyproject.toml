@@ -1,0 +1,20 @@
+[project]
+name = "super-travel"
+version = "0.1.0"
+description = "One super app for all your travel plans"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=1.0",
+    "pydantic>=2.7",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+markers = ["network: hits a live external API"]
