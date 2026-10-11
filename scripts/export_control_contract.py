@@ -25,7 +25,12 @@ DISRUPTION = {
     "kind": "delay",
     "passengers": 2,
     "arrival_delay_minutes": 220,
-    "flight": {"carrier_code": "VY", "number": "VY7821", "from_iata": "LHR", "to_iata": "BCN"},
+    "flight": {
+        "carrier_code": "VY",
+        "number": "VY7821",
+        "from_iata": "LHR",
+        "to_iata": "BCN",
+    },
 }
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,7 +71,7 @@ def artifacts():
     }
     for agent in ("essentials", "recovery"):
         proposals[agent] = (
-            HelperAdapter(agent,"fixture")
+            HelperAdapter(agent, "fixture")
             .propose(HelperInput(**travel), now)
             .model_dump(mode="json")
         )
@@ -76,6 +81,7 @@ def artifacts():
             "plan_book",
             "pack_shop",
             "explore_magic",
+            "travel_essentials",
             "essentials",
             "recovery",
             "travel_essentials",

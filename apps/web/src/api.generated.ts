@@ -873,6 +873,17 @@ export interface components {
              */
             type: "save";
         };
+        /** AdvisorEssentialsRequest */
+        AdvisorEssentialsRequest: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            agent: "travel_essentials";
+            input: components["schemas"]["EssentialsInput"];
+            /** Trip Id */
+            trip_id?: string | null;
+        };
         /**
          * AdvisorLink
          * @description A traveler's (consumer actor's) connection to the agency trip created from their intake.
@@ -919,6 +930,17 @@ export interface components {
         AdvisorLinkCreate: {
             /** Client Code */
             client_code: string;
+        };
+        /** AdvisorRecoveryRequest */
+        AdvisorRecoveryRequest: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            agent: "manage_recover";
+            input: components["schemas"]["RecoveryInput"];
+            /** Trip Id */
+            trip_id?: string | null;
         };
         /** AgentInfo */
         AgentInfo: {
@@ -1500,8 +1522,8 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            agent: "travel_essentials";
-            input: components["schemas"]["EssentialsInput"];
+            agent: "essentials";
+            input: components["schemas"]["HelperInput"];
             /** Trip Id */
             trip_id?: string | null;
         };
@@ -1609,17 +1631,6 @@ export interface components {
             /** To Iata */
             to_iata: string;
         };
-        /** HelperEssentialsRequest */
-        HelperEssentialsRequest: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            agent: "essentials";
-            input: components["schemas"]["HelperInput"];
-            /** Trip Id */
-            trip_id?: string | null;
-        };
         /** HelperInput */
         HelperInput: {
             /**
@@ -1672,17 +1683,6 @@ export interface components {
              * @default unhurried
              */
             travel_style: string;
-        };
-        /** HelperRecoveryRequest */
-        HelperRecoveryRequest: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            agent: "recovery";
-            input: components["schemas"]["HelperInput"];
-            /** Trip Id */
-            trip_id?: string | null;
         };
         /** Home */
         Home: {
@@ -2758,8 +2758,8 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            agent: "manage_recover";
-            input: components["schemas"]["RecoveryInput"];
+            agent: "recovery";
+            input: components["schemas"]["HelperInput"];
             /** Trip Id */
             trip_id?: string | null;
         };
@@ -3825,7 +3825,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlanRequest"] | components["schemas"]["PackRequest"] | components["schemas"]["ExploreRequest"] | components["schemas"]["HelperEssentialsRequest"] | components["schemas"]["HelperRecoveryRequest"] | components["schemas"]["EssentialsRequest"] | components["schemas"]["RecoveryRequest"] | components["schemas"]["VoiceQuoteRequest"];
+                "application/json": components["schemas"]["PlanRequest"] | components["schemas"]["PackRequest"] | components["schemas"]["ExploreRequest"] | components["schemas"]["EssentialsRequest"] | components["schemas"]["RecoveryRequest"] | components["schemas"]["AdvisorEssentialsRequest"] | components["schemas"]["AdvisorRecoveryRequest"] | components["schemas"]["VoiceQuoteRequest"];
             };
         };
         responses: {

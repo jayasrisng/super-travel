@@ -46,6 +46,37 @@
         "title": "Action",
         "type": "object"
       },
+      "AdvisorEssentialsRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "agent": {
+            "const": "travel_essentials",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/components/schemas/EssentialsInput"
+          },
+          "trip_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trip Id"
+          }
+        },
+        "required": [
+          "agent",
+          "input"
+        ],
+        "title": "AdvisorEssentialsRequest",
+        "type": "object"
+      },
       "AdvisorLink": {
         "additionalProperties": false,
         "description": "A traveler's (consumer actor's) connection to the agency trip created from their intake.",
@@ -127,6 +158,37 @@
           "client_code"
         ],
         "title": "AdvisorLinkCreate",
+        "type": "object"
+      },
+      "AdvisorRecoveryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "agent": {
+            "const": "manage_recover",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/components/schemas/RecoveryInput"
+          },
+          "trip_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trip Id"
+          }
+        },
+        "required": [
+          "agent",
+          "input"
+        ],
+        "title": "AdvisorRecoveryRequest",
         "type": "object"
       },
       "AgentInfo": {
@@ -1735,12 +1797,12 @@
         "additionalProperties": false,
         "properties": {
           "agent": {
-            "const": "travel_essentials",
+            "const": "essentials",
             "title": "Agent",
             "type": "string"
           },
           "input": {
-            "$ref": "#/components/schemas/EssentialsInput"
+            "$ref": "#/components/schemas/HelperInput"
           },
           "trip_id": {
             "anyOf": [
@@ -2045,37 +2107,6 @@
         "title": "FlightRef",
         "type": "object"
       },
-      "HelperEssentialsRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "agent": {
-            "const": "essentials",
-            "title": "Agent",
-            "type": "string"
-          },
-          "input": {
-            "$ref": "#/components/schemas/HelperInput"
-          },
-          "trip_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Trip Id"
-          }
-        },
-        "required": [
-          "agent",
-          "input"
-        ],
-        "title": "HelperEssentialsRequest",
-        "type": "object"
-      },
       "HelperInput": {
         "additionalProperties": false,
         "properties": {
@@ -2186,37 +2217,6 @@
           }
         },
         "title": "HelperInput",
-        "type": "object"
-      },
-      "HelperRecoveryRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "agent": {
-            "const": "recovery",
-            "title": "Agent",
-            "type": "string"
-          },
-          "input": {
-            "$ref": "#/components/schemas/HelperInput"
-          },
-          "trip_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Trip Id"
-          }
-        },
-        "required": [
-          "agent",
-          "input"
-        ],
-        "title": "HelperRecoveryRequest",
         "type": "object"
       },
       "Home": {
@@ -4831,12 +4831,12 @@
         "additionalProperties": false,
         "properties": {
           "agent": {
-            "const": "manage_recover",
+            "const": "recovery",
             "title": "Agent",
             "type": "string"
           },
           "input": {
-            "$ref": "#/components/schemas/RecoveryInput"
+            "$ref": "#/components/schemas/HelperInput"
           },
           "trip_id": {
             "anyOf": [
@@ -7156,13 +7156,13 @@
               "schema": {
                 "discriminator": {
                   "mapping": {
-                    "essentials": "#/components/schemas/HelperEssentialsRequest",
+                    "essentials": "#/components/schemas/EssentialsRequest",
                     "explore_magic": "#/components/schemas/ExploreRequest",
-                    "manage_recover": "#/components/schemas/RecoveryRequest",
+                    "manage_recover": "#/components/schemas/AdvisorRecoveryRequest",
                     "pack_shop": "#/components/schemas/PackRequest",
                     "plan_book": "#/components/schemas/PlanRequest",
-                    "recovery": "#/components/schemas/HelperRecoveryRequest",
-                    "travel_essentials": "#/components/schemas/EssentialsRequest",
+                    "recovery": "#/components/schemas/RecoveryRequest",
+                    "travel_essentials": "#/components/schemas/AdvisorEssentialsRequest",
                     "voice_quotes": "#/components/schemas/VoiceQuoteRequest"
                   },
                   "propertyName": "agent"
@@ -7178,16 +7178,16 @@
                     "$ref": "#/components/schemas/ExploreRequest"
                   },
                   {
-                    "$ref": "#/components/schemas/HelperEssentialsRequest"
-                  },
-                  {
-                    "$ref": "#/components/schemas/HelperRecoveryRequest"
-                  },
-                  {
                     "$ref": "#/components/schemas/EssentialsRequest"
                   },
                   {
                     "$ref": "#/components/schemas/RecoveryRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AdvisorEssentialsRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AdvisorRecoveryRequest"
                   },
                   {
                     "$ref": "#/components/schemas/VoiceQuoteRequest"

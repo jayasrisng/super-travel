@@ -125,10 +125,17 @@ def create_app(
         responses={
             status: {"model": ErrorEnvelope, "description": description}
             for status, description in {
-                400: "Bad Request", 401: "Unauthorized", 403: "Forbidden", 404: "Not Found",
-                409: "Conflict", 412: "Precondition Failed", 413: "Content Too Large",
-                422: "Unprocessable Content", 428: "Precondition Required",
-                429: "Too Many Requests", 503: "Service Unavailable",
+                400: "Bad Request",
+                401: "Unauthorized",
+                403: "Forbidden",
+                404: "Not Found",
+                409: "Conflict",
+                412: "Precondition Failed",
+                413: "Content Too Large",
+                422: "Unprocessable Content",
+                428: "Precondition Required",
+                429: "Too Many Requests",
+                503: "Service Unavailable",
             }.items()
         },
         description="Local consumer notebook and agent control. Explicit draft apply; fixture defaults; no external purchases.",
@@ -296,12 +303,24 @@ def create_app(
                     "limitation": limitation,
                 }
                 for wire, name, title, limitation in [
-                    ("travel_essentials", "essentials", "Travel Essentials",
-                     "Deterministic: curated country data, ECB rates, mock eSIM plans; no advisories"),
-                    ("manage_recover", "recovery", "Manage & Recover",
-                     "Deterministic rules on reported disruptions; no flight monitoring; claims are drafts"),
-                    ("voice_quotes", "voice", "Voice agent: insurance quotes",
-                     request.app.state.service.agents["voice_quotes"].describe()),
+                    (
+                        "travel_essentials",
+                        "essentials",
+                        "Travel Essentials",
+                        "Deterministic: curated country data, ECB rates, mock eSIM plans; no advisories",
+                    ),
+                    (
+                        "manage_recover",
+                        "recovery",
+                        "Manage & Recover",
+                        "Deterministic rules on reported disruptions; no flight monitoring; claims are drafts",
+                    ),
+                    (
+                        "voice_quotes",
+                        "voice",
+                        "Voice agent: insurance quotes",
+                        request.app.state.service.agents["voice_quotes"].describe(),
+                    ),
                 ]
             ],
         )
@@ -357,7 +376,9 @@ def create_app(
         trip_id: UUID | None = None,
     ):
         values, next_cursor = request.app.state.store.transaction(
-            lambda: request.app.state.store.list(identity, "run", cursor, limit, trip_id)
+            lambda: request.app.state.store.list(
+                identity, "run", cursor, limit, trip_id
+            )
         )
         return envelope(request, values, next_cursor)
 
@@ -512,7 +533,11 @@ def create_app(
         service = request.app.state.service
         return envelope(request, service.store.transaction(lambda: service.traveler_policy(identity, policy_id)))
 
-    @app.post("/v1/trips/{trip_id}/messages", status_code=201, response_model=Envelope[Message])
+    @app.post(
+        "/v1/trips/{trip_id}/messages",
+        status_code=201,
+        response_model=Envelope[Message],
+    )
     def create_message(
         trip_id: UUID,
         payload: MessageCreate,
@@ -527,7 +552,8 @@ def create_app(
             replay_key,
             payload.model_dump(mode="json"),
             lambda: envelope(
-                request, request.app.state.service.create_message(identity, trip_id, payload)
+                request,
+                request.app.state.service.create_message(identity, trip_id, payload),
             ),
         )
         set_etag(response, result["data"])
@@ -562,7 +588,8 @@ def create_app(
             replay_key,
             payload.model_dump(mode="json"),
             lambda: envelope(
-                request, request.app.state.service.create_policy(identity, trip_id, payload)
+                request,
+                request.app.state.service.create_policy(identity, trip_id, payload),
             ),
         )
         set_etag(response, result["data"])
@@ -573,7 +600,11 @@ def create_app(
         response_model=Envelope[InsurancePolicy],
     )
     def get_policy(
-        trip_id: UUID, policy_id: UUID, request: Request, response: Response, identity=Depends(actor)
+        trip_id: UUID,
+        policy_id: UUID,
+        request: Request,
+        response: Response,
+        identity=Depends(actor),
     ):
         body = request.app.state.store.transaction(
             lambda: request.app.state.store.get(identity, "policy", policy_id)

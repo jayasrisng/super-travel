@@ -125,6 +125,8 @@ uv run python scripts/seed_demo.py                                              
 
 Other dashboard features: per-agent proposals for all five agents, report-a-disruption (EU261 / US DOT / baggage), save Magic ideas, re-run agents. Onboarding's **Send to Wonder agents** creates a new client. Approve/Dismiss on the five agents' proposals is browser-local. No real calls, purchases or insurance policies are made; the onboarding page's images, fonts and analytics script are still missing.
 
+The teammate's `dashboard/` advisor demo, `super_travel/onboarding/` saved HTML and CLI orchestrator are preserved. Their limitations are recorded in [integration status](docs/INTEGRATION_STATUS.md). For the model-based CLI: `uv run python scripts/chat.py` or `uv run python scripts/chat.py --event all`.
+
 ## Continue here
 
 The latest [consumer brief](docs/product/CONSUMER_BRIEF.md) and [notebook design](docs/product/NOTEBOOK_DESIGN.md) supersede older consumer priorities. The original [product brief](docs/product/PRODUCT_BRIEF.md) remains preserved.

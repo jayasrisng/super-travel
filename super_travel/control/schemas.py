@@ -17,12 +17,15 @@ from pydantic import (
     model_validator,
 )
 
-# Agents a consumer task can be assigned to (main's five-agent contract).
-AgentKey = Literal["plan_book", "pack_shop", "explore_magic", "essentials", "recovery"]
-# Every agent the run queue accepts: the five above plus the advisor-side agents.
-RunAgentKey = Literal[
-    "plan_book", "pack_shop", "explore_magic", "essentials", "recovery",
-    "travel_essentials", "manage_recover", "voice_quotes",
+AgentKey = Literal[
+    "plan_book",
+    "pack_shop",
+    "explore_magic",
+    "essentials",
+    "recovery",
+    "travel_essentials",
+    "manage_recover",
+    "voice_quotes",
 ]
 Currency = Annotated[str, Field(pattern=r"^[A-Z]{3}$")]
 Priority = Literal["must", "should", "nice"]
@@ -129,20 +132,29 @@ class FlightRef(Model):
 
 class Disruption(Model):
     kind: Literal[
-        "delay", "cancellation", "denied_boarding",
-        "baggage_delayed", "baggage_lost", "baggage_damaged",
+        "delay",
+        "cancellation",
+        "denied_boarding",
+        "baggage_delayed",
+        "baggage_lost",
+        "baggage_damaged",
     ]
     flight: FlightRef | None = None
     passengers: int = Field(default=1, ge=1, le=30, strict=True)
     arrival_delay_minutes: int = Field(default=0, ge=0, le=4320, strict=True)
     extraordinary_circumstances: bool = False
     notice_days: int | None = Field(default=None, ge=0, le=365, strict=True)
-    reroute_arrival_delay_minutes: int | None = Field(default=None, ge=0, le=4320, strict=True)
+    reroute_arrival_delay_minutes: int | None = Field(
+        default=None, ge=0, le=4320, strict=True
+    )
     reference: str | None = Field(default=None, max_length=40)
 
     @model_validator(mode="after")
     def flight_for_flight_events(self):
-        if self.kind in ("delay", "cancellation", "denied_boarding") and self.flight is None:
+        if (
+            self.kind in ("delay", "cancellation", "denied_boarding")
+            and self.flight is None
+        ):
             raise ValueError("Flight disruptions need flight details")
         return self
 
@@ -204,26 +216,12 @@ class ExploreRequest(RunBase):
     input: MagicInput
 
 
-class HelperInput(TravelInput):
-    pass
-
-
-class HelperEssentialsRequest(RunBase):
-    agent: Literal["essentials"]
-    input: HelperInput
-
-
-class HelperRecoveryRequest(RunBase):
-    agent: Literal["recovery"]
-    input: HelperInput
-
-
-class EssentialsRequest(RunBase):
+class AdvisorEssentialsRequest(RunBase):
     agent: Literal["travel_essentials"]
     input: EssentialsInput
 
 
-class RecoveryRequest(RunBase):
+class AdvisorRecoveryRequest(RunBase):
     agent: Literal["manage_recover"]
     input: RecoveryInput
 
@@ -233,9 +231,29 @@ class VoiceQuoteRequest(RunBase):
     input: VoiceQuoteInput
 
 
+class HelperInput(TravelInput):
+    pass
+
+
+class EssentialsRequest(RunBase):
+    agent: Literal["essentials"]
+    input: HelperInput
+
+
+class RecoveryRequest(RunBase):
+    agent: Literal["recovery"]
+    input: HelperInput
+
+
 RunRequest = Annotated[
-    PlanRequest | PackRequest | ExploreRequest | HelperEssentialsRequest | HelperRecoveryRequest
-    | EssentialsRequest | RecoveryRequest | VoiceQuoteRequest,
+    PlanRequest
+    | PackRequest
+    | ExploreRequest
+    | EssentialsRequest
+    | RecoveryRequest
+    | AdvisorEssentialsRequest
+    | AdvisorRecoveryRequest
+    | VoiceQuoteRequest,
     Field(discriminator="agent"),
 ]
 
@@ -247,7 +265,7 @@ class MagicRequest(MagicInput):
 class TaskProposal(Model):
     item_id: Text
     title: Text
-    system: RunAgentKey
+    system: AgentKey
     due_date: date | None = None
     priority: Priority = "should"
 
@@ -352,8 +370,14 @@ class BriefingItem(Model):
 
 class BriefingSection(Model):
     topic: Literal[
-        "payments_currency", "connectivity", "health", "insurance",
-        "safety", "customs_etiquette", "language", "emergency",
+        "payments_currency",
+        "connectivity",
+        "health",
+        "insurance",
+        "safety",
+        "customs_etiquette",
+        "language",
+        "emergency",
     ]
     items: list[BriefingItem] = Field(max_length=30)
 
@@ -462,7 +486,11 @@ class VoiceQuoteProposal(ProposalBase):
 
 
 Proposal = (
-    PlanProposal | PackProposal | ExploreProposal | EssentialsProposal | RecoveryProposal
+    PlanProposal
+    | PackProposal
+    | ExploreProposal
+    | EssentialsProposal
+    | RecoveryProposal
     | VoiceQuoteProposal
 )
 
@@ -477,7 +505,7 @@ class AgentRun(Model):
     id: UUID
     actor_user_id: UUID
     trip_id: UUID | None
-    agent: RunAgentKey
+    agent: AgentKey
     status: Status
     context_version: int | None
     version: int
@@ -492,11 +520,11 @@ class AgentRun(Model):
             "plan_book": PlanProposal,
             "pack_shop": PackProposal,
             "explore_magic": ExploreProposal,
-            "essentials": PlanProposal,
-            "recovery": PlanProposal,
             "travel_essentials": EssentialsProposal,
             "manage_recover": RecoveryProposal,
             "voice_quotes": VoiceQuoteProposal,
+            "essentials": PlanProposal,
+            "recovery": PlanProposal,
         }[self.agent]
         if self.proposal is not None and not isinstance(self.proposal, expected):
             raise ValueError("Proposal type must match the run agent")
@@ -603,12 +631,16 @@ class IntakeCreate(Model):
 
     @model_validator(mode="after")
     def valid_dates(self):
-        TravelInput(destination=self.destination, start_date=self.start_date, end_date=self.end_date)
+        TravelInput(
+            destination=self.destination,
+            start_date=self.start_date,
+            end_date=self.end_date,
+        )
         return self
 
 
 class IntakeRun(Model):
-    agent: RunAgentKey
+    agent: AgentKey
     run_id: UUID | None
     skipped_reason: str | None = None
 
@@ -711,7 +743,7 @@ class SavedExperience(Model):
 
 
 class AgentInfo(Model):
-    agent: RunAgentKey
+    agent: AgentKey
     prototype_name: str
     title: str
     mode: Mode

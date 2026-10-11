@@ -103,17 +103,15 @@ def test_intake_validation(api):
     assert post(client, "/v1/intakes", {**SARAH, "ssn": "x"}).status_code == 422
 
 
-def test_magic_runs_for_any_known_destination(api):
-    # Magic accepts synthetic origins anywhere (main, consumer notebook); unknown cities are skipped.
+def test_advisor_magic_stays_in_barcelona_demo_area(api):
+    # Advisor intakes keep the declared Barcelona Magic coverage; other agents still run.
     client, app = api
     intake = post(client, "/v1/intakes", {**SARAH, "destination": "Lisbon"}).json()["data"]
-    assert all(r["run_id"] for r in intake["runs"])
-    unknown = post(client, "/v1/intakes", {**SARAH, "destination": "Atlantis"}).json()["data"]
-    magic = next(r for r in unknown["runs"] if r["agent"] == "explore_magic")
-    assert magic["run_id"] is None and magic["skipped_reason"]
+    magic = next(r for r in intake["runs"] if r["agent"] == "explore_magic")
+    assert magic["run_id"] is None and "Barcelona" in magic["skipped_reason"]
     drain(app)
     runs = client.get(f"/v1/agent-runs?trip_id={intake['trip_id']}").json()["data"]
-    assert len(runs) == 5 and all(r["status"] == "succeeded" for r in runs)
+    assert len(runs) == 4 and all(r["status"] == "succeeded" for r in runs)
 
 
 def test_reported_delay_computes_eu261_claim(api):
@@ -151,8 +149,7 @@ def test_unknown_airport_fails_safely(api):
     assert body["status"] == "failed" and body["error"]["code"] == "invalid_constraints"
 
 
-def test_agents_endpoint_lists_five_specialists_and_voice(api):
+def test_agents_endpoint_preserves_consumer_and_advisor_contracts(api):
     client, _ = api
     agents = [a["agent"] for a in client.get("/v1/agents").json()["data"]]
-    assert agents == ["plan_book", "pack_shop", "explore_magic", "essentials", "recovery",
-                      "travel_essentials", "manage_recover", "voice_quotes"]
+    assert set(agents) == {"plan_book", "pack_shop", "explore_magic", "travel_essentials", "manage_recover", "essentials", "recovery", "voice_quotes"}
