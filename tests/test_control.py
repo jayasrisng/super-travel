@@ -338,9 +338,9 @@ def test_no_missing_standalone_constraints_or_outside_area(api):
         post(
             client,
             "/v1/magic/runs",
-            {**magic(), "location": {"latitude": 0, "longitude": 0}},
+            {**magic(), "location": {"latitude": 91, "longitude": 0}},
         ).json()["error"]["code"]
-        == "unsupported_area"
+        == "invalid_request"
     )
 
 

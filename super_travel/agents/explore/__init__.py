@@ -47,6 +47,11 @@ class FixtureProvider:
 
     def discover(self, request, now):
         # Routes/hours below are simulated scenarios, never geographic/live assertions.
+        currency = (
+            request.budget.currency
+            if request.budget
+            else ("JPY" if request.city == "Tokyo" else "EUR")
+        )
         source = Source(
             provider="wonder-fixture",
             source_url="https://example.com/wonder-fixtures",
@@ -61,11 +66,16 @@ class FixtureProvider:
                 key,
                 title,
                 category,
-                Location(latitude=lat, longitude=lon),
+                Location(
+                    latitude=max(-89.9, min(89.9, request.location.latitude + (lat - 41.385))),
+                    longitude=max(
+                        -179.9, min(179.9, request.location.longitude + (lon - 2.174))
+                    ),
+                ),
                 duration,
                 outbound,
                 onward,
-                Money(amount_minor=cost, currency="EUR"),
+                Money(amount_minor=cost, currency=currency),
                 now - timedelta(hours=1),
                 now + timedelta(hours=8),
                 source,
@@ -73,7 +83,7 @@ class FixtureProvider:
             for key, title, category, lat, lon, duration, outbound, onward, cost in [
                 (
                     "walk",
-                    "Example Gothic Quarter walk",
+                    f"Example {request.city} neighbourhood walk",
                     "culture",
                     41.383,
                     2.176,
@@ -108,10 +118,8 @@ class ExploreAgent:
 
     @staticmethod
     def supports(location):
-        # Temporary demo rectangle, not the reviewed beta boundary polygon.
-        return (
-            41.32 <= location.latitude <= 41.47 and 2.05 <= location.longitude <= 2.23
-        )
+        # Global synthetic origins only; this does not assert live place coverage.
+        return -90 <= location.latitude <= 90 and -180 <= location.longitude <= 180
 
     def run(self, task, trip, today=None):
         request = MagicInput.model_validate_json(task)
@@ -230,7 +238,7 @@ class ExploreAgent:
                 "No verified feasible options for this window; try a longer window or review uncertain options."
             )
         return ExploreProposal(
-            reply="Review your Barcelona options before saving.",
+            reply=f"Review your {request.city} sample options before saving.",
             assumptions=[],
             sources=[],
             data_mode=self.provider.data_mode,
@@ -238,6 +246,7 @@ class ExploreAgent:
             uncertain_recommendations=uncertain[:5],
             warnings=warnings,
             coverage={
+                "area": request.city.lower(),
                 "data_mode": self.provider.data_mode,
                 "providers": [type(self.provider).__name__],
                 "partial": bool(uncertain),

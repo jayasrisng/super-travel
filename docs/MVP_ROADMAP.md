@@ -1,5 +1,8 @@
 # Wonder prioritized MVP roadmap
 
+> Current consumer supplement: [CONSUMER_APP.md](CONSUMER_APP.md). Checked OpenAPI defines implemented local routes. Latest consumer scope supersedes older Magic-first/website ownership; production beta gates below remain separate.
+
+
 Release order agreed by owner: Barcelona Magic private beta with web/native iOS core parity, followed by connected travel MVP. Today's hackathon demo uses the same direction with a smaller acceptance gate. Priority P0 blocks the first beta; P1 completes the brief's connected MVP; P2 follows validated usage. Partner integrations have event-specific priority and may be disabled for beta if their operational gates fail.
 
 Estimates are relative effort: S ~ half to one developer day, M ~ 1–3, L ~ 3–5; uncertainty is high until access spikes. Estimates exclude credential approval and app distribution delays. No fixed beta release date is promised.

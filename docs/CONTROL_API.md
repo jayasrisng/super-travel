@@ -1,5 +1,8 @@
 # Wonder agent control API — implementation handoff
 
+> Current consumer supplement: [CONSUMER_APP.md](CONSUMER_APP.md). Checked OpenAPI defines implemented local routes. Latest consumer scope supersedes older Magic-first/website ownership; production beta gates below remain separate.
+
+
 This change implements the three requested agent backends and their local control API. The website belongs to D4; no frontend is included. Python remains in the existing `super_travel/` package to avoid moving teammates' Essentials/Recovery code.
 
 ## Run locally
@@ -69,7 +72,7 @@ Standalone Plan/Pack require destination, start_date and end_date. Trip mode can
 
 Model-generated planning/packing drafts have `data_mode=live` meaning a real model execution, **not verified travel data**. Sources are cleared by the service because no research tools were called. Always show “model-generated, unverified” and the agent limitation; never infer booking, weather, price or source verification from this field. Synthetic fixtures have `data_mode=fixture` throughout. Budget estimates are proposals, not authoritative arithmetic or quotes.
 
-Magic's primary list fits outbound + activity + onward + buffer against the earlier of the requested window and next commitment, using UTC arithmetic across Barcelona DST. Known costs must fit any supplied EUR budget. Unknown route/hours/required cost or unverified live availability excludes primary results; separately listed uncertain results require `allow_unknown_feasibility=true`. No return leg is inferred when no next commitment was supplied. Candidates and origins must be within a temporary Barcelona demo rectangle (latitude 41.32–41.47, longitude 2.05–2.23); this is explicitly **not** the reviewed private-beta polygon. Dates/hours/routes/costs in the fixture adapter are simulated, irrespective of wall-clock time or origin.
+Magic's primary list fits outbound + activity + onward + buffer against the earlier of the requested window and next commitment, using UTC arithmetic across Barcelona DST. Known costs must fit any supplied EUR budget. Unknown route/hours/required cost or unverified live availability excludes primary results; separately listed uncertain results require `allow_unknown_feasibility=true`. No return leg is inferred when no next commitment was supplied. Advisor intake automatically queues Magic only within a temporary Barcelona demo rectangle (latitude 41.32–41.47, longitude 2.05–2.23); this is explicitly **not** the reviewed private-beta polygon. The consumer fixture adapter accepts manually entered origins globally; that is not live coverage. Dates/hours/routes/costs in the fixture adapter are simulated, irrespective of wall-clock time or origin.
 
 Recommendation validity is capped at 15 minutes and shortened by provider expiry, closing time and the time window. Save checks validity again. Saved records retain title, scope and fixture/live label, not precise origin or route history; they are bookmarks, not reservations. Agent-run retention does not extend recommendation validity.
 
@@ -94,3 +97,5 @@ uv run ruff check super_travel/control super_travel/agents/proposals.py super_tr
 Tests cover token/actor/trip isolation, strict inputs/money, replay/conflict including omitted overrides, queue limits/pagination, cancellation/late completion, lease recovery/restart, expiry redaction, saving/deletion, three-agent results, fake model API execution, private-context nonmutation, DST/onward/budget/unknown feasibility and checked artifact drift. Existing Essentials/Recovery tests are retained. Tests use synthetic tokens and localhost fake servers; no provider credentials are needed.
 
 Future domain prose in DATA_MODEL/CONTRACTS remains the private-beta design. This local TripCreate adds a required destination and interests, excludes membership/budget/guest lifecycle and does not imply the full Trip is shipped. See decision T14 for this deliberate staging boundary. D1 and affected web/iOS owners should review the exported contract before wiring clients.
+
+Consumer `essentials`/`recovery` retain their existing proposal contracts. Advisor `travel_essentials`/`manage_recover` retain their richer deterministic briefing/rights contracts. `/agents` exposes both sets without renaming persisted runs; the consumer task picker keeps its five specialist choices.

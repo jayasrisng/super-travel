@@ -1,4 +1,30 @@
 {
+  "essentials": {
+    "assumptions": [
+      "Sample preparation guidance; verify current requirements with official sources."
+    ],
+    "budget_estimates": [],
+    "checklist_tasks": [
+      {
+        "due_date": null,
+        "item_id": "essentials-0",
+        "priority": "should",
+        "system": "essentials",
+        "title": "Review connectivity options"
+      },
+      {
+        "due_date": null,
+        "item_id": "essentials-1",
+        "priority": "should",
+        "system": "essentials",
+        "title": "Check official entry and emergency information"
+      }
+    ],
+    "data_mode": "fixture",
+    "itinerary_items": [],
+    "reply": "Sample essentials preparation note for Barcelona. No live advice or external action.",
+    "sources": []
+  },
   "explore_magic": {
     "assumptions": [],
     "coverage": {
@@ -51,7 +77,7 @@
         "rank": 1,
         "reason": "Fits the supplied constraints",
         "slack_minutes": 65,
-        "title": "Example Gothic Quarter walk",
+        "title": "Example Barcelona neighbourhood walk",
         "valid_until": "2026-10-11T12:15:00Z"
       },
       {
@@ -141,7 +167,7 @@
         "valid_until": "2026-10-11T12:15:00Z"
       }
     ],
-    "reply": "Review your Barcelona options before saving.",
+    "reply": "Review your Barcelona sample options before saving.",
     "sources": [],
     "uncertain_recommendations": [],
     "warnings": [
@@ -160,7 +186,7 @@
     },
     "data_mode": "fixture",
     "recommendations": [],
-    "reply": "Review your Barcelona options before saving.",
+    "reply": "Review your Barcelona sample options before saving.",
     "sources": [],
     "uncertain_recommendations": [],
     "warnings": [
@@ -310,6 +336,32 @@
       }
     ],
     "reply": "Example planning proposal for Barcelona. Review before applying.",
+    "sources": []
+  },
+  "recovery": {
+    "assumptions": [
+      "Sample preparation guidance; verify current requirements with official sources."
+    ],
+    "budget_estimates": [],
+    "checklist_tasks": [
+      {
+        "due_date": null,
+        "item_id": "recovery-0",
+        "priority": "should",
+        "system": "recovery",
+        "title": "Keep booking receipts and provider contacts"
+      },
+      {
+        "due_date": null,
+        "item_id": "recovery-1",
+        "priority": "should",
+        "system": "recovery",
+        "title": "Review disruption options before taking action"
+      }
+    ],
+    "data_mode": "fixture",
+    "itinerary_items": [],
+    "reply": "Sample recovery preparation note for Barcelona. No live advice or external action.",
     "sources": []
   },
   "travel_essentials": {

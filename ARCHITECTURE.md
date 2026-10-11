@@ -1,8 +1,17 @@
 # Wonder architecture
 
+> Current consumer implementation: [CONSUMER_APP.md](docs/CONSUMER_APP.md) and the latest [owner brief](docs/product/CONSUMER_BRIEF.md) supersede the earlier consumer priority and frontend ownership below. React/Vite and SQLite are implemented locally; production identity, native parity and live integrations remain release gates. The earlier beta design is retained for migration planning, not presented as shipped behavior.
+
+
 Implemented staging note: the three-agent control backend is now in `super_travel/control/`, with checked OpenAPI and synthetic fixtures. [CONTROL_API.md](docs/CONTROL_API.md) records its local SQLite/token adapter and beta gaps. The architecture below remains the production target.
 
 Status: proposed implementation baseline, October 11, 2026. No services are deployed by this document. Owner decisions: Magic first in Barcelona; private-beta first release; equally complete core web/native iOS. The same-day SpeedHacks demo is separately scoped in [HACKATHON_INTEGRATIONS.md](docs/HACKATHON_INTEGRATIONS.md). The product brief is preserved in [PRODUCT_BRIEF.md](docs/product/PRODUCT_BRIEF.md). Domain records and wire behavior are defined in [DATA_MODEL.md](docs/DATA_MODEL.md) and [CONTRACTS.md](docs/api/CONTRACTS.md).
+
+## Implemented consumer runtime
+
+Browser React/Vite client → same-origin `/v1` proxy → existing FastAPI control + owner-scoped consumer services → existing transactional SQLite store/lease worker → existing specialist proposal adapters. Pydantic source exports OpenAPI and generated TypeScript. Notebook owns transactions/identity; coordination and wardrobe services share those primitives. There is one backend and one authoritative local store.
+
+The local launcher enables signed HttpOnly localhost demo sessions and fixture agent mode. UI media stays authenticated, proposals apply only with explicit approval/current context, and group money remains integer deterministic. Provider interfaces report unconfigured or fixture behavior honestly. T15–T19 in the decision register explain Vite, local sessions, JSON storage, lookbooks and synthetic-calendar trade-offs. [CONSUMER_APP](docs/CONSUMER_APP.md) specifies actual API/data semantics. The rest of this document defines a future beta architecture, not deployed capabilities.
 
 ## Decisions and trade-offs
 

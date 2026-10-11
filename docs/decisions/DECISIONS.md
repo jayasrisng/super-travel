@@ -12,6 +12,7 @@ Source hierarchy: preserved product brief → explicit product-owner changes →
 | P04 | Barcelona launch area | Europe/Madrid, EUR; precise supported boundary needs review |
 | P05 | Web and native iOS equally complete | both meet Magic core gate before beta; no prototype exemption |
 | P06 | D3 takes deterministic backend workflows | D1 agents/shared core, D2 coordination, D3 operations, D4 web, D5 native |
+| P08 | Complete consumer application and notebook design explicitly authorized in new owner briefs | Build connected Tokyo trip/checklist/wardrobe/packing/Magic/briefing; supersedes P03 for local delivery and earlier exclusive website ownership. Home-city fixture origins do not change P04 live launch gate. Native production parity remains gated. |
 | P07 | Building for SpeedHacks; integrate as much as possible | plan meaningful use of all five partners, time-box access and retain reliable core |
 
 ## Concrete technical defaults for review
@@ -50,3 +51,13 @@ These defaults are sufficiently specific for contract drafting. They do not auth
 | Partner prize-pane inconsistency | rely on published rubric; organizer clarification for awards | submission planning / owner |
 
 Do not block documentation/fixture work on unanswered commercial questions. Do not convert silence into spending authorization. User requests to maximize integrations do not require sacrificing feasibility or truthful claims. Event eligibility of reused assets should be clarified with organizers by the team; this task has not contacted anyone or submitted feedback.
+
+## Implemented consumer choices
+
+- T15: React + TypeScript + Vite static consumer client instead of introducing Next.js server features for this local slice. Reuses FastAPI via same-origin `/v1` proxy, a small frontend runtime and generated OpenAPI DTOs. Trade-off: no SSR/production account infrastructure; revisit hosting/SSR with the web owner before beta.
+- T16: Extend the existing SQLite control store with actor-scoped consumer objects and versioned transactions. Preserve shared worker/replay semantics and source package; do not duplicate backend or agents. Trade-off: generic JSON records need reviewed relational migration/RLS before beta.
+- T17: Signed HttpOnly, same-site, localhost-only demo sessions; backend launcher generates an ignored secret. No shared bearer secret in JS. Trade-off: seven-day browser identity and no account recovery; cannot represent production accounts.
+- T18: Original SVG capsule lookbooks, manual image tags, deterministic outfit ranking and vote history. No recognition/photorealistic try-on claim. Trade-off: heuristic styling and manually supplied occasion/temperature rather than live destination forecasts or automatic calendar styling.
+- T19: Explicit synthetic calendar consent and in-app daily brief; event/weather interfaces fail or label fixtures honestly. No OAuth or automatic delivery until credentials, consent, token security and scheduling are implemented and tested.
+
+Source briefs are preserved as docs/product/CONSUMER_BRIEF.md and NOTEBOOK_DESIGN.md. The resulting local app is a connected prototype; prior native/live beta requirements are not silently waived.

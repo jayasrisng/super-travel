@@ -1,0 +1,39 @@
+name: Consumer checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.19.0'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '10.18.3'
+      - run: uv sync --frozen
+      - run: uv run pytest -q -m 'not network'
+      - run: uv run ruff check super_travel/consumer super_travel/control scripts/run_consumer.py scripts/build_wardrobe_assets.py tests/test_consumer.py
+      - run: pnpm --dir apps/web install --frozen-lockfile
+      - run: uv run python scripts/export_control_contract.py
+      - run: pnpm --dir apps/web contracts
+      - run: git diff --exit-code -- packages/contracts apps/web/src/api.generated.ts
+      - run: pnpm --dir apps/web format:check
+      - run: pnpm --dir apps/web build
+      - run: pnpm --dir apps/web exec playwright install --with-deps chromium
+      - run: pnpm --dir apps/web test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: consumer-browser-evidence
+          path: |
+            docs/screenshots/
+            apps/web/test-results/
