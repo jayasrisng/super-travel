@@ -35,14 +35,16 @@ All paths include `/v1`. GET entity responses carry `ETag: "version"`. JSON is s
 
 | Method and path | Behavior |
 |---|---|
-| GET `/agents` | Three agent keys, prototype-name mapping, configured mode, readiness and limitations |
+| GET `/agents` | Five agent keys, prototype-name mapping, configured mode, readiness and limitations |
 | POST `/agent-runs` | Discriminated agent request; returns 202 and queued run |
 | POST `/magic/runs` | Convenient Magic input shape; returns the same run contract |
-| GET `/agent-runs` | Actor-owned runs, cursor/limit pagination |
+| GET `/agent-runs` | Actor-owned runs, cursor/limit pagination, optional `trip_id` filter |
 | GET `/agent-runs/{run_id}` | Current state, typed result or redacted failure |
 | POST `/agent-runs/{run_id}/cancel` | Cancel queued/running work; requires current `If-Match` |
 | POST `/trips` | Minimal owner-only integration context; destination/dates/timezone/traveler counts/interests |
 | GET `/trips/{trip_id}` | Same actor only; versioned minimal context |
+| POST `/intakes` | Advisor intake from the onboarding call: creates the trip and queues all five agents in one transaction (Magic only inside the Barcelona demo area) |
+| GET `/intakes`, GET `/intakes/{intake_id}` | Actor-owned intakes with their trip and run IDs |
 | POST `/me/saved-experiences` | Save an unexpired recommendation from the actor's succeeded Magic run |
 | GET `/me/saved-experiences` | Actor-owned minimal saved records, cursor/limit pagination |
 | DELETE `/me/saved-experiences/{saved_id}` | Actor-owned deletion; requires `If-Match` |
@@ -60,6 +62,8 @@ Create → poll after one second → increase interval up to ten seconds → sto
 | `plan_book` | `planning` | Itinerary items, checklist tasks and budget estimates; no booking tools or verified inventory |
 | `pack_shop` | `packing` | Categorized item quantities and preparation tasks; no purchases or packing-state mutation |
 | `explore_magic` | `explore` | Normalized provider candidates filtered/ranked by deterministic feasibility; saving creates only a private saved record |
+| `travel_essentials` | `essentials` | Deterministic briefing from curated country data, the ECB exchange rate and mock eSIM plans; no advisories or entry rules |
+| `manage_recover` | `recovery` | Deterministic EU261 / US DOT / Montreal rights for a reported disruption, with claim drafts as proposals; without a disruption, a home-prep and follow-up checklist. No flight monitoring |
 
 Standalone Plan/Pack require destination, start_date and end_date. Trip mode can omit those fields: the service reads only an actor-owned snapshot. Explicit null remains explicit and fails if a required constraint becomes absent. Unknown fields fail rather than silently accepting private documents. Traveler counts default to one adult; trip counts fill omitted fields. The model sees only the resolved input, never full TripContext, documents, passenger names, PNRs or ledger rows. The existing prototype `.run(task, trip)` adapter uses a destination/date allowlist and returns `AgentResult` without mutating the trip. Explore's prototype `.run` expects a JSON-encoded MagicInput, since free text cannot safely supply location/time.
 

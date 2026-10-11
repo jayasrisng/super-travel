@@ -24,6 +24,8 @@ from super_travel.control.schemas import (
     Envelope,
     ErrorEnvelope,
     ExploreRequest,
+    Intake,
+    IntakeCreate,
     MagicRequest,
     RunRequest,
     SavedExperience,
@@ -90,9 +92,15 @@ def create_app(
         title="Wonder Agent Control API",
         version="0.1.0",
         lifespan=lifespan,
+        # Fixed descriptions keep the exported OpenAPI identical across Python versions
+        # (3.13 renamed the 413 reason phrase).
         responses={
-            status: {"model": ErrorEnvelope}
-            for status in (400, 401, 404, 409, 412, 413, 422, 428, 429, 503)
+            status: {"model": ErrorEnvelope, "description": description}
+            for status, description in {
+                400: "Bad Request", 401: "Unauthorized", 404: "Not Found", 409: "Conflict",
+                412: "Precondition Failed", 413: "Content Too Large", 422: "Unprocessable Content",
+                428: "Precondition Required", 429: "Too Many Requests", 503: "Service Unavailable",
+            }.items()
         },
         description="Local integration backend. Fixture defaults; no purchases or domain-plan mutation.",
     )
@@ -234,6 +242,22 @@ def create_app(
                     ("pack_shop", "packing", "Pack & Shop"),
                     ("explore_magic", "explore", "Explore / Magic"),
                 ]
+            ]
+            + [
+                {
+                    "agent": wire,
+                    "prototype_name": name,
+                    "title": title,
+                    "mode": mode,
+                    "ready": True,
+                    "limitation": limitation,
+                }
+                for wire, name, title, limitation in [
+                    ("travel_essentials", "essentials", "Travel Essentials",
+                     "Deterministic: curated country data, ECB rates, mock eSIM plans; no advisories"),
+                    ("manage_recover", "recovery", "Manage & Recover",
+                     "Deterministic rules on reported disruptions; no flight monitoring; claims are drafts"),
+                ]
             ],
         )
 
@@ -285,9 +309,10 @@ def create_app(
         identity=Depends(actor),
         cursor: UUID | None = None,
         limit: int = Query(default=20, ge=1, le=100),
+        trip_id: UUID | None = None,
     ):
         values, next_cursor = request.app.state.store.transaction(
-            lambda: request.app.state.store.list(identity, "run", cursor, limit)
+            lambda: request.app.state.store.list(identity, "run", cursor, limit, trip_id)
         )
         return envelope(request, values, next_cursor)
 
@@ -350,6 +375,48 @@ def create_app(
     ):
         body = request.app.state.store.transaction(
             lambda: request.app.state.store.get(identity, "trip", trip_id)
+        )
+        set_etag(response, body)
+        return envelope(request, body)
+
+    @app.post("/v1/intakes", status_code=201, response_model=Envelope[Intake])
+    def create_intake(
+        payload: IntakeCreate,
+        request: Request,
+        response: Response,
+        identity=Depends(actor),
+        replay_key=Depends(key),
+    ):
+        result = request.app.state.store.create(
+            identity,
+            "/v1/intakes",
+            replay_key,
+            payload.model_dump(mode="json"),
+            lambda: envelope(
+                request, request.app.state.service.create_intake(identity, payload)
+            ),
+        )
+        set_etag(response, result["data"])
+        return result
+
+    @app.get("/v1/intakes", response_model=Envelope[list[Intake]])
+    def list_intakes(
+        request: Request,
+        identity=Depends(actor),
+        cursor: UUID | None = None,
+        limit: int = Query(default=20, ge=1, le=100),
+    ):
+        values, next_cursor = request.app.state.store.transaction(
+            lambda: request.app.state.store.list(identity, "intake", cursor, limit)
+        )
+        return envelope(request, values, next_cursor)
+
+    @app.get("/v1/intakes/{intake_id}", response_model=Envelope[Intake])
+    def get_intake(
+        intake_id: UUID, request: Request, response: Response, identity=Depends(actor)
+    ):
+        body = request.app.state.store.transaction(
+            lambda: request.app.state.store.get(identity, "intake", intake_id)
         )
         set_etag(response, body)
         return envelope(request, body)

@@ -10,10 +10,10 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="demo-strip">Wonder Agency Console · demo scenario with sample agent outputs</div>
+  <div class="demo-strip" id="mode-strip">Wonder Agency Console</div>
 
   <header class="topbar">
-    <a class="brand" href="#" aria-label="Wonder">
+    <a class="brand" href="/" aria-label="Wonder">
       <svg class="brand-mark" viewBox="0 0 64 40" aria-hidden="true">
         <circle cx="26" cy="22" r="13" fill="currentColor"/>
         <ellipse cx="26" cy="22" rx="24" ry="7" fill="none" stroke="currentColor" stroke-width="3" transform="rotate(-14 26 22)"/>
@@ -22,17 +22,22 @@
       <span class="brand-word">Wonder</span>
       <span class="brand-sub">Agency</span>
     </a>
-    <nav class="stages" id="stages" aria-label="Scenario stage"></nav>
+    <label class="client-picker">
+      <span class="micro">Client</span>
+      <select id="client-select" aria-label="Client trip"></select>
+    </label>
     <div class="topbar-right">
+      <a class="btn primary" href="/onboarding/#onboard">New intake <span aria-hidden="true">→</span></a>
       <button class="pill-ghost" id="theme-toggle" type="button" aria-label="Toggle theme">
         <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
         <span id="theme-label">Evening</span>
       </button>
-      <div class="advisor" id="advisor"></div>
     </div>
   </header>
 
-  <main>
+  <div class="banner" id="banner" role="alert" hidden></div>
+
+  <main id="main">
     <section class="hero" id="hero"></section>
 
     <section class="row">
@@ -47,8 +52,8 @@
           <h2>Five agents,<br><span class="dim">one trip.</span></h2>
         </div>
         <div class="agents-layout">
-          <ol class="agent-list" id="agent-list"></ol>
-          <div class="agent-detail" id="agent-detail" tabindex="-1"></div>
+          <ol class="agent-list" id="agent-list" role="tablist" aria-label="Agents"></ol>
+          <div class="agent-detail" id="agent-detail" tabindex="-1" role="tabpanel"></div>
         </div>
       </div>
     </section>
@@ -62,6 +67,7 @@
     </section>
   </main>
 
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <footer class="foot" id="foot"></footer>
   <script src="app.js" type="module"></script>
 </body>

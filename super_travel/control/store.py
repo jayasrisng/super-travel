@@ -138,11 +138,13 @@ class Store:
 
         return self.transaction(operation)
 
-    def list(self, actor, kind, cursor=None, limit=20):
-        rows = self.db.execute(
-            "SELECT body FROM objects WHERE actor=? AND kind=? ORDER BY created DESC,id DESC",
-            (str(actor), kind),
-        ).fetchall()
+    def list(self, actor, kind, cursor=None, limit=20, trip_id=None):
+        query = "SELECT body FROM objects WHERE actor=? AND kind=?"
+        params = [str(actor), kind]
+        if trip_id is not None:
+            query += " AND json_extract(body,'$.trip_id')=?"
+            params.append(str(trip_id))
+        rows = self.db.execute(query + " ORDER BY created DESC,id DESC", params).fetchall()
         values = [json.loads(row["body"]) for row in rows]
         if cursor:
             positions = [

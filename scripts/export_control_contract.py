@@ -4,10 +4,27 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+from super_travel.agents.essentials.proposal import EssentialsProposalAgent
 from super_travel.agents.explore import ExploreAgent
 from super_travel.agents.proposals import PackingAgent, PlanningAgent
+from super_travel.agents.recovery.proposal import RecoveryProposalAgent
 from super_travel.control.app import create_app
-from super_travel.control.schemas import MagicInput, PackInput, PlanInput
+from super_travel.control.schemas import (
+    EssentialsInput,
+    MagicInput,
+    PackInput,
+    PlanInput,
+    RecoveryInput,
+)
+
+# Fixed rate so exported fixtures never depend on the network.
+FIXED_RATE = lambda frm, to: (1.12, "2026-10-09")
+DISRUPTION = {
+    "kind": "delay",
+    "passengers": 2,
+    "arrival_delay_minutes": 220,
+    "flight": {"carrier_code": "VY", "number": "VY7821", "from_iata": "LHR", "to_iata": "BCN"},
+}
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -38,10 +55,20 @@ def artifacts():
         "magic_empty": ExploreAgent()
         .propose(MagicInput(**{**magic, "available_minutes": 15}), now)
         .model_dump(mode="json"),
+        "travel_essentials": EssentialsProposalAgent(rate_fn=FIXED_RATE)
+        .propose(EssentialsInput(**travel), now)
+        .model_dump(mode="json"),
+        "manage_recover": RecoveryProposalAgent()
+        .propose(RecoveryInput(**travel, disruption=DISRUPTION), now)
+        .model_dump(mode="json"),
     }
     requests = {
         agent: {"agent": agent, "input": magic if agent == "explore_magic" else travel}
-        for agent in ("plan_book", "pack_shop", "explore_magic")
+        for agent in ("plan_book", "pack_shop", "explore_magic", "travel_essentials")
+    }
+    requests["manage_recover"] = {
+        "agent": "manage_recover",
+        "input": {**travel, "disruption": DISRUPTION},
     }
     return {
         "packages/contracts/openapi.json": create_app().openapi(),

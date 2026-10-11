@@ -89,13 +89,19 @@ uv run python scripts/chat.py
 uv run python scripts/chat.py --event all
 ```
 
-The teammate's static advisor dashboard uses committed synthetic data:
+### Agency dashboard (live)
+
+The advisor console reads the control API through a small Node server that keeps the token server-side. After an intake call, all five agents run for the client's trip and their proposals appear on the dashboard.
 
 ```sh
-node dashboard/serve.mjs  # localhost:5180
+uv run uvicorn super_travel.control.app:app --host 127.0.0.1 --port 8000 --env-file .env   # terminal 1
+node dashboard/serve.mjs                                                                    # terminal 2: http://localhost:5180
+uv run python scripts/seed_demo.py                                                          # optional: demo client + sample delay
 ```
 
-To regenerate its data, `uv run python scripts/build_dashboard_data.py` fetches a public FX feed with a labeled fallback. Narratives and supplier links remain samples; local Approve/Dismiss does not send, book or mutate server state. The standalone onboarding HTML is a separate presentation demo, not an API-connected intake flow. Production auth/database setup, app builds, generated clients and CI remain subsequent tasks; do not imply those checks exist today.
+- **Onboarding:** `http://localhost:5180/onboarding/#onboard`. Play the scripted call, then **Send to Wonder agents**. It posts to `POST /v1/intakes`, which creates the trip and queues Plan & Book, Pack & Shop, Explore/Magic (Barcelona only), Travel Essentials and Manage & Recover.
+- **Dashboard:** pick a client, see each agent's proposal, report a disruption (Manage & Recover computes EU261/US DOT/baggage rights and drafts the claim), save Magic ideas, re-run an agent.
+- Approve/Dismiss in the review queue is recorded in the browser only; nothing is sent. The onboarding page's images, fonts and analytics script are still missing from the repo (see INTEGRATION_STATUS.md).
 
 ## Team workflow
 

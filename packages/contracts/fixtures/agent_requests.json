@@ -16,6 +16,25 @@
       }
     }
   },
+  "manage_recover": {
+    "agent": "manage_recover",
+    "input": {
+      "destination": "Barcelona",
+      "disruption": {
+        "arrival_delay_minutes": 220,
+        "flight": {
+          "carrier_code": "VY",
+          "from_iata": "LHR",
+          "number": "VY7821",
+          "to_iata": "BCN"
+        },
+        "kind": "delay",
+        "passengers": 2
+      },
+      "end_date": "2026-11-15",
+      "start_date": "2026-11-13"
+    }
+  },
   "pack_shop": {
     "agent": "pack_shop",
     "input": {
@@ -26,6 +45,14 @@
   },
   "plan_book": {
     "agent": "plan_book",
+    "input": {
+      "destination": "Barcelona",
+      "end_date": "2026-11-15",
+      "start_date": "2026-11-13"
+    }
+  },
+  "travel_essentials": {
+    "agent": "travel_essentials",
     "input": {
       "destination": "Barcelona",
       "end_date": "2026-11-15",
