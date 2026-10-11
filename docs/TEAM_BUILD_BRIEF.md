@@ -1,38 +1,53 @@
-# Super Travel — Team Build Brief
+# Wonder — team build brief
 
-**Positioning:** Less searching. More experiencing. One personalized checklist, with the next best action a tap away.
+**Less searching. More experiencing.** Repository: `jayasrisng/super-travel`. Product renamed Wonder by owner; original brief retained in [PRODUCT_BRIEF.md](product/PRODUCT_BRIEF.md).
 
-## Five owners
-1. **Agents & shared API (project lead):** Plan & Book, Pack & Shop, Explore & Experience / Magic. Own shared data contracts and integration decisions.
-2. **iMessage:** Trip invite links, itinerary sharing, group polls, reminders, expense updates. Use supported platform methods; provide fallback share links.
-3. **Essentials & Recovery:** Travel documents, payments, connectivity, health/safety, disruptions, home prep, refunds and post-trip tasks.
-4. **Web:** Landing page, onboarding, trips dashboard, personalized checklist, single-feature mode, Travel Passport.
-5. **iOS:** Native screens, active-trip checklist, Magic entry point, notifications and compact home-screen widget.
+## Agreed direction
 
-## MVP user journeys
-- Create multiple independent trips; set persona per trip (solo, family, infant, friends, etc.).
-- Open a trip to see the next actionable checklist item; optionally enter one feature directly.
-- Invite people who participate only in selected trip segments.
-- Record shared expenses: paid by, participants, split rules, refunds and balances.
-- Ask Magic for nearby experiences based on available time, travel time, area, budget and interests.
-- Export/share an opt-in Travel Passport recap.
+Owner decisions: **Magic first**, **Barcelona**, **private beta first**, and **equally complete core web/native iOS**. D3 takes deterministic backend workflows. Today's SpeedHacks entry is a focused demo, with an integration-maximizing plan across Alike, Darwin, Dial, Keewano and Sparta. A same-day demo does not waive beta reliability/privacy criteria or imply the full travel super-app is complete. See [PLAN](../PLAN.md), [roadmap](MVP_ROADMAP.md) and [hackathon integrations](HACKATHON_INTEGRATIONS.md).
 
-## Shared models (draft)
-User, Trip, TripSegment, TripParticipant, Task, Booking, Expense, ExpenseSplit, Experience, Recommendation, ActivityLog.
-Every trip-related record must have a trip ID. Participants have their own joined dates/segments and permissions. Use source attribution and timestamps on recommendations.
+## Five owners and exclusive edit boundaries
 
-## API proposal (draft; finalize before implementation)
-GET/POST /trips; GET /trips/:id; GET/PATCH /trips/:id/tasks
-POST /agents/plan; POST /agents/pack; POST /agents/explore
-GET/POST /trips/:id/participants; GET/POST /trips/:id/expenses
-POST /magic/recommend; GET /trips/:id/summary
-Return typed, versioned JSON with clear loading/error states. Mock integrations where third-party access is unavailable, and label mock data.
+| Owner | Magic-first responsibilities | Connected MVP responsibilities | Owned paths / shared boundary |
+|---|---|---|---|
+| D1: lead, agents, API | auth/context/jobs, structured ranking, Darwin, approved live discovery | trip/segments, Plan & Book, Pack & Shop, itinerary/manual bookings | `services/api/.../core`, `agents`, `integrations/darwin`, root configs/contracts; migration coordinator |
+| D2: coordination/iMessage | Dial opt-in sharing adapter, coordination contract, native share flow | participants, segment attendance, invitations, guest scopes, web share DTOs; later Messages | `domains/coordination`, `integrations/dial`, `apps/ios/.../Features/Coordination`, `Extensions/Messages`; D4 owns web page rendering |
+| D3: essentials/recovery and domain backend | feasibility rules with D1 interface, provider regression cases, Keewano, Sparta scenarios | checklist/packing persistence, expenses/refunds/manual settlement, sourced essentials/recovery, Passport API | `domains/operations`, `integrations/keewano`, domain tests, `database/seeds`; migration proposals reviewed by D1 |
+| D4: web and design | Magic web/auth/saved states, accessibility, action funnel | landing/onboarding, trip dashboard, all responsive connected views and redacted share pages | `apps/web`, `packages/design-tokens`; consumes API, owns no independent ledger |
+| D5: native platform | SwiftUI Magic parity, auth lifecycle, location permission fallback, native save/navigation | native trips/checklist/packing/expenses/Passport; later widgets/push | `apps/ios` except D2 source folders; exclusive editor of project.pbxproj, schemes, entitlements/signing |
 
-## Repo collaboration
-Separate feature branches and pull requests. Don't push directly to main. Document environment setup and API changes. No secrets or personal travel documents in Git. Unit tests for split math and trip isolation; integration tests for checklist persistence; basic privacy and accessibility review.
+`services/api/...` abbreviates `services/api/src/super_travel/`; architecture contains complete layout. Provider adapters other than assigned sponsors are D1-owned by default, with explicit handoff possible after interface approval. D3's feasibility module is `domains/operations/feasibility`; it is deterministic shared logic consumed by the Explore agent. D1 coordinates Alike adoption; each developer controls their own authorized setup/transcript capture.
 
-## Demonstration target
-A user creates a Tokyo family trip and an overlapping friends trip; gets distinct checklists; invites a partial-trip participant; records a group taxi payment; opens Magic for a 90-minute activity; sees the same trip state on web and iOS.
+D1 must not implement everyone’s backend. D2/D3 own route/domain tests in their folders, using core persistence/auth interfaces. They propose schema/contract changes through review rather than maintaining divergent schemas. D4 implements Essentials/Recovery web views from D3 contracts; D5 implements native equivalents. D2 must not independently rewrite host navigation, auth or Xcode targets.
 
-## Five-day prototype plan
-Day 1 contracts and skeleton; Days 2–3 parallel feature demos; Day 4 integration; Day 5 end-to-end validation. Booking/payments and live event availability should not be represented as real unless integrations are operational.
+## Shared files and review
+
+- API spec/generated clients: D1 owns integration; each affected consumer reviews. Contracts merge before dependent feature work; no hand-edited generated output.
+- Migrations: D1 assigns ordering, reviews same-trip constraints/RLS and clean-database replay. Each domain owner authors its schema proposal; append-only after merge.
+- Xcode project and target configuration: D5 serializes changes. D2 works inside agreed source folders, requests configuration changes.
+- Tokens/shared web components: D4 owns changes; D5 consumes versioned JSON token export without editing web CSS.
+- Root manifests, lockfiles, CI: D1 owner; avoid unrelated reformatting. Real names/handles and CODEOWNERS remain Phase 0 work.
+
+Before editing a shared file, reserve it in the human team coordination channel and release after PR; no implied authorization for tools to send messages. Branches are small and domain-scoped. Never push directly to main. Contract changes need D1 and affected consumer; expenses/permissions need independent review. Avoid cherry-picking a migration out of order.
+
+## Contracts everyone shares
+
+[Data model](DATA_MODEL.md) and [API contracts](api/CONTRACTS.md) define UUIDs, UTC instants/IANA zones, integer money, same-trip association constraints, per-resource version/ETag, context versions, errors and idempotency. No client writes trip tables directly. Guest record ≠ authenticated user. Saved/booked ≠ attended. Recorded settlement ≠ payment. Live data ≠ verified availability. Agent output ≠ applied plan.
+
+Fixtures are synthetic and explicitly labeled. A contributor can build UI against canonical fixtures while backend catches up. No module invents its own persona, status, expense split or API envelope. Semantic changes require updating source specs and both client fixtures together.
+
+## Handoffs and first independent tasks
+
+D1 publishes Magic wire fixtures + run/job boundary; D4/D5 immediately implement matching form/loading/result/error flows in separate branches after implementation is authorized. D2 spikes Dial draft/send/status with test recipient and prepares coordination DTOs. D3 implements feasibility fixtures and typed Keewano outcome query contract, then deterministic task/ledger rules. D4 defines shared UI tokens; D5 scaffolds host targets and deep-link routing. Sparta test evidence is D3-owned; every adapter owner supplies one successful and one failure case.
+
+Three integration checkpoints: (1) fixture contracts on both clients; (2) same live server Magic run consumed by web/iOS; (3) persistence, failover and partner proof across the same user action. No separate “agent demo” counts as integrated app functionality.
+
+## Demo and beta acceptance
+
+Event journey: user in Barcelona has 90 minutes → Wonder presents sourced feasible choices → chooses and saves/navigates → explicitly shares if enabled → feedback history affects next suggestion → show agent failure tests and measured time-to-action. Explain each actual partner contribution, remaining mocks and disabled integrations. See the event plan for deadline/submission steps; this task does not submit forms or contact sponsors.
+
+Private beta must additionally pass real auth, private saves/preferences, location-denied/unsupported-area/error handling, operational live providers, tested retention/deletion, device delivery, rate limits and rollback. Both clients meet the same core criteria. The full Tokyo/friends/packing/expense/Passport journey follows beta, maintaining the original long-term MVP scope.
+
+## Operating rhythm
+
+Discuss contract blockers first, integrate continuously, and keep one canonical fixture set. Every PR states task ID, owned paths, contract/migration implications, validation and known limitations. Review against acceptance criteria, not feature count. Measure TTUA including review/correction time. A successful venue navigation/share is distinct from a reservation or attendance.
