@@ -1,5 +1,8 @@
 # Wonder API contracts v1
 
+> Current consumer supplement: [../CONSUMER_APP.md](../CONSUMER_APP.md). Checked OpenAPI defines implemented local routes. Latest consumer scope supersedes older Magic-first/website ownership; production beta gates below remain separate.
+
+
 Implementation boundary: [CONTROL_API.md](../CONTROL_API.md) and [checked OpenAPI](../../packages/contracts/openapi.json) describe the implemented local subset and deliberate staging differences. The remaining operations below are beta design, not working endpoints.
 
 Status: normative proposed wire specification for contract review before implementation. No endpoints exist yet. Phase 0 must produce `packages/contracts/openapi.json` (OpenAPI 3.1) and checked TypeScript/Swift clients from these operations, including examples and rejection fixtures. Do not let generated FastAPI defaults silently redefine this spec.
