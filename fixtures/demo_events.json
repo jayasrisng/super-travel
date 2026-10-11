@@ -1,0 +1,79 @@
+{
+  "_meta": {
+    "description": "Scripted events and user messages for the demo. The UI's 'simulate' buttons POST these to /events in order. Fictional data."
+  },
+  "events": [
+    {
+      "id": "ev1",
+      "at": "2026-11-17T07:55:00+00:00",
+      "type": "flight_status_update",
+      "segment_id": "s2",
+      "data": {
+        "status": "delayed",
+        "new_depart": "2026-11-17T13:50:00+00:00",
+        "new_arrive": "2026-11-17T17:05:00+01:00",
+        "arrival_delay_minutes": 250,
+        "reason_code": "technical",
+        "extraordinary_circumstances": false
+      },
+      "expected": {
+        "agent": "recovery",
+        "compensation": "EU261: EUR 250 per passenger (intra-EU, <=1500 km, arrival delay >= 3h, not extraordinary)",
+        "handoffs": ["explore: 20:30 dinner r2 is probably still OK; Sagrada Família r3 unaffected", "planning: no rebooking needed, delay < 5h"],
+        "pending_actions": ["send_claim: EU261 claim to Vueling for 2 passengers"]
+      }
+    },
+    {
+      "id": "ev2",
+      "at": "2026-11-17T17:40:00+01:00",
+      "type": "baggage_delayed",
+      "segment_id": "s2",
+      "data": {
+        "traveler_id": "t_arjun",
+        "bag_tag": "VY 123456",
+        "pir_reference": "BCNVY10293",
+        "estimated_delivery": "2026-11-19"
+      },
+      "expected": {
+        "agent": "recovery",
+        "actions": ["open incident", "list claimable essentials (toiletries, a change of clothes)", "remind to keep receipts"],
+        "handoffs": ["packing: what to buy tonight near Gràcia to cover 48h"]
+      }
+    },
+    {
+      "id": "ev3",
+      "at": "2026-11-17T19:10:00+01:00",
+      "type": "receipt_uploaded",
+      "data": {
+        "traveler_id": "t_arjun",
+        "merchant": "Farmàcia Gràcia",
+        "amount": 38.40,
+        "currency": "EUR",
+        "items": ["toothbrush", "toothpaste", "deodorant", "phone charger"],
+        "image": "fixtures/receipts/farmacia_gracia.jpg"
+      },
+      "expected": {
+        "agent": "recovery",
+        "actions": ["extract_receipt -> Expense e8 (category: delayed_baggage, claimable)"]
+      }
+    },
+    {
+      "id": "ev4",
+      "at": "2026-11-22T09:00:00-08:00",
+      "type": "trip_ended",
+      "data": {},
+      "expected": {
+        "agent": "recovery",
+        "actions": ["reconcile expenses in USD -> who owes whom", "post-trip tasks: follow up on EU261 claim, baggage claim, reviews"]
+      }
+    }
+  ],
+  "user_messages": [
+    {"agent": "planning",   "text": "Is there anything that could stop us from flying?"},
+    {"agent": "packing",    "text": "What should we pack for Lisbon and Barcelona in mid-November? We each have one checked bag."},
+    {"agent": "essentials", "text": "What do we need to know about money, phones and safety before we go?"},
+    {"agent": "explore",    "text": "We land in Barcelona late. Find us something fun for that evening near Gràcia."},
+    {"agent": "recovery",   "text": "Our flight to Barcelona is delayed 4 hours. What are we owed?"},
+    {"agent": "multi",      "text": "My bag didn't show up in Barcelona. What do I do, and what should I buy tonight?"}
+  ]
+}
