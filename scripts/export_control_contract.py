@@ -6,8 +6,9 @@ from pathlib import Path
 
 from super_travel.agents.explore import ExploreAgent
 from super_travel.agents.proposals import PackingAgent, PlanningAgent
+from super_travel.consumer.agents import HelperAdapter
 from super_travel.control.app import create_app
-from super_travel.control.schemas import MagicInput, PackInput, PlanInput
+from super_travel.control.schemas import HelperInput, MagicInput, PackInput, PlanInput
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,9 +40,21 @@ def artifacts():
         .propose(MagicInput(**{**magic, "available_minutes": 15}), now)
         .model_dump(mode="json"),
     }
+    for agent in ("essentials", "recovery"):
+        proposals[agent] = (
+            HelperAdapter(agent,"fixture")
+            .propose(HelperInput(**travel), now)
+            .model_dump(mode="json")
+        )
     requests = {
         agent: {"agent": agent, "input": magic if agent == "explore_magic" else travel}
-        for agent in ("plan_book", "pack_shop", "explore_magic")
+        for agent in (
+            "plan_book",
+            "pack_shop",
+            "explore_magic",
+            "essentials",
+            "recovery",
+        )
     }
     return {
         "packages/contracts/openapi.json": create_app().openapi(),
