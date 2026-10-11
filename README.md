@@ -30,6 +30,17 @@ uv run python scripts/run_recovery.py        # all events: delay, lost bag, rece
 uv run python scripts/run_recovery.py ev1    # just the flight delay
 ```
 
+## Agency dashboard
+
+A console for travel advisors: after the intake call, it shows what each of the five agents has done for the trip, plus a human-review queue. It uses the demo scenario.
+
+```bash
+uv run python scripts/build_dashboard_data.py   # regenerate dashboard/data/demo.json
+node dashboard/serve.mjs                        # http://localhost:5180
+```
+
+Use the stage switcher (Onboarded, Pre-trip, Disruption day, Back home) to move through the trip. Agent narratives are sample outputs (`fixtures/demo_agent_outputs.json`). Compensation, baggage rights, settle-up, FX, eSIM search and emergency numbers are computed by the real code.
+
 Architecture: [docs/architecture.md](docs/architecture.md)
 # Wonder
 
