@@ -22,6 +22,15 @@ flowchart TD
     A5 -->|handoff: replan| O
 ```
 
+Implementation: `super_travel/orchestrator/`. `Orchestrator.chat()` runs Claude (effort `low`)
+with one `delegate(agent, task)` tool; its `agent` enum is built from `REGISTRY` plus `PLANNED`
+(agents that aren't built yet return `unavailable`, and the orchestrator says so rather than
+doing their job). At most 6 delegations per turn; a failing specialist returns an error instead
+of killing the turn. `Orchestrator.handle_event()` routes app events by type (`EVENT_ROUTES`,
+no model involved), then follows the specialist's handoffs one level. `Session` keeps
+append-only text history per trip. Each turn returns the merged reply, pending actions with ids
+for confirm cards, per-agent data for UI cards, and any open handoffs.
+
 Why delegation through the orchestrator rather than a plain classifier: real requests cross
 domains ("my flight got cancelled, will my eSIM still work for the extra day?"). With
 delegation the orchestrator can call 5 and then 4 in one turn and merge the answers.

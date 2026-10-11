@@ -9,19 +9,37 @@ cp .env.example .env   # then add your ANTHROPIC_API_KEY
 uv run pytest -q
 ```
 
-Run the Travel Essentials agent (agent 4) on the demo trip:
+Chat with the orchestrator, which routes to the agents, about the demo trip:
+
+```bash
+uv run python scripts/chat.py
+uv run python scripts/chat.py --event all    # play the scripted demo events
+```
+
+Run the Travel Essentials agent (agent 4) directly on the demo trip:
 
 ```bash
 uv run python scripts/run_essentials.py
 uv run python scripts/run_essentials.py "Do we need cash in Lisbon?"
 ```
 
-Run the Manage & Recover agent (agent 5) on the demo trip's scripted events:
+Run the Manage & Recover agent (agent 5) directly on the demo trip's scripted events:
 
 ```bash
 uv run python scripts/run_recovery.py        # all events: delay, lost bag, receipt, trip end
 uv run python scripts/run_recovery.py ev1    # just the flight delay
 ```
+
+## Agency dashboard
+
+A console for travel advisors: after the intake call, it shows what each of the five agents has done for the trip, plus a human-review queue. It uses the demo scenario.
+
+```bash
+uv run python scripts/build_dashboard_data.py   # regenerate dashboard/data/demo.json
+node dashboard/serve.mjs                        # http://localhost:5180
+```
+
+Use the stage switcher (Onboarded, Pre-trip, Disruption day, Back home) to move through the trip. Agent narratives are sample outputs (`fixtures/demo_agent_outputs.json`). Compensation, baggage rights, settle-up, FX, eSIM search and emergency numbers are computed by the real code.
 
 Architecture: [docs/architecture.md](docs/architecture.md)
 # Wonder
