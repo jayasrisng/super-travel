@@ -1,9 +1,26 @@
 .env
 .env.*
 !.env.example
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.xcconfig.local
+*.pem
+*.key
+# Build/runtime output
+node_modules/
+.next/
 .venv/
 __pycache__/
 *.pyc
 .pytest_cache/
 .DS_Store
 *.db
+.ruff_cache/
+.coverage
+coverage/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+.DS_Store
