@@ -102,7 +102,7 @@ export function Theme() {
       onClick={() => setTheme((t) => (t === "light" ? "dark" : "light"))}
     >
       {theme === "light" ? "☾" : "☀"}
-      <span>{theme === "light" ? "Chalkboard" : "Paper"}</span>
+      <span>{theme === "light" ? "Evening" : "Day"}</span>
     </button>
   );
 }

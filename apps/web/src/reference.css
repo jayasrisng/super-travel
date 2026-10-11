@@ -1,0 +1,409 @@
+/* Owner-selected visual reference: group-travel-landing-page.replit.app. */
+:root {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --paper: #f5f5f2;
+  --sheet: #ffffff;
+  --ink: #171717;
+  --muted: #626262;
+  --rule: #deded9;
+  --margin: #767676;
+  --accent: #171717;
+  --soft: #eeeee9;
+  --danger: #963c34;
+  --shadow: rgba(17, 17, 17, 0.07);
+  --glass: rgba(255, 255, 255, 0.76);
+  color: var(--ink);
+  background: var(--paper);
+}
+:root[data-theme="dark"] {
+  --paper: #101112;
+  --sheet: #1b1d1f;
+  --ink: #f3eee3;
+  --muted: #b6b7b7;
+  --rule: #3b3e40;
+  --margin: #aeb0b0;
+  --accent: #f3eee3;
+  --soft: #25282b;
+  --danger: #f1aaa0;
+  --shadow: rgba(0, 0, 0, 0.2);
+  --glass: rgba(31, 34, 37, 0.82);
+  color: var(--ink);
+  background: var(--paper);
+}
+body {
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  background: var(--paper);
+}
+h1,
+h2,
+h3,
+.hand,
+.wordmark,
+.annotation,
+.arrow,
+.look-caption,
+.look-foot,
+.trip-number,
+.doodle,
+.discovery-number,
+.liked-counter strong,
+.lookbook figcaption,
+.fashion-panel > summary,
+.fashion-settings legend,
+.swipe-stamp {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+h1 {
+  font-size: clamp(42px, 5.5vw, 72px);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 1.04;
+}
+h2 {
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+h3 {
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+.hand {
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+.annotation {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.app-shell {
+  max-width: 1240px;
+  padding: 0 48px;
+}
+.masthead {
+  height: 90px;
+  gap: 28px;
+  background: var(--glass);
+  border-bottom: 1px solid var(--rule);
+}
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.065em;
+}
+.brand-orbit {
+  width: 44px;
+  height: 34px;
+  flex-shrink: 0;
+}
+.masthead nav button {
+  font-size: 12px;
+  color: var(--muted);
+}
+.masthead nav button[aria-current="page"] {
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.theme {
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 18px;
+}
+.theme span {
+  font-size: 12px;
+}
+.edition {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.page-heading {
+  padding: 42px 0 32px;
+}
+.subtitle {
+  font-size: 14px;
+  line-height: 1.7;
+  max-width: 560px;
+}
+.ink-button,
+.outline-button {
+  border-radius: 999px;
+  padding: 12px 24px;
+  box-shadow: none;
+  font-size: 12px;
+}
+.ink-button {
+  background: var(--ink);
+  color: var(--sheet);
+}
+.outline-button {
+  border-color: var(--rule);
+  background: var(--glass);
+}
+.note {
+  border-radius: 12px;
+}
+.notebook-form,
+.task-sheet {
+  border-radius: 18px;
+}
+.notebook-form input,
+.notebook-form select,
+.notebook-form textarea,
+.outfit-notes input,
+.outfit-notes select {
+  border-radius: 10px;
+  border-color: var(--rule);
+  background: var(--sheet);
+}
+.trip-number {
+  transform: none;
+  border-color: var(--rule);
+  font-size: 24px;
+}
+.doodle {
+  transform: none;
+  font-size: 32px;
+}
+.pencil-check {
+  border-radius: 5px;
+  transform: none;
+}
+.garment,
+.garment-art {
+  border-radius: 16px;
+}
+.outfit-layout {
+  grid-template-columns: 285px minmax(0, 1fr);
+  gap: 64px;
+  align-items: start;
+}
+.outfit-notes {
+  gap: 20px;
+}
+.outfit-notes > .hand {
+  transform: none;
+  color: var(--ink);
+  font-size: 25px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.outfit-notes .annotation {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.fashion-panel {
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: var(--glass);
+  padding: 16px;
+}
+.fashion-panel > summary {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+.fashion-panel[open] > summary {
+  margin-bottom: 18px;
+}
+.fashion-settings {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.fashion-colors > p {
+  font-size: 12px;
+}
+.fashion-colors .chips {
+  gap: 6px;
+}
+.fashion-colors .chips button {
+  font-size: 11px;
+  padding: 6px 11px;
+}
+.fashion-owned {
+  font-size: 12px;
+}
+.fashion-owned input {
+  accent-color: var(--ink);
+}
+.liked-counter strong {
+  font-size: 32px;
+  letter-spacing: -0.04em;
+}
+.swipe-section {
+  max-width: 620px;
+}
+.swipe-card {
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--glass);
+  box-shadow:
+    0 18px 50px var(--shadow),
+    inset 0 1px 0 var(--sheet);
+}
+.lookbook {
+  padding: 20px 28px 12px;
+  border-radius: 18px;
+  background: transparent;
+}
+.look-caption {
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+.look-foot {
+  font-size: 11px;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+.complete-look {
+  height: 360px;
+}
+.outfit-caption {
+  padding: 14px 28px 26px;
+}
+.outfit-caption h2 {
+  font-size: 29px;
+  letter-spacing: -0.04em;
+}
+.outfit-caption p {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.swipe-actions {
+  gap: 18px;
+  margin: 22px 0;
+}
+.swipe-actions button {
+  box-shadow: 0 5px 16px var(--shadow);
+  background: var(--glass);
+}
+.swipe-section > details {
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+.swipe-section > .ink-button {
+  width: 100%;
+}
+.swipe-help {
+  text-align: center;
+  margin-top: 14px;
+}
+.vote-message {
+  font-size: 12px;
+  min-height: 22px;
+  text-align: center;
+}
+.swipe-section > .annotation:last-child {
+  font-size: 11px;
+  text-align: center;
+}
+.swipe-stamp {
+  font-size: 22px;
+  font-weight: 500;
+  border-radius: 8px;
+  letter-spacing: 0.1em;
+}
+.packing-list {
+  border-radius: 18px;
+}
+.packing-line {
+  padding: 14px 0;
+}
+.packing-line img {
+  border-radius: 12px;
+  background: var(--sheet);
+}
+.packing-line select {
+  border-radius: 999px;
+}
+.saved-look-grid article {
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  background: var(--glass);
+}
+.site-foot {
+  font-size: 10px;
+}
+@media (max-width: 700px) {
+  .app-shell {
+    padding: 0 22px;
+  }
+  .masthead {
+    height: auto;
+    min-height: 94px;
+    gap: 14px;
+  }
+  .wordmark {
+    font-size: 27px;
+  }
+  .brand-orbit {
+    width: 36px;
+    height: 30px;
+  }
+  .theme {
+    padding: 6px 11px;
+  }
+  .masthead nav {
+    gap: 20px;
+  }
+  .page-heading {
+    padding: 32px 0 22px;
+  }
+  h1 {
+    font-size: 44px;
+  }
+  .outfit-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .outfit-notes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .outfit-notes > .hand {
+    font-size: 22px;
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+  .outfit-notes > .annotation {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .fashion-panel {
+    grid-column: 1 / -1;
+  }
+  .lookbook {
+    padding: 18px 20px 8px;
+  }
+  .complete-look {
+    height: 310px;
+  }
+  .outfit-caption {
+    padding: 12px 20px 20px;
+  }
+  .outfit-caption h2 {
+    font-size: 26px;
+  }
+  .swipe-section {
+    max-width: none;
+  }
+  .swipe-actions button {
+    width: 54px;
+    height: 54px;
+  }
+  .edition {
+    gap: 14px;
+    font-size: 8px;
+  }
+}

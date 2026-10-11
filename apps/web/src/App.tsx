@@ -58,7 +58,24 @@ export default function App() {
             onClick={() => nav("/")}
             aria-label="Wonder home"
           >
-            wonder<span className="brand-star">✳</span>
+            <svg className="brand-orbit" viewBox="0 0 60 44" aria-hidden="true">
+              <circle cx="25" cy="25" r="14" fill="currentColor" />
+              <ellipse
+                cx="26"
+                cy="25"
+                rx="27"
+                ry="9"
+                transform="rotate(-22 26 25)"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+              />
+              <path
+                d="m42 4 8 3 7-2-7 5-1 6-3-5-7-1 6-2Z"
+                fill="currentColor"
+              />
+            </svg>
+            Wonder
           </button>
           <nav aria-label="Main navigation">
             <button

@@ -61,3 +61,7 @@ Do not block documentation/fixture work on unanswered commercial questions. Do n
 - T19: Explicit synthetic calendar consent and in-app daily brief; event/weather interfaces fail or label fixtures honestly. No OAuth or automatic delivery until credentials, consent, token security and scheduling are implemented and tested.
 
 Source briefs are preserved as docs/product/CONSUMER_BRIEF.md and NOTEBOOK_DESIGN.md. The resulting local app is a connected prototype; prior native/live beta requirements are not silently waived.
+
+## Fashion preview visual update — October 11, 2026
+
+The owner explicitly selected https://group-travel-landing-page.replit.app/ as the aesthetic reference for the existing web fashion experience. This supersedes handwritten typography and paper/chalkboard presentation for the web client: use clean Helvetica-style type, monochrome controls, translucent surfaces, restrained borders, rounded cards, and Day/Evening themes. Keep the notebook data model and complete-outfit swipe → Done → packing behavior. The Replit site is a visual reference, not a deployment target or a claim of live integrations.
