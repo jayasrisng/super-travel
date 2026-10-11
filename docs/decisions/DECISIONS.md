@@ -30,6 +30,7 @@ Source hierarchy: preserved product brief → explicit product-owner changes →
 | T10 | explicit proposal apply, ETag/context version vs autonomous agent writes | prevents stale plan overwrite and preserves control |
 | T11 | Postgres canonical state; Keewano read-only event insight | no conflicting authoritative copies; sponsor query must demonstrably change follow-up |
 | T12 | reviewed external links; no payments/purchases/calls by default | actionability without unsupported transactional claims |
+| T14 | local SQLite run store and private bearer token for authorized three-agent integration work | Preserve current Python package and avoid blocking teammate integration on provisioning. This does not replace beta Postgres/Auth/RLS: no public deployment or real tester identity with this adapter. Required local destination/interests are documented in CONTROL_API; reviewed domain apply and generated clients follow. |
 | T13 | Vercel web / proposed Render API+worker / Supabase | separates async backend from frontend hosting; confirm region/cost/limits before provisioning |
 
 These defaults are sufficiently specific for contract drafting. They do not authorize provisioning, billing or recording real user data. Change through a focused ADR update with affected-owner review. Prefer one source definition per semantic contract.

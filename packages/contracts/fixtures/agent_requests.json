@@ -1,0 +1,35 @@
+{
+  "explore_magic": {
+    "agent": "explore_magic",
+    "input": {
+      "available_minutes": 120,
+      "budget": {
+        "amount_minor": 2000,
+        "currency": "EUR"
+      },
+      "interests": [
+        "culture"
+      ],
+      "location": {
+        "latitude": 41.385,
+        "longitude": 2.174
+      }
+    }
+  },
+  "pack_shop": {
+    "agent": "pack_shop",
+    "input": {
+      "destination": "Barcelona",
+      "end_date": "2026-11-15",
+      "start_date": "2026-11-13"
+    }
+  },
+  "plan_book": {
+    "agent": "plan_book",
+    "input": {
+      "destination": "Barcelona",
+      "end_date": "2026-11-15",
+      "start_date": "2026-11-13"
+    }
+  }
+}

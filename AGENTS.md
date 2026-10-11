@@ -4,7 +4,7 @@ These instructions apply to all repository paths. App name **Wonder**; repo rema
 
 ## Current scope and truthful status
 
-This repository is planning-only at this change. Do not build application features during the documentation task. A subsequent explicit implementation request can authorize Phase 0 and scoped roadmap work; it need not reapprove every routine technical choice. Do not imply that planned commands, tests, API routes, integrations or deployment already exist.
+The owner has explicitly authorized the three agent backends and control API. See docs/CONTROL_API.md for the implemented local adapter and remaining beta gates. Website work belongs to another teammate. Further scoped implementation requests need not reapprove every routine technical choice. Do not imply that planned commands, tests, API routes, integrations or deployment already exist.
 
 Priorities: Magic first in Barcelona; first usable release is private beta with web/native iOS core parity. Hackathon demo is separately gated. Preserve the full connected-travel roadmap. Integrations are maximized through meaningful, demonstrated use, not speculative claims or logos. No unrelated architecture rewrite or unbounded infrastructure additions.
 
@@ -24,7 +24,7 @@ Do not spawn/delegate agents merely because five developers are mentioned. Only 
 
 ## Contract-first changes
 
-Propose schema/operation changes before dependent features. Canonical prose is docs/DATA_MODEL.md + docs/api/CONTRACTS.md until Phase 0's checked OpenAPI exists; thereafter update source models, exported spec and fixtures atomically. Generate TypeScript/Swift clients; never hand-edit generated output or create a parallel shared-types source. Review by D1 and affected client/domain owner. Additive v1 changes preferred; breaking changes require version/deprecation/mobile compatibility plan.
+Propose schema/operation changes before dependent features. Checked packages/contracts/openapi.json is canonical for implemented local control routes; docs/DATA_MODEL.md + docs/api/CONTRACTS.md define the remaining beta design. Keep the staging differences in docs/CONTROL_API.md explicit. Update source models, exported spec and fixtures atomically. Generate TypeScript/Swift clients; never hand-edit generated output or create a parallel shared-types source. Review by D1 and affected client/domain owner. Additive v1 changes preferred; breaking changes require version/deprecation/mobile compatibility plan.
 
 Use snake_case JSON, UUIDs, integer minor-unit money, civil dates and UTC instants with IANA timezone. Preserve response/error envelopes, cursor semantics, idempotency and ETag rules. Distinguish omitted/null. Keep domain enums synchronized; unknowns must fail safely. Do not invent endpoint success for unimplemented features.
 

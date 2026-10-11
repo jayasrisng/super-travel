@@ -1,0 +1,243 @@
+{
+  "explore_magic": {
+    "assumptions": [],
+    "coverage": {
+      "area": "barcelona",
+      "data_mode": "fixture",
+      "partial": false,
+      "providers": [
+        "FixtureProvider"
+      ]
+    },
+    "data_mode": "fixture",
+    "recommendations": [
+      {
+        "allowed_actions": [
+          {
+            "type": "save"
+          }
+        ],
+        "assumptions": [
+          "No booking or attendance is implied."
+        ],
+        "buffer_minutes": 15,
+        "category": "culture",
+        "cost": {
+          "amount_minor": 0,
+          "currency": "EUR"
+        },
+        "cost_status": "estimated",
+        "duration_minutes": 30,
+        "evaluated_at": "2026-10-11T12:00:00Z",
+        "feasibility": "feasible",
+        "id": "75206bd8-5b3b-57ae-9208-79388cea1c28",
+        "location": {
+          "latitude": 41.383,
+          "longitude": 2.176
+        },
+        "onward_minutes": 0,
+        "outbound_minutes": 10,
+        "provenance": [
+          {
+            "availability": "unverified",
+            "cost_status": "estimated",
+            "data_mode": "fixture",
+            "expires_at": "2026-10-11T12:15:00Z",
+            "observed_at": "2026-10-11T12:00:00Z",
+            "provider": "wonder-fixture",
+            "source_url": "https://example.com/wonder-fixtures"
+          }
+        ],
+        "rank": 1,
+        "reason": "Fits the supplied constraints",
+        "slack_minutes": 65,
+        "title": "Example Gothic Quarter walk",
+        "valid_until": "2026-10-11T12:15:00Z"
+      },
+      {
+        "allowed_actions": [
+          {
+            "type": "save"
+          }
+        ],
+        "assumptions": [
+          "No booking or attendance is implied."
+        ],
+        "buffer_minutes": 15,
+        "category": "food",
+        "cost": {
+          "amount_minor": 500,
+          "currency": "EUR"
+        },
+        "cost_status": "estimated",
+        "duration_minutes": 20,
+        "evaluated_at": "2026-10-11T12:00:00Z",
+        "feasibility": "feasible",
+        "id": "60edc127-001c-56b3-aefd-7792cba7f3ff",
+        "location": {
+          "latitude": 41.386,
+          "longitude": 2.174
+        },
+        "onward_minutes": 0,
+        "outbound_minutes": 8,
+        "provenance": [
+          {
+            "availability": "unverified",
+            "cost_status": "estimated",
+            "data_mode": "fixture",
+            "expires_at": "2026-10-11T12:15:00Z",
+            "observed_at": "2026-10-11T12:00:00Z",
+            "provider": "wonder-fixture",
+            "source_url": "https://example.com/wonder-fixtures"
+          }
+        ],
+        "rank": 2,
+        "reason": "Fits the supplied constraints",
+        "slack_minutes": 77,
+        "title": "Example coffee break",
+        "valid_until": "2026-10-11T12:15:00Z"
+      },
+      {
+        "allowed_actions": [
+          {
+            "type": "save"
+          }
+        ],
+        "assumptions": [
+          "No booking or attendance is implied."
+        ],
+        "buffer_minutes": 15,
+        "category": "nature",
+        "cost": {
+          "amount_minor": 0,
+          "currency": "EUR"
+        },
+        "cost_status": "estimated",
+        "duration_minutes": 45,
+        "evaluated_at": "2026-10-11T12:00:00Z",
+        "feasibility": "feasible",
+        "id": "2584e6d7-4ed4-52fb-9487-a6e8e8ecaaf2",
+        "location": {
+          "latitude": 41.388,
+          "longitude": 2.187
+        },
+        "onward_minutes": 0,
+        "outbound_minutes": 15,
+        "provenance": [
+          {
+            "availability": "unverified",
+            "cost_status": "estimated",
+            "data_mode": "fixture",
+            "expires_at": "2026-10-11T12:15:00Z",
+            "observed_at": "2026-10-11T12:00:00Z",
+            "provider": "wonder-fixture",
+            "source_url": "https://example.com/wonder-fixtures"
+          }
+        ],
+        "rank": 3,
+        "reason": "Fits the supplied constraints",
+        "slack_minutes": 45,
+        "title": "Example park visit",
+        "valid_until": "2026-10-11T12:15:00Z"
+      }
+    ],
+    "reply": "Review your Barcelona options before saving.",
+    "sources": [],
+    "uncertain_recommendations": [],
+    "warnings": [
+      "Fixture routes, hours and costs are simulated; verify before travelling."
+    ]
+  },
+  "magic_empty": {
+    "assumptions": [],
+    "coverage": {
+      "area": "barcelona",
+      "data_mode": "fixture",
+      "partial": false,
+      "providers": [
+        "FixtureProvider"
+      ]
+    },
+    "data_mode": "fixture",
+    "recommendations": [],
+    "reply": "Review your Barcelona options before saving.",
+    "sources": [],
+    "uncertain_recommendations": [],
+    "warnings": [
+      "Fixture routes, hours and costs are simulated; verify before travelling.",
+      "No verified feasible options for this window; try a longer window or review uncertain options."
+    ]
+  },
+  "pack_shop": {
+    "assumptions": [
+      "Synthetic fixture; weather and airline baggage rules have not been checked.",
+      "Quantities are per adult; no personal health or document details are requested."
+    ],
+    "checklist_tasks": [
+      {
+        "item_id": "pack-review",
+        "system": "pack_shop",
+        "title": "Check baggage allowance and forecast"
+      }
+    ],
+    "data_mode": "fixture",
+    "packing_lists": [
+      {
+        "item_id": "pack-adult",
+        "items": [
+          {
+            "category": "clothing",
+            "item_id": "pack-shirts",
+            "purchase_status": "not_needed",
+            "quantity": 3,
+            "title": "Tops"
+          },
+          {
+            "category": "electronics",
+            "item_id": "pack-charger",
+            "purchase_status": "not_needed",
+            "quantity": 1,
+            "title": "Phone charger"
+          },
+          {
+            "category": "clothing",
+            "item_id": "pack-shoes",
+            "purchase_status": "not_needed",
+            "quantity": 1,
+            "title": "Walking shoes"
+          }
+        ],
+        "title": "Adult essentials"
+      }
+    ],
+    "reply": "Example packing proposal. Review weather, baggage limits and personal needs.",
+    "sources": []
+  },
+  "plan_book": {
+    "assumptions": [
+      "Synthetic fixture; no availability, reservation or price has been checked.",
+      "The example activity starts at 10:00 local time when a start date is supplied."
+    ],
+    "budget_estimates": [],
+    "checklist_tasks": [
+      {
+        "item_id": "plan-review",
+        "system": "plan_book",
+        "title": "Confirm dates and transport independently"
+      }
+    ],
+    "data_mode": "fixture",
+    "itinerary_items": [
+      {
+        "ends_at": "2026-11-13T10:00:00Z",
+        "item_id": "plan-walk",
+        "kind": "activity",
+        "starts_at": "2026-11-13T09:00:00Z",
+        "timezone": "Europe/Madrid",
+        "title": "Example orientation walk"
+      }
+    ],
+    "reply": "Example planning proposal for Barcelona. Review before applying.",
+    "sources": []
+  }
+}

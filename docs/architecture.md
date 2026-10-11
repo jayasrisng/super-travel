@@ -1,5 +1,7 @@
 # super-travel: Agent Architecture
 
+Implementation status: registry now includes all five names. The three requested proposal agents use the [local control API](CONTROL_API.md), not the planned /chat orchestrator below. Existing Essentials/Recovery tools retain prototype behavior; they are not exposed by the new control API.
+
 Status: draft · Scope: hackathon/demo · Stack: Python (FastAPI) + Claude API
 
 ## 1. System shape
