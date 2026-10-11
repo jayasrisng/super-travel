@@ -100,3 +100,18 @@ WonderWidgets/ Home/Lock Screen widget and the Lock Screen Live Activity
 The concierge is behind the `ConciergeAgent` protocol, which streams `AgentEvent`s. To go to production, implement it against a Wonder backend. That backend should own the LLM, the supplier integrations (GDS/NDC flights, hotel channel managers, ground transport) and payments. Keep model and supplier keys out of the app.
 
 State is in-memory for now. Approved trips reset when the app relaunches.
+
+## Nearby alert consent and text drafts
+
+Nearby alerts are disabled by default. Enabling them in Profile and choosing a non-Off interval allows refreshes only while the app is in the foreground; entering the background or disabling alerts cancels the timer. Invalid stored intervals fail closed. Notifications require iOS permission, and a denied/failed notification is not recorded as delivered, so it remains retryable.
+
+“Text draft” prepares the current suggestion for the currently selected recipient only when **Review nearby text** is tapped. The iOS system composer requires the user to tap Send; no generic SMS relay, relay credentials, automatic text delivery or sent-message confirmation exists. US formatted numbers and international +country-code numbers are supported. A simulator or device without SMS capability disables the review action. Recipient preference stays on the device.
+
+`NearbyAlertPolicyTests.swift` checks consent, foreground/off/interval rules, phone validation and successful-delivery deduplication. Run:
+
+```sh
+swiftc Wonder/App/NearbyAlertPolicy.swift Tests/NearbyAlertPolicyTests.swift -o /tmp/wonder-alert-policy-tests
+/tmp/wonder-alert-policy-tests
+```
+
+The iOS GitHub workflow builds the app and widgets for a generic simulator with empty demo secrets and signing disabled. No Apple account, provisioning changes, real SMS or provider/model credentials are used. Device notification/location permissions and actual SMS sending still need explicit device validation. The native app remains a separate local prototype; backend account/consumer data parity is not implied by a simulator build.

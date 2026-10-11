@@ -22,9 +22,10 @@ final class NearbyNotifier: NSObject, UNUserNotificationCenterDelegate {
         ])
     }
 
-    func notify(pick: NearbyPick, locality: String?, delay: TimeInterval) async {
+    @discardableResult
+    func notify(pick: NearbyPick, locality: String?, delay: TimeInterval) async -> Bool {
         let center = UNUserNotificationCenter.current()
-        guard (try? await center.requestAuthorization(options: [.alert, .sound])) == true else { return }
+        guard (try? await center.requestAuthorization(options: [.alert, .sound])) == true else { return false }
 
         let content = UNMutableNotificationContent()
         content.title = "Your agent found something nearby"
@@ -36,7 +37,10 @@ final class NearbyNotifier: NSObject, UNUserNotificationCenterDelegate {
         if let locality { content.targetContentIdentifier = locality }
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(delay, 1), repeats: false)
-        try? await center.add(UNNotificationRequest(identifier: "nearby", content: content, trigger: trigger))
+        do {
+            try await center.add(UNNotificationRequest(identifier: "nearby", content: content, trigger: trigger))
+            return true
+        } catch { return false }
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {

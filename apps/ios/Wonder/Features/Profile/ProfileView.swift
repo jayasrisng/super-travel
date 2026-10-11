@@ -1,9 +1,11 @@
 import SwiftUI
+import MessageUI
 
 struct ProfileView: View {
     @Environment(WonderStore.self) private var store
     @State private var alerts = NearbyAlertSettings.shared
     @State private var showAlertSettings = false
+    @State private var textDraft: NearbyTextDraft?
 
     var body: some View {
         @Bindable var store = store
@@ -148,9 +150,15 @@ struct ProfileView: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
                         if alerts.e164Phone == nil {
-                            note("Enter a 10-digit US number.")
-                        } else if alerts.relayURL == nil {
-                            note("Texting needs an SMS relay (SMS_RELAY_URL). Until it's set, updates arrive as notifications.")
+                            note("Enter a US number or an international number starting with + and the country code.")
+                        }
+                        note("Texts stay on your device until you review them and tap Send. No automatic SMS relay is used.")
+                        if NearbyModel.shared.top != nil, alerts.e164Phone != nil {
+                            Button("Review nearby text") { textDraft = NearbyModel.shared.makeTextDraft() }
+                                .disabled(!MFMessageComposeViewController.canSendText())
+                            if !MFMessageComposeViewController.canSendText() {
+                                note("Text messaging is unavailable on this device. Nearby notifications still work when permitted.")
+                            }
                         }
                     }
                 }
@@ -179,6 +187,12 @@ struct ProfileView: View {
         .padding(16)
         .glassPanel(cornerRadius: 22)
         .onChange(of: alerts.intervalSeconds) { _, _ in NearbyModel.shared.configureAutoRefresh() }
+        .onChange(of: alerts.alertsEnabled) { _, _ in
+            NearbyModel.shared.configureAutoRefresh()
+        }
+        .sheet(item: $textDraft) { draft in
+            NearbyTextComposer(draft: draft) { textDraft = nil }
+        }
     }
 
     private func note(_ text: String) -> some View {
