@@ -97,6 +97,7 @@ final class NearbyModel {
     func configureAutoRefresh() {
         autoTask?.cancel()
         autoTask = nil
+        if !NearbyAlertSettings.shared.alertsEnabled { NearbyNotifier.shared.cancelAutomaticRequests() }
         let seconds = NearbyAlertSettings.shared.intervalSeconds
         guard NearbyAlertPolicy.canRefresh(enabled: NearbyAlertSettings.shared.alertsEnabled, interval: seconds, foreground: foreground) else { return }
         autoTask = Task { [weak self] in
@@ -134,7 +135,7 @@ final class NearbyModel {
 
     func deliver(_ pick: NearbyPick) async {
         guard mayRefresh else { return }
-        let scheduled = await NearbyNotifier.shared.notify(pick: pick, locality: result?.locality, delay: 1)
+        let scheduled = await NearbyNotifier.shared.notify(pick: pick, locality: result?.locality, delay: 1, identifier: "nearby-auto")
         delivery.record(pick.id, succeeded: scheduled)
     }
 
