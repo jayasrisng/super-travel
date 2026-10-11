@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Wonder Trip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="phone">
+    <header class="app-top">
+      <div class="brand">
+        <svg viewBox="0 0 64 40" aria-hidden="true"><circle cx="26" cy="22" r="13" fill="currentColor"/><ellipse cx="26" cy="22" rx="24" ry="7" fill="none" stroke="currentColor" stroke-width="3" transform="rotate(-14 26 22)"/><path d="M44 6l14-3-3 2.5 6 1-1.5 1.5-6-.5-4 4-1.5-.5 2-4-4.5.5z" fill="currentColor"/></svg>
+        <span>Wonder</span>
+      </div>
+      <span class="micro" id="greeting"></span>
+    </header>
+
+    <section class="trip-card" id="trip-card"></section>
+    <section class="advisor-card" id="advisor-card"></section>
+
+    <main class="thread" id="thread" aria-live="polite"></main>
+
+    <div class="quick" id="quick"></div>
+    <form class="composer" id="composer">
+      <label class="sr-only" for="message">Message your advisor</label>
+      <textarea id="message" rows="1" placeholder="Message your advisor…" maxlength="2000"></textarea>
+      <button type="submit" aria-label="Send"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </form>
+  </div>
+
+  <div class="certificate" id="certificate" role="dialog" aria-modal="true" aria-labelledby="cert-title" hidden></div>
+  <script src="app.js" type="module"></script>
+</body>
+</html>

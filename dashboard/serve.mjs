@@ -1,6 +1,6 @@
 // Advisor dashboard server (no dependencies): node dashboard/serve.mjs [port]
 //
-// - Serves the dashboard and the onboarding page (/onboarding/).
+// - Serves the advisor dashboard (/), the customer app (/app/) and onboarding (/onboarding/).
 // - Proxies /api/* to the control API's /v1/*, adding the bearer token server-side so it
 //   never reaches the browser. Token: WONDER_API_TOKEN from the environment or the repo .env.
 import { createServer } from "node:http";
@@ -14,7 +14,11 @@ const repoRoot = dirname(dashboardRoot);
 const port = Number(process.argv[2] || process.env.PORT || 5180);
 const apiBase = (process.env.WONDER_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 const types = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png" };
-const mounts = [["/onboarding/", join(repoRoot, "super_travel", "onboarding")], ["/", dashboardRoot]];
+const mounts = [
+  ["/onboarding/", join(repoRoot, "super_travel", "onboarding")],
+  ["/app/", join(repoRoot, "customer")],
+  ["/", dashboardRoot],
+];
 const forwardHeaders = ["content-type", "idempotency-key", "if-match"];
 const MAX_BODY = 32 * 1024;
 

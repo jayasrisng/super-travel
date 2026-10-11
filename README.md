@@ -89,19 +89,25 @@ uv run python scripts/chat.py
 uv run python scripts/chat.py --event all
 ```
 
-### Agency dashboard (live)
+### Agency dashboard, customer app and the border scenario
 
-The advisor console reads the control API through a small Node server that keeps the token server-side. After an intake call, all five agents run for the client's trip and their proposals appear on the dashboard.
+One Node server serves the advisor dashboard (`/`), Sarah's customer app (`/app/`) and onboarding (`/onboarding/`). It proxies `/api/*` to the control API and keeps the token server-side.
 
 ```sh
 uv run uvicorn super_travel.control.app:app --host 127.0.0.1 --port 8000 --env-file .env   # terminal 1
-node dashboard/serve.mjs                                                                    # terminal 2: http://localhost:5180
-uv run python scripts/seed_demo.py                                                          # optional: demo client + sample delay
+node dashboard/serve.mjs                                                                    # terminal 2
+uv run python scripts/seed_demo.py                                                          # Sarah's trip, starting today
 ```
 
-- **Onboarding:** `http://localhost:5180/onboarding/#onboard`. Play the scripted call, then **Send to Wonder agents**. It posts to `POST /v1/intakes`, which creates the trip and queues Plan & Book, Pack & Shop, Explore/Magic (Barcelona only), Travel Essentials and Manage & Recover.
-- **Dashboard:** pick a client, see each agent's proposal, report a disruption (Manage & Recover computes EU261/US DOT/baggage rights and drafts the claim), save Magic ideas, re-run an agent.
-- Approve/Dismiss in the review queue is recorded in the browser only; nothing is sent. The onboarding page's images, fonts and analytics script are still missing from the repo (see INTEGRATION_STATUS.md).
+**Demo: Sarah at the border.** Open the customer app at `localhost:5180/app/` (phone width) and the dashboard at `localhost:5180/`.
+
+1. In the app, Sarah taps "I'm at border control… asking for proof of travel insurance". The message is triaged as urgent by code.
+2. The dashboard shows an urgent case with the suggested action. The advisor clicks **Call insurers for the cheapest quote**, which deploys the voice agent (`voice_quotes` run).
+3. The voice agent calls 5 insurers (simulated, fictional insurers, with transcripts). Wonder code checks each quote against Schengen-standard requirements (≥ €30,000 medical with repatriation, immediate certificate) and recommends the cheapest one that qualifies.
+4. The advisor reads the quotes and transcripts, then clicks **Approve & send to Sarah**. This issues a *simulated* policy and sends it in the chat.
+5. Sarah taps **Show to officer** for a full-screen certificate, then **I'm through ✓**. The dashboard marks the case resolved.
+
+Other dashboard features: per-agent proposals for all five agents, report-a-disruption (EU261 / US DOT / baggage), save Magic ideas, re-run agents. Onboarding's **Send to Wonder agents** creates a new client. Approve/Dismiss on the five agents' proposals is browser-local. No real calls, purchases or insurance policies are made; the onboarding page's images, fonts and analytics script are still missing.
 
 ## Team workflow
 

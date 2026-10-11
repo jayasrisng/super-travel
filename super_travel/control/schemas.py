@@ -18,7 +18,8 @@ from pydantic import (
 )
 
 AgentKey = Literal[
-    "plan_book", "pack_shop", "explore_magic", "travel_essentials", "manage_recover"
+    "plan_book", "pack_shop", "explore_magic", "travel_essentials", "manage_recover",
+    "voice_quotes",
 ]
 TaskSystem = Literal["plan_book", "pack_shop", "travel_essentials", "manage_recover"]
 Currency = Annotated[str, Field(pattern=r"^[A-Z]{3}$")]
@@ -143,6 +144,17 @@ class RecoveryInput(TravelInput):
     disruption: Disruption | None = None
 
 
+class VoiceQuoteInput(TravelInput):
+    """Ask the voice agent to phone insurers for an urgent travel-insurance quote."""
+
+    child_ages: list[int] = Field(default_factory=list, max_length=30)
+    min_medical: Money = Field(
+        default_factory=lambda: Money(amount_minor=3_000_000, currency="EUR")
+    )
+    need_document_now: bool = True
+    message_id: UUID | None = None
+
+
 class Commitment(Model):
     starts_at: AwareDatetime
     location: Location
@@ -195,8 +207,14 @@ class RecoveryRequest(RunBase):
     input: RecoveryInput
 
 
+class VoiceQuoteRequest(RunBase):
+    agent: Literal["voice_quotes"]
+    input: VoiceQuoteInput
+
+
 RunRequest = Annotated[
-    PlanRequest | PackRequest | ExploreRequest | EssentialsRequest | RecoveryRequest,
+    PlanRequest | PackRequest | ExploreRequest | EssentialsRequest | RecoveryRequest
+    | VoiceQuoteRequest,
     Field(discriminator="agent"),
 ]
 
@@ -387,8 +405,43 @@ class RecoveryProposal(ProposalBase):
     checklist_tasks: list[TaskProposal] = Field(max_length=100)
 
 
+class TranscriptLine(Model):
+    speaker: Literal["voice_agent", "insurer"]
+    text: Text
+
+
+class InsuranceQuote(Model):
+    quote_id: Text
+    insurer: Text
+    premium: Money
+    medical_cover: Money
+    deductible: Money
+    repatriation: bool
+    schengen_compliant: bool
+    document_delivery: Literal["instant_pdf", "email_24h"]
+    meets_requirements: bool
+    notes: list[Text]
+
+
+class InsurerCall(Model):
+    item_id: Text
+    insurer: Text
+    phone: str = Field(min_length=1, max_length=30)
+    outcome: Literal["quoted", "declined", "no_answer"]
+    duration_seconds: int = Field(ge=0, le=3600, strict=True)
+    transcript: list[TranscriptLine] = Field(max_length=40)
+    quote: InsuranceQuote | None
+
+
+class VoiceQuoteProposal(ProposalBase):
+    requirements: list[Text]
+    calls: list[InsurerCall] = Field(max_length=10)
+    recommended_quote_id: str | None
+
+
 Proposal = (
     PlanProposal | PackProposal | ExploreProposal | EssentialsProposal | RecoveryProposal
+    | VoiceQuoteProposal
 )
 
 
@@ -419,6 +472,7 @@ class AgentRun(Model):
             "explore_magic": ExploreProposal,
             "travel_essentials": EssentialsProposal,
             "manage_recover": RecoveryProposal,
+            "voice_quotes": VoiceQuoteProposal,
         }[self.agent]
         if self.proposal is not None and not isinstance(self.proposal, expected):
             raise ValueError("Proposal type must match the run agent")
@@ -521,6 +575,57 @@ class Intake(IntakeCreate):
     trip_id: UUID
     created_at: AwareDatetime
     runs: list[IntakeRun]
+    version: int = 1
+
+
+class PolicyAttachment(Model):
+    type: Literal["insurance_policy"] = "insurance_policy"
+    policy_id: UUID
+
+
+class MessageCreate(Model):
+    sender: Literal["traveler", "advisor"]
+    text: Text
+    attachment: PolicyAttachment | None = None
+
+
+class Triage(Model):
+    topic: Literal["insurance_proof", "disruption", "general"]
+    urgency: Literal["urgent", "normal"]
+    suggested_action: Literal["voice_quotes", "manage_recover", "reply"]
+    reason: Text
+
+
+class Message(MessageCreate):
+    id: UUID
+    trip_id: UUID
+    created_at: AwareDatetime
+    triage: Triage | None = None
+    version: int = 1
+
+
+class PolicyCreate(Model):
+    run_id: UUID
+    quote_id: Text
+
+
+class InsurancePolicy(Model):
+    id: UUID
+    trip_id: UUID
+    run_id: UUID
+    quote_id: Text
+    policy_number: str
+    insurer: Text
+    insured: list[Text]
+    coverage_start: date
+    coverage_end: date
+    premium: Money
+    medical_cover: Money
+    deductible: Money
+    repatriation: bool
+    schengen_compliant: bool
+    status: Literal["simulated"] = "simulated"
+    issued_at: AwareDatetime
     version: int = 1
 
 

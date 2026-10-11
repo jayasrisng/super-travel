@@ -1,10 +1,12 @@
 """Seed the agency dashboard with the demo client from the onboarding call.
 
-Posts Sarah Mitchell's intake (the same details the onboarding page's scripted call fills in)
-to the running control API, then reports a sample flight delay so Manage & Recover has
-something to assess. Needs the API running and WONDER_API_TOKEN in .env.
+Posts Sarah Mitchell's intake (the details the onboarding page's scripted call fills in) to
+the running control API, with the trip starting today so the border scenario lines up:
+Sarah lands in Barcelona, messages her advisor from the customer app (/app/), and the
+advisor deploys the voice agent from the dashboard. Needs the API running and
+WONDER_API_TOKEN in .env.
 
-    uv run python scripts/seed_demo.py [--no-disruption]
+    uv run python scripts/seed_demo.py [--with-delay]
 """
 
 import json
@@ -14,6 +16,7 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+from datetime import date, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,8 +26,8 @@ SARAH = {
     "client_name": "Sarah Mitchell",
     "purpose": "Family vacation",
     "destination": "Barcelona, Spain",
-    "start_date": "2026-10-19",
-    "end_date": "2026-10-25",
+    "start_date": date.today().isoformat(),
+    "end_date": (date.today() + timedelta(days=6)).isoformat(),
     "traveler_configuration": {"adult_count": 1, "child_count": 1},
     "child_ages": [6],
     "accommodation_area": "Near the Gothic Quarter",
@@ -34,14 +37,14 @@ SARAH = {
     "channel": "phone_call",
 }
 
-# Sample disruption for the demo (fictional flight details).
+# Optional sample disruption (fictional flight details).
 DELAY = {
     "kind": "delay",
     "passengers": 2,
     "arrival_delay_minutes": 220,
     "reference": "QX7K2M",
     "flight": {"carrier_code": "VY", "number": "VY7821", "from_iata": "LHR", "to_iata": "BCN",
-               "scheduled_date": "2026-10-19"},
+               "scheduled_date": date.today().isoformat()},
 }
 
 
@@ -74,7 +77,7 @@ def call(method: str, path: str, body: dict | None = None) -> dict:
 def main() -> None:
     intake = call("POST", "/intakes", SARAH)["data"]
     print(f"Intake {intake['id']} -> trip {intake['trip_id']}")
-    if "--no-disruption" not in sys.argv:
+    if "--with-delay" in sys.argv:
         run = call("POST", "/agent-runs", {"agent": "manage_recover", "trip_id": intake["trip_id"],
                                            "input": {"disruption": DELAY}})["data"]
         print(f"Reported sample delay -> run {run['id']}")
@@ -85,7 +88,8 @@ def main() -> None:
         time.sleep(0.5)
     for r in sorted(runs, key=lambda r: r["agent"]):
         print(f"  {r['agent']:<18} {r['status']}")
-    print(f"Open http://localhost:5180/?intake={intake['id']}")
+    print(f"Advisor dashboard: http://localhost:5180/?intake={intake['id']}")
+    print(f"Sarah's app:       http://localhost:5180/app/?intake={intake['id']}")
 
 
 if __name__ == "__main__":

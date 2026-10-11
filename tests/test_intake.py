@@ -148,7 +148,8 @@ def test_unknown_airport_fails_safely(api):
     assert body["status"] == "failed" and body["error"]["code"] == "invalid_constraints"
 
 
-def test_agents_endpoint_lists_five(api):
+def test_agents_endpoint_lists_five_specialists_and_voice(api):
     client, _ = api
     agents = [a["agent"] for a in client.get("/v1/agents").json()["data"]]
-    assert agents == ["plan_book", "pack_shop", "explore_magic", "travel_essentials", "manage_recover"]
+    assert agents == ["plan_book", "pack_shop", "explore_magic", "travel_essentials", "manage_recover",
+                      "voice_quotes"]

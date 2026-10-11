@@ -24,9 +24,13 @@ from super_travel.control.schemas import (
     Envelope,
     ErrorEnvelope,
     ExploreRequest,
+    InsurancePolicy,
     Intake,
     IntakeCreate,
     MagicRequest,
+    Message,
+    MessageCreate,
+    PolicyCreate,
     RunRequest,
     SavedExperience,
     SaveRequest,
@@ -257,6 +261,8 @@ def create_app(
                      "Deterministic: curated country data, ECB rates, mock eSIM plans; no advisories"),
                     ("manage_recover", "recovery", "Manage & Recover",
                      "Deterministic rules on reported disruptions; no flight monitoring; claims are drafts"),
+                    ("voice_quotes", "voice", "Voice agent: insurance quotes",
+                     "Simulated calls to fictional insurers; no real calls, purchases or policies"),
                 ]
             ],
         )
@@ -418,6 +424,78 @@ def create_app(
         body = request.app.state.store.transaction(
             lambda: request.app.state.store.get(identity, "intake", intake_id)
         )
+        set_etag(response, body)
+        return envelope(request, body)
+
+    @app.post("/v1/trips/{trip_id}/messages", status_code=201, response_model=Envelope[Message])
+    def create_message(
+        trip_id: UUID,
+        payload: MessageCreate,
+        request: Request,
+        response: Response,
+        identity=Depends(actor),
+        replay_key=Depends(key),
+    ):
+        result = request.app.state.store.create(
+            identity,
+            f"/v1/trips/{trip_id}/messages",
+            replay_key,
+            payload.model_dump(mode="json"),
+            lambda: envelope(
+                request, request.app.state.service.create_message(identity, trip_id, payload)
+            ),
+        )
+        set_etag(response, result["data"])
+        return result
+
+    @app.get("/v1/trips/{trip_id}/messages", response_model=Envelope[list[Message]])
+    def list_messages(trip_id: UUID, request: Request, identity=Depends(actor)):
+        store = request.app.state.store
+
+        def read():
+            store.get(identity, "trip", trip_id)
+            values, _ = store.list(identity, "message", limit=500, trip_id=trip_id)
+            return list(reversed(values))  # oldest first, like a chat
+
+        return envelope(request, store.transaction(read))
+
+    @app.post(
+        "/v1/trips/{trip_id}/insurance-policies",
+        status_code=201,
+        response_model=Envelope[InsurancePolicy],
+    )
+    def create_policy(
+        trip_id: UUID,
+        payload: PolicyCreate,
+        request: Request,
+        response: Response,
+        identity=Depends(actor),
+        replay_key=Depends(key),
+    ):
+        result = request.app.state.store.create(
+            identity,
+            f"/v1/trips/{trip_id}/insurance-policies",
+            replay_key,
+            payload.model_dump(mode="json"),
+            lambda: envelope(
+                request, request.app.state.service.create_policy(identity, trip_id, payload)
+            ),
+        )
+        set_etag(response, result["data"])
+        return result
+
+    @app.get(
+        "/v1/trips/{trip_id}/insurance-policies/{policy_id}",
+        response_model=Envelope[InsurancePolicy],
+    )
+    def get_policy(
+        trip_id: UUID, policy_id: UUID, request: Request, response: Response, identity=Depends(actor)
+    ):
+        body = request.app.state.store.transaction(
+            lambda: request.app.state.store.get(identity, "policy", policy_id)
+        )
+        if body["trip_id"] != str(trip_id):
+            raise ControlError(404, "not_found", "Resource not found")
         set_etag(response, body)
         return envelope(request, body)
 
