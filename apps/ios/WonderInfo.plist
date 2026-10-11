@@ -4,6 +4,10 @@
 <dict>
 	<key>GeminiAPIKey</key>
 	<string>$(GEMINI_API_KEY)</string>
+	<key>DefaultAlertPhone</key>
+	<string>$(DEFAULT_ALERT_PHONE)</string>
+	<key>SMSRelayURL</key>
+	<string>$(SMS_RELAY_URL)</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>

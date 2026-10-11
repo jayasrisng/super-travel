@@ -18,6 +18,8 @@ final class NearbyModel {
     private var location: CLLocation?
     private var session: CLServiceSession?
     private var observer: NSObjectProtocol?
+    private var autoTask: Task<Void, Never>?
+    private var lastDelivered: String?
 
     private init() {
         // The Lock Screen buttons switch category from an intent; keep the app in step.
@@ -87,6 +89,43 @@ final class NearbyModel {
     func removeFromLockScreen() async {
         await NearbyLiveActivity.end()
         isOnLockScreen = false
+    }
+
+    /// (Re)starts the timer that fetches new suggestions every N seconds. Runs while the app
+    /// is alive; iOS suspends it in the background.
+    func configureAutoRefresh() {
+        autoTask?.cancel()
+        autoTask = nil
+        let seconds = NearbyAlertSettings.shared.intervalSeconds
+        guard seconds > 0 else { return }
+        autoTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(seconds))
+                if Task.isCancelled { break }
+                await self?.tick()
+            }
+        }
+    }
+
+    private func tick() async {
+        if status == .idle || status == .needsPermission { await start() }
+        guard status != .denied, status != .locating, status != .searching else { return }
+        if let fresh = await CurrentLocation.fetch(timeout: .seconds(10)) { location = fresh }
+        await refresh()
+        guard NearbyAlertSettings.shared.alertsEnabled, let top, top.id != lastDelivered else { return }
+        await deliver(top)
+    }
+
+    /// Sends the pick over the channel the user chose; a failed text falls back to a notification.
+    func deliver(_ pick: NearbyPick) async {
+        lastDelivered = pick.id
+        let settings = NearbyAlertSettings.shared
+        if settings.channel == .text {
+            let place = result?.locality.map { " in \($0)" } ?? ""
+            let body = "Wonder found something nearby\(place): \(pick.name) · \(pick.walkText). \(pick.note)"
+            if await NearbyTexter.send(body) { return }
+        }
+        await NearbyNotifier.shared.notify(pick: pick, locality: result?.locality, delay: 1)
     }
 
     /// A category tapped on the notification: find that kind of place and notify again.

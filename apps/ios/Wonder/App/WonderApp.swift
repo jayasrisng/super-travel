@@ -46,6 +46,7 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: 0.6), value: store.hasOnboarded)
         .onAppear {
+            NearbyModel.shared.configureAutoRefresh()
             ImagePipeline.shared.prefetch(Catalog.all.map(\.hero))
         }
     }

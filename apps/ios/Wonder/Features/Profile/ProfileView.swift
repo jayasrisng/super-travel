@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ProfileView: View {
     @Environment(WonderStore.self) private var store
+    @State private var alerts = NearbyAlertSettings.shared
+    @State private var showAlertSettings = false
 
     var body: some View {
         @Bindable var store = store
@@ -92,6 +94,10 @@ struct ProfileView: View {
                     .glassPanel(cornerRadius: 22)
                     .padding(.horizontal, 20)
 
+                    alertSettings
+                        .padding(.horizontal, 20)
+                        .padding(.top, 24)
+
                     Button("Replay introduction") { store.resetDemo() }
                         .font(WFont.body(13))
                         .foregroundStyle(Color.textSoft)
@@ -112,6 +118,76 @@ struct ProfileView: View {
             .background { Backdrop(photo: Pic.aboveClouds, veil: 0.5) }
             .toolbar(.hidden, for: .navigationBar)
         }
+    }
+
+    /// Tucked away: collapsed until opened.
+    private var alertSettings: some View {
+        @Bindable var alerts = alerts
+        return DisclosureGroup(isExpanded: $showAlertSettings) {
+            VStack(spacing: 0) {
+                Hairline()
+                toggle("Location updates", "Tell me when something good is nearby", $alerts.alertsEnabled)
+                if alerts.alertsEnabled {
+                    Hairline().padding(.leading, 16)
+                    pickerRow("Send by", selection: Binding(
+                        get: { alerts.channel.title },
+                        set: { title in alerts.channel = AlertChannel.allCases.first { $0.title == title } ?? .push }
+                    ), options: AlertChannel.allCases.map(\.title))
+                    if alerts.channel == .text {
+                        Hairline().padding(.leading, 16)
+                        HStack {
+                            Text("Number").font(WFont.body(14)).foregroundStyle(Color.ink)
+                            Spacer()
+                            TextField("(555) 555-5555", text: $alerts.phone)
+                                .keyboardType(.phonePad)
+                                .textContentType(.telephoneNumber)
+                                .multilineTextAlignment(.trailing)
+                                .font(WFont.body(14))
+                                .foregroundStyle(Color.ink)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        if alerts.e164Phone == nil {
+                            note("Enter a 10-digit US number.")
+                        } else if alerts.relayURL == nil {
+                            note("Texting needs an SMS relay (SMS_RELAY_URL). Until it's set, updates arrive as notifications.")
+                        }
+                    }
+                }
+                Hairline().padding(.leading, 16)
+                HStack {
+                    Text("New suggestions every").font(WFont.body(14)).foregroundStyle(Color.ink)
+                    Spacer()
+                    Menu {
+                        ForEach(NearbyAlertSettings.intervals, id: \.seconds) { option in
+                            Button(option.label) { alerts.intervalSeconds = option.seconds }
+                        }
+                    } label: {
+                        Text(NearbyAlertSettings.intervals.first { $0.seconds == alerts.intervalSeconds }?.label ?? "Custom")
+                            .font(WFont.body(14, weight: .medium))
+                            .foregroundStyle(Color.verified)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                note("Refreshes while Wonder is open.")
+            }
+        } label: {
+            Text("Nearby alerts").font(WFont.body(14)).foregroundStyle(Color.ink)
+        }
+        .tint(Color.textSoft)
+        .padding(16)
+        .glassPanel(cornerRadius: 22)
+        .onChange(of: alerts.intervalSeconds) { _, _ in NearbyModel.shared.configureAutoRefresh() }
+    }
+
+    private func note(_ text: String) -> some View {
+        Text(text)
+            .font(WFont.body(12))
+            .foregroundStyle(Color.textSoft)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 10)
     }
 
     private var stats: some View {
